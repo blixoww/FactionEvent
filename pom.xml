@@ -62,8 +62,8 @@
         </dependency>
         <dependency>
             <groupId>org.bukkit</groupId>
-            <artifactId>CraftBukkit</artifactId>
-            <version>1.8.8-R0.1-SNAPSHOT</version>
+            <artifactId>bukkit</artifactId>
+            <version>1.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
