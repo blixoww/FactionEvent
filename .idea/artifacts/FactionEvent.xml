@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="FactionEvent">
-    <output-path>$PROJECT_DIR$/../../../../Serv local 1.8/plugins</output-path>
-    <root id="archive" name="FactionEvent.jar">
-      <element id="module-output" name="factionevent" />
-    </root>
-  </artifact>
-</component>
