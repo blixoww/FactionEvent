@@ -186,6 +186,7 @@ public class EventOn {
         FactionMessageTitle.sendPlayersMessage(msg.getString("meteorite.prefix") + new StrManager(msg.getString("meteorite.adding_to_queue")).reMeteorite(meteorite.getName()).toString(), players);
         queue.add(meteorite);
     }
+
     public void stopCurrentEvent() {
         if (!canStartAnEvent()) {
             if (kothEvent != null) {

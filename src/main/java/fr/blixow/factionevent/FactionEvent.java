@@ -1,5 +1,6 @@
 package fr.blixow.factionevent;
 
+import fr.blixow.factionevent.commands.chat.ChatCommand;
 import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;
 import fr.blixow.factionevent.commands.dtc.DTCListCommand;
@@ -74,6 +75,7 @@ public final class FactionEvent extends JavaPlugin {
     private FileConfiguration totemFileConfiguration;
     private FileConfiguration dtcFileConfiguration;
     private FileConfiguration meteoriteFileConfiguration;
+    private FileConfiguration chatEventFileConfiguration;
     private FileConfiguration planningFileConfiguration;
     private FileConfiguration eventManagerFileConfiguration;
     private FileConfiguration classementFileConfiguration;
@@ -131,6 +133,9 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("meteoritelist").setExecutor(new MeteoriteListCommand());
         getCommand("meteoritesetlist").setExecutor(new MeteoriteSetListCommand());
         getCommand("meteoritesetlist").setTabCompleter(new MeteoriteSetListCommand());
+
+        getCommand("chat").setExecutor(new ChatCommand());
+        getCommand("chat").setTabCompleter(new ChatCommand());
     }
 
     private void loadListeners() {
@@ -305,6 +310,10 @@ public final class FactionEvent extends JavaPlugin {
         return meteoriteFileConfiguration;
     }
 
+    public FileConfiguration getChatEventFileConfiguration() {
+        return chatEventFileConfiguration;
+    }
+
     public FileConfiguration getPlanningFileConfiguration() {
         return planningFileConfiguration;
     }
@@ -345,6 +354,10 @@ public final class FactionEvent extends JavaPlugin {
         this.meteoriteFileConfiguration = meteoriteFileConfiguration;
     }
 
+    public void setChatEventFileConfiguration(FileConfiguration chatEventFileConfiguration) {
+        this.chatEventFileConfiguration = chatEventFileConfiguration;
+    }
+
     public void setPlanningFileConfiguration(FileConfiguration planningFileConfiguration) {
         this.planningFileConfiguration = planningFileConfiguration;
     }
@@ -360,4 +373,5 @@ public final class FactionEvent extends JavaPlugin {
     public void setLogsFileConfiguration(FileConfiguration logsFileConfiguration) {
         this.logsFileConfiguration = logsFileConfiguration;
     }
+
 }

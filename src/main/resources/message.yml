@@ -169,3 +169,11 @@ faction_classement:
     - "§8» §cKoth gagnés : §7{nb_koth}"
     - "§8» §cTotem gagnés : §7{nb_totem}"
     - "§8» §cDTC gagnés : §7{nb_dtc}"
+chatEvent:
+  prefix: "§8[§cChatRéaction§8]§7 "
+  already_started: "§cUn chat réaction est déjà en cours."
+  winner_message: "§aVous avez gagné le chat réaction !"
+  global_winner_message: "§aLe joueur {player} a gagné le chat réaction !"
+  canceled: "§cLe chat réaction a été annulé."
+  no_winner: "§cAucun gagnant n'a été trouvé."
+  started: "§aUn chat réaction a été lancé, écrivez le mot {mot}, vous avez {maxTime} pour l'écrire !"

@@ -37,3 +37,8 @@ meteorite:
   # Temps maximum de l'événement
   max_duration: 1800 # 1800 → 30 minutes
 
+chat:
+  max_time: 60.0 # en secondes
+  recompense_money: 1000 # en argent ($)
+
+

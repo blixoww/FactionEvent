@@ -99,6 +99,11 @@ public class StrManager {
         return this;
     }
 
+    public StrManager reMot(String mot){
+        this.message = this.message.replaceAll("\\{mot}", mot);
+        return this;
+    }
+
     public StrManager rePlayerTarget(Player player, Player target){
         rePlayer(player);
         reTarget(target);

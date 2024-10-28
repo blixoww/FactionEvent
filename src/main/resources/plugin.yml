@@ -45,3 +45,7 @@ commands:
   meteoritesetlist:
     usage: /meteoritesetlist
     description: Défini les blocks dans un rayon de 40 (Longueur) * 40 (Largeur) * 12 (Hauteur)
+  chat:
+    usage: /chat
+    description: Permet de gérer les attributs du chat des événements
+
