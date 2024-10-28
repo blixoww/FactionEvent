@@ -1,0 +1,44 @@
+##                  ##
+#   FactionEvent     #
+##                  ##
+
+
+koth:
+  # Temps requis pour gagner un koth (en secondes)
+  win_time: 300
+  # Temps en secondes nécessaire pour vérifier le temps pour les koths (en secondes)
+  check_time: 1
+  # Temps maximum de l'événement
+  max_duration: 1800 # 1800 => 30 minutes
+  # Nombre de points reçus par la faction gagnante :)
+  win_points: 10
+
+totem:
+  # Temps en secondes nécessaire pour vérifier le temps pour les totems (en secondes)
+  check_time: 10
+  # Temps maximum de l'événement
+  max_duration: 1800 # 1800 => 30 minutes
+  # Nombre de points reçus par la faction gagnante :)
+  win_points: 10
+
+dtc:
+  # Temps en secondes nécessaire pour vérifier le temps pour les dtc (en secondes)
+  check_time: 10
+  # Nombre de coups nécessaire pour mettre à jour ?
+  check_hit: 10
+  # Temps maximum de l'événement
+  max_duration: 1800 # 1800 → 30 minutes
+  # Nombre de points reçus par la faction gagnante :)
+  win_points: 10
+
+meteorite:
+  # Temps en secondes nécessaire pour vérifier le temps pour la météorite (en secondes)
+  check_time: 1
+  # Temps maximum de l'événement
+  max_duration: 1800 # 1800 → 30 minutes
+
+chat:
+  max_time: 60.0 # en secondes
+  recompense_money: 1000 # en argent ($)
+
+

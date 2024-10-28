@@ -1,0 +1,51 @@
+name: FactionEvent
+version: '1.0'
+main: fr.blixow.factionevent.FactionEvent
+authors: [ SYNATIKS ,blixow14 ]
+description: plugin d'event faction
+commands:
+  planning:
+    description: Affiche le planning des events de la semaine.
+  planningadd:
+    usage: /planningadd
+    description: Planification des events.
+  koth:
+    usage: /koth
+    description: Gestion des koths.
+  kothlist:
+    usage: /kothlist
+    description: Affiche la liste des koths
+  totem:
+    usage: /totem
+    description: Gestion des totems.
+  totemlist:
+    usage: /totemlist
+    description: Affiche la liste des totems
+  event:
+    usage: /event
+    description: Permet de gérer les attributs des événements
+    aliases: [events, cevent, cevents]
+  classement:
+    usage: /classement
+    description: Affiche le classement des factions
+    aliases: [ftop, rankings, ranking]
+  dtc:
+    usage: /dtc
+    description: Gestion des dtc
+    aliases: [cdtc]
+  dtclist:
+    usage: /dtclist
+    description: Affiche la liste des dtc
+  meteorite:
+    usage: /meteorite
+    description: Gestion des météorites
+  meteoritelist:
+    usage: /meteoritelist
+    description: Affiche la liste des météorites.
+  meteoritesetlist:
+    usage: /meteoritesetlist
+    description: Défini les blocks dans un rayon de 40 (Longueur) * 40 (Largeur) * 12 (Hauteur)
+  chat:
+    usage: /chat
+    description: Permet de gérer les attributs du chat des événements
+
