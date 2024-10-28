@@ -99,7 +99,7 @@ public class StrManager {
         return this;
     }
 
-    public StrManager reMot(String mot){
+    public StrManager reWord(String mot){
         this.message = this.message.replaceAll("\\{mot}", mot);
         return this;
     }
