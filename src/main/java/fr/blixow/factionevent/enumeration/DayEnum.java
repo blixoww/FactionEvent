@@ -2,23 +2,23 @@ package fr.blixow.factionevent.enumeration;
 
 public enum DayEnum {
 
-    MONDAY("Lundi"),
-    TUESDAY("Mardi"),
-    WEDNESDAY("Mercredi"),
-    THURSDAY("Jeudi"),
-    FRIDAY("Vendredi"),
-    SATURDAY("Samedi"),
-    SUNDAY("Dimanche");
+  MONDAY("Lundi"),
+  TUESDAY("Mardi"),
+  WEDNESDAY("Mercredi"),
+  THURSDAY("Jeudi"),
+  FRIDAY("Vendredi"),
+  SATURDAY("Samedi"),
+  SUNDAY("Dimanche");
 
-    private final String valeur;
+  private final String valeur;
 
-    private DayEnum(String valeur) {
-        this.valeur = valeur ;
-    }
+  DayEnum(String valeur) {
+    this.valeur = valeur;
+  }
 
-    public String getValeur() {
-        return  this.valeur ;
-    }
+  public String getValeur() {
+    return this.valeur;
+  }
 
 
 }

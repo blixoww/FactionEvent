@@ -1,5 +1,6 @@
 package fr.blixow.factionevent;
 
+import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.commands.chat.ChatCommand;
 import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;
@@ -18,6 +19,7 @@ import fr.blixow.factionevent.events.CustomEvents;
 import fr.blixow.factionevent.events.DisbandFactionEvent;
 import fr.blixow.factionevent.events.InventoryEvent;
 import fr.blixow.factionevent.events.MeteoriteEventListener;
+import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.PlanningScheduler;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
@@ -29,8 +31,6 @@ import fr.blixow.factionevent.utils.meteorite.MeteoriteManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
-import com.massivecraft.factions.Faction;
-import fr.blixow.factionevent.manager.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -45,333 +45,331 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public final class FactionEvent extends JavaPlugin {
-    private static FactionEvent instance;
+  private static FactionEvent instance;
+  // Planning
+  private HashMap<String, String> planning;
+  // KOTH
+  private ArrayList<KOTH> listKOTH;
+
+  // Totem
+  private ArrayList<Totem> listTotem;
+  private HashMap<Player, TotemEditor> playerTotemEditorHashMap;
+
+  // DTC
+  private ArrayList<DTC> listDTC;
+
+  // Météorite
+  private ArrayList<Meteorite> listMeteorite;
+
+  // EventOn instance manager
+  private EventOn eventOn;
+
+  // Scoreboard and Title lists
+  private HashMap<Player, EventManager> eventManagerMap;
+  // Faction rankings
+  private LinkedHashMap<Faction, Integer> factionRankings;
+  // FileConfig
+  private FileConfiguration config;
+  private FileConfiguration messageFileConfiguration;
+  private FileConfiguration kothFileConfiguration;
+  private FileConfiguration totemFileConfiguration;
+  private FileConfiguration dtcFileConfiguration;
+  private FileConfiguration meteoriteFileConfiguration;
+  private FileConfiguration chatEventFileConfiguration;
+  private FileConfiguration planningFileConfiguration;
+  private FileConfiguration eventManagerFileConfiguration;
+  private FileConfiguration classementFileConfiguration;
+  private FileConfiguration logsFileConfiguration;
+
+  public static FactionEvent getInstance() {
+    return instance;
+  }
+
+  @Override
+  public void onEnable() {
+    instance = this;
+    FileManager.createNeededFiles();
+    FileManager.loadNeededFiles();
+    instanceListMap();
+    loadCommand();
+    loadListeners();
+    loadEvents();
+    Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Activation du plugin");
+    startSchedulerForPlanning();
+    actionsForOnlinePlayers();
+    RankingManager.runTaskUpdateRankings();
+  }
+
+  private void actionsForOnlinePlayers() {
+    for (Player player : Bukkit.getOnlinePlayers()) {
+      EventManager eventManager = EventManager.loadFromFile(player);
+      getEventScoreboardOff().put(player, eventManager);
+    }
+  }
+
+  private void loadCommand() {
     // Planning
-    private HashMap<String, String> planning;
+    getCommand("planning").setExecutor(new PlanningCommand());
+    getCommand("planningadd").setExecutor(new PlanningAddCommand());
+    getCommand("planningadd").setTabCompleter(new PlanningAddCommand());
     // KOTH
-    private ArrayList<KOTH> listKOTH;
-
+    getCommand("koth").setExecutor(new KothCommand());
+    getCommand("koth").setTabCompleter(new KothCommand());
+    getCommand("kothlist").setExecutor(new KothListCommand());
     // Totem
-    private ArrayList<Totem> listTotem;
-    private HashMap<Player, TotemEditor> playerTotemEditorHashMap;
-
+    getCommand("totem").setExecutor(new TotemCommand());
+    getCommand("totem").setTabCompleter(new TotemCommand());
+    getCommand("totemlist").setExecutor(new TotemListCommand());
     // DTC
-    private ArrayList<DTC> listDTC;
+    getCommand("dtc").setExecutor(new DTCCommand());
+    getCommand("dtc").setTabCompleter(new DTCCommand());
+    getCommand("dtclist").setExecutor(new DTCListCommand());
+    // Event
+    getCommand("event").setExecutor(new EventCommand());
+    getCommand("event").setTabCompleter(new EventCommand());
+    // classement
+    getCommand("classement").setExecutor(new ClassementCommand());
+    getCommand("classement").setTabCompleter(new ClassementCommand());
+    // Meteorite
+    getCommand("meteorite").setExecutor(new MeteoriteCommand());
+    getCommand("meteorite").setTabCompleter(new MeteoriteCommand());
+    getCommand("meteoritelist").setExecutor(new MeteoriteListCommand());
+    getCommand("meteoritesetlist").setExecutor(new MeteoriteSetListCommand());
+    getCommand("meteoritesetlist").setTabCompleter(new MeteoriteSetListCommand());
 
-    // Météorite
-    private ArrayList<Meteorite> listMeteorite;
+    getCommand("chat").setExecutor(new ChatCommand());
+    getCommand("chat").setTabCompleter(new ChatCommand());
+  }
 
-    // EventOn instance manager
-    private EventOn eventOn;
+  private void loadListeners() {
+    PluginManager pluginManager = Bukkit.getPluginManager();
+    // Events
+    pluginManager.registerEvents(new CustomEvents(), this);
+    // Disband faction  actions
+    pluginManager.registerEvents(new DisbandFactionEvent(), this);
+    // MeteoriteEvents
+    pluginManager.registerEvents(new MeteoriteEventListener(), this);
 
-    // Scoreboard and Title lists
-    private HashMap<Player, EventManager> eventManagerMap;
-    // Faction rankings
-    private LinkedHashMap<Faction, Integer> factionRankings;
-    // FileConfig
-    private FileConfiguration config;
-    private FileConfiguration messageFileConfiguration;
-    private FileConfiguration kothFileConfiguration;
-    private FileConfiguration totemFileConfiguration;
-    private FileConfiguration dtcFileConfiguration;
-    private FileConfiguration meteoriteFileConfiguration;
-    private FileConfiguration chatEventFileConfiguration;
-    private FileConfiguration planningFileConfiguration;
-    private FileConfiguration eventManagerFileConfiguration;
-    private FileConfiguration classementFileConfiguration;
-    private FileConfiguration logsFileConfiguration;
+    pluginManager.registerEvents(new InventoryEvent(), this);
+  }
 
+  private void instanceListMap() {
+    listKOTH = new ArrayList<>();
+    listTotem = new ArrayList<>();
+    listDTC = new ArrayList<>();
+    listMeteorite = new ArrayList<>();
+    playerTotemEditorHashMap = new HashMap<>();
+    eventManagerMap = new HashMap<>();
+    factionRankings = new LinkedHashMap<>();
+    eventOn = new EventOn();
+  }
 
-    @Override
-    public void onEnable() {
-        instance = this;
-        FileManager.createNeededFiles();
-        FileManager.loadNeededFiles();
-        instanceListMap();
-        loadCommand();
-        loadListeners();
-        loadEvents();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Activation du plugin");
-        startSchedulerForPlanning();
-        actionsForOnlinePlayers();
-        RankingManager.runTaskUpdateRankings();
-    }
+  private void loadEvents() {
+    KOTHManager.loadKOTH();
+    TotemManager.loadTotems();
+    DTCManager.loadDTCfromFile();
+    MeteoriteManager.loadMeteoritesFromFile();
+    planning = loadPlanning();
+  }
 
-    private void actionsForOnlinePlayers() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            EventManager eventManager = EventManager.loadFromFile(player);
-            getEventScoreboardOff().put(player, eventManager);
+  public void reloadPlanning() {
+    this.planning = loadPlanning();
+  }
+
+  private HashMap<String, String> loadPlanning() {
+    HashMap<String, String> planning_load = new HashMap<>();
+    LocalDateTime localDateTime = LocalDateTime.now();
+    int week = DateManager.getWeekOfYear(localDateTime);
+    String base_path = localDateTime.getYear() + "." + week;
+    for (String jour : DateManager.listJour) {
+      String path_jour = base_path + "." + jour;
+      String date = PlanningManager.getDate(path_jour);
+      HashMap<String, List<String>> dailyEvents = PlanningManager.getDailyEvents(path_jour);
+      dailyEvents.forEach((k, v) -> {
+        for (String s : v) {
+          try {
+            String hours = s.split("\\|")[0].split("h")[0];
+            if (hours.length() == 1) {
+              hours = "0" + hours;
+            }
+            String mins = s.split("\\|")[0].split("h")[1];
+            if (mins.length() == 1) {
+              mins = "0" + mins;
+            }
+            String name = s.split("\\|")[1];
+            planning_load.put(date + "-" + hours + "-" + mins, k + "-" + name);
+          } catch (Exception exception) {
+            exception.printStackTrace();
+          }
         }
+      });
     }
+    return planning_load;
+  }
 
-    private void loadCommand() {
-        // Planning
-        getCommand("planning").setExecutor(new PlanningCommand());
-        getCommand("planningadd").setExecutor(new PlanningAddCommand());
-        getCommand("planningadd").setTabCompleter(new PlanningAddCommand());
-        // KOTH
-        getCommand("koth").setExecutor(new KothCommand());
-        getCommand("koth").setTabCompleter(new KothCommand());
-        getCommand("kothlist").setExecutor(new KothListCommand());
-        // Totem
-        getCommand("totem").setExecutor(new TotemCommand());
-        getCommand("totem").setTabCompleter(new TotemCommand());
-        getCommand("totemlist").setExecutor(new TotemListCommand());
-        // DTC
-        getCommand("dtc").setExecutor(new DTCCommand());
-        getCommand("dtc").setTabCompleter(new DTCCommand());
-        getCommand("dtclist").setExecutor(new DTCListCommand());
-        // Event
-        getCommand("event").setExecutor(new EventCommand());
-        getCommand("event").setTabCompleter(new EventCommand());
-        // classement
-        getCommand("classement").setExecutor(new ClassementCommand());
-        getCommand("classement").setTabCompleter(new ClassementCommand());
-        // Meteorite
-        getCommand("meteorite").setExecutor(new MeteoriteCommand());
-        getCommand("meteorite").setTabCompleter(new MeteoriteCommand());
-        getCommand("meteoritelist").setExecutor(new MeteoriteListCommand());
-        getCommand("meteoritesetlist").setExecutor(new MeteoriteSetListCommand());
-        getCommand("meteoritesetlist").setTabCompleter(new MeteoriteSetListCommand());
+  private void cancelAllEvent() {
+    //EventOn.cancelEvents();
+  }
 
-        getCommand("chat").setExecutor(new ChatCommand());
-        getCommand("chat").setTabCompleter(new ChatCommand());
-    }
+  private void startSchedulerForPlanning() {
+    new PlanningScheduler().runTaskTimer(this, 0L, 60 * 20L);
+  }
 
-    private void loadListeners() {
-        PluginManager pluginManager = Bukkit.getPluginManager();
-        // Events
-        pluginManager.registerEvents(new CustomEvents(), this);
-        // Disband faction  actions
-        pluginManager.registerEvents(new DisbandFactionEvent(), this);
-        // MeteoriteEvents
-        pluginManager.registerEvents(new MeteoriteEventListener(), this);
+  @Override
+  public void onDisable() {
+    Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Reloading new files");
+    FileManager.loadNeededFiles();
+    Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Saving new files");
+    FileManager.saveFiles();
+    eventOn.cancelEvent();
+    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Désactivation du plugin");
+  }
 
-        pluginManager.registerEvents(new InventoryEvent(), this);
-    }
+  public HashMap<String, String> getPlanning() {
+    return planning;
+  }
 
-    private void instanceListMap() {
-        listKOTH = new ArrayList<>();
-        listTotem = new ArrayList<>();
-        listDTC = new ArrayList<>();
-        listMeteorite = new ArrayList<>();
-        playerTotemEditorHashMap = new HashMap<>();
-        eventManagerMap = new HashMap<>();
-        factionRankings = new LinkedHashMap<>();
-        eventOn = new EventOn();
-    }
+  public ArrayList<KOTH> getListKOTH() {
+    return listKOTH;
+  }
 
-    private void loadEvents() {
-        KOTHManager.loadKOTH();
-        TotemManager.loadTotems();
-        DTCManager.loadDTCfromFile();
-        MeteoriteManager.loadMeteoritesFromFile();
-        planning = loadPlanning();
-    }
+  public void setListKOTH(ArrayList<KOTH> listKOTH) {
+    this.listKOTH = listKOTH;
+  }
 
-    public void reloadPlanning() {
-        this.planning = loadPlanning();
-    }
+  public ArrayList<Totem> getListTotem() {
+    return listTotem;
+  }
 
-    private HashMap<String, String> loadPlanning() {
-        HashMap<String, String> planning_load = new HashMap<>();
-        LocalDateTime localDateTime = LocalDateTime.now();
-        int week = DateManager.getWeekOfYear(localDateTime);
-        String base_path = localDateTime.getYear() + "." + week;
-        for (String jour : DateManager.listJour) {
-            String path_jour = base_path + "." + jour;
-            String date = PlanningManager.getDate(path_jour);
-            HashMap<String, List<String>> dailyEvents = PlanningManager.getDailyEvents(path_jour);
-            dailyEvents.forEach((k, v) -> {
-                for (String s : v) {
-                    try {
-                        String hours = s.split("\\|")[0].split("h")[0];
-                        if (hours.length() == 1) {
-                            hours = "0" + hours;
-                        }
-                        String mins = s.split("\\|")[0].split("h")[1];
-                        if (mins.length() == 1) {
-                            mins = "0" + mins;
-                        }
-                        String name = s.split("\\|")[1];
-                        planning_load.put(date + "-" + hours + "-" + mins, k + "-" + name);
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                    }
-                }
-            });
-        }
-        return planning_load;
-    }
-
-    private void cancelAllEvent() {
-        //EventOn.cancelEvents();
-    }
-
-    private void startSchedulerForPlanning() {
-        new PlanningScheduler().runTaskTimer(this, 0L, 60 * 20L);
-    }
+  public HashMap<Player, TotemEditor> getPlayerTotemEditorHashMap() {
+    return playerTotemEditorHashMap;
+  }
 
 
-    @Override
-    public void onDisable() {
-        Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Reloading new files");
-        FileManager.loadNeededFiles();
-        Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Saving new files");
-        FileManager.saveFiles();
-        eventOn.cancelEvent();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Désactivation du plugin");
-    }
+  public HashMap<Player, EventManager> getEventScoreboardOff() {
+    return eventManagerMap;
+  }
 
-    public static FactionEvent getInstance() {
-        return instance;
-    }
+  public HashMap<Faction, Integer> getFactionRankings() {
+    return factionRankings;
+  }
 
-    public HashMap<String, String> getPlanning() {
-        return planning;
-    }
+  public void setFactionRankings(LinkedHashMap<Faction, Integer> factionRankings) {
+    this.factionRankings = factionRankings;
+  }
 
-    public void setListKOTH(ArrayList<KOTH> listKOTH) {
-        this.listKOTH = listKOTH;
-    }
+  public ArrayList<DTC> getListDTC() {
+    return listDTC;
+  }
 
-    public ArrayList<KOTH> getListKOTH() {
-        return listKOTH;
-    }
+  public void setListDTC(ArrayList<DTC> listDTC) {
+    this.listDTC = listDTC;
+  }
 
-    public ArrayList<Totem> getListTotem() {
-        return listTotem;
-    }
+  public ArrayList<Meteorite> getListMeteorite() {
+    return listMeteorite;
+  }
 
-    public HashMap<Player, TotemEditor> getPlayerTotemEditorHashMap() {
-        return playerTotemEditorHashMap;
-    }
+  public void setListMeteorite(ArrayList<Meteorite> listMeteorite) {
+    this.listMeteorite = listMeteorite;
+  }
 
+  public EventOn getEventOn() {
+    return eventOn;
+  }
 
-    public HashMap<Player, EventManager> getEventScoreboardOff() {
-        return eventManagerMap;
-    }
-
-    public HashMap<Faction, Integer> getFactionRankings() {
-        return factionRankings;
-    }
-
-    public void setFactionRankings(LinkedHashMap<Faction, Integer> factionRankings) {
-        this.factionRankings = factionRankings;
-    }
-
-    public ArrayList<DTC> getListDTC() {
-        return listDTC;
-    }
-
-    public void setListDTC(ArrayList<DTC> listDTC) {
-        this.listDTC = listDTC;
-    }
-
-    public ArrayList<Meteorite> getListMeteorite() {
-        return listMeteorite;
-    }
-
-    public void setListMeteorite(ArrayList<Meteorite> listMeteorite) {
-        this.listMeteorite = listMeteorite;
-    }
-
-    public EventOn getEventOn() {
-        return eventOn;
-    }
-
-    private void reloadFiles() {
-        FileManager.saveFiles();
-        FileManager.loadNeededFiles();
-    }
+  private void reloadFiles() {
+    FileManager.saveFiles();
+    FileManager.loadNeededFiles();
+  }
 
 
-    public FileConfiguration getFileConfig() {
-        return config;
-    }
+  public FileConfiguration getFileConfig() {
+    return config;
+  }
 
-    public FileConfiguration getMessageFileConfiguration() {
-        return messageFileConfiguration;
-    }
+  public FileConfiguration getMessageFileConfiguration() {
+    return messageFileConfiguration;
+  }
 
-    public FileConfiguration getKothFileConfiguration() {
-        return kothFileConfiguration;
-    }
+  public void setMessageFileConfiguration(FileConfiguration messageFileConfiguration) {
+    this.messageFileConfiguration = messageFileConfiguration;
+  }
 
-    public FileConfiguration getTotemFileConfiguration() {
-        return totemFileConfiguration;
-    }
+  public FileConfiguration getKothFileConfiguration() {
+    return kothFileConfiguration;
+  }
 
-    public FileConfiguration getDtcFileConfiguration() {
-        return dtcFileConfiguration;
-    }
+  public void setKothFileConfiguration(FileConfiguration kothFileConfiguration) {
+    this.kothFileConfiguration = kothFileConfiguration;
+  }
 
-    public FileConfiguration getMeteoriteFileConfiguration() {
-        return meteoriteFileConfiguration;
-    }
+  public FileConfiguration getTotemFileConfiguration() {
+    return totemFileConfiguration;
+  }
 
-    public FileConfiguration getChatEventFileConfiguration() {
-        return chatEventFileConfiguration;
-    }
+  public void setTotemFileConfiguration(FileConfiguration totemFileConfiguration) {
+    this.totemFileConfiguration = totemFileConfiguration;
+  }
 
-    public FileConfiguration getPlanningFileConfiguration() {
-        return planningFileConfiguration;
-    }
+  public FileConfiguration getDtcFileConfiguration() {
+    return dtcFileConfiguration;
+  }
 
-    public FileConfiguration getEventManagerFileConfiguration() {
-        return eventManagerFileConfiguration;
-    }
+  public void setDtcFileConfiguration(FileConfiguration dtcFileConfiguration) {
+    this.dtcFileConfiguration = dtcFileConfiguration;
+  }
 
-    public FileConfiguration getClassementFileConfiguration() {
-        return classementFileConfiguration;
-    }
+  public FileConfiguration getMeteoriteFileConfiguration() {
+    return meteoriteFileConfiguration;
+  }
 
-    public FileConfiguration getLogsFileConfiguration() {
-        return logsFileConfiguration;
-    }
+  public void setMeteoriteFileConfiguration(FileConfiguration meteoriteFileConfiguration) {
+    this.meteoriteFileConfiguration = meteoriteFileConfiguration;
+  }
 
-    public void setConfig(FileConfiguration config) {
-        this.config = config;
-    }
+  public FileConfiguration getChatEventFileConfiguration() {
+    return chatEventFileConfiguration;
+  }
 
-    public void setMessageFileConfiguration(FileConfiguration messageFileConfiguration) {
-        this.messageFileConfiguration = messageFileConfiguration;
-    }
+  public void setChatEventFileConfiguration(FileConfiguration chatEventFileConfiguration) {
+    this.chatEventFileConfiguration = chatEventFileConfiguration;
+  }
 
-    public void setKothFileConfiguration(FileConfiguration kothFileConfiguration) {
-        this.kothFileConfiguration = kothFileConfiguration;
-    }
+  public FileConfiguration getPlanningFileConfiguration() {
+    return planningFileConfiguration;
+  }
 
-    public void setTotemFileConfiguration(FileConfiguration totemFileConfiguration) {
-        this.totemFileConfiguration = totemFileConfiguration;
-    }
+  public void setPlanningFileConfiguration(FileConfiguration planningFileConfiguration) {
+    this.planningFileConfiguration = planningFileConfiguration;
+  }
 
-    public void setDtcFileConfiguration(FileConfiguration dtcFileConfiguration) {
-        this.dtcFileConfiguration = dtcFileConfiguration;
-    }
+  public FileConfiguration getEventManagerFileConfiguration() {
+    return eventManagerFileConfiguration;
+  }
 
-    public void setMeteoriteFileConfiguration(FileConfiguration meteoriteFileConfiguration) {
-        this.meteoriteFileConfiguration = meteoriteFileConfiguration;
-    }
+  public void setEventManagerFileConfiguration(FileConfiguration eventManagerFileConfiguration) {
+    this.eventManagerFileConfiguration = eventManagerFileConfiguration;
+  }
 
-    public void setChatEventFileConfiguration(FileConfiguration chatEventFileConfiguration) {
-        this.chatEventFileConfiguration = chatEventFileConfiguration;
-    }
+  public FileConfiguration getClassementFileConfiguration() {
+    return classementFileConfiguration;
+  }
 
-    public void setPlanningFileConfiguration(FileConfiguration planningFileConfiguration) {
-        this.planningFileConfiguration = planningFileConfiguration;
-    }
+  public void setClassementFileConfiguration(FileConfiguration classementFileConfiguration) {
+    this.classementFileConfiguration = classementFileConfiguration;
+  }
 
-    public void setEventManagerFileConfiguration(FileConfiguration eventManagerFileConfiguration) {
-        this.eventManagerFileConfiguration = eventManagerFileConfiguration;
-    }
+  public FileConfiguration getLogsFileConfiguration() {
+    return logsFileConfiguration;
+  }
 
-    public void setClassementFileConfiguration(FileConfiguration classementFileConfiguration) {
-        this.classementFileConfiguration = classementFileConfiguration;
-    }
+  public void setLogsFileConfiguration(FileConfiguration logsFileConfiguration) {
+    this.logsFileConfiguration = logsFileConfiguration;
+  }
 
-    public void setLogsFileConfiguration(FileConfiguration logsFileConfiguration) {
-        this.logsFileConfiguration = logsFileConfiguration;
-    }
+  public void setConfig(FileConfiguration config) {
+    this.config = config;
+  }
 
 }

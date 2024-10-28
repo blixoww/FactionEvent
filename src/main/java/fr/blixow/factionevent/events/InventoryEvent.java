@@ -6,11 +6,11 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 
 public class InventoryEvent implements Listener {
 
-    @EventHandler
-    public void onClick(InventoryClickEvent event){
-        if(event.getInventory().getName().equals("§cPlanning des event faction")){
-            event.setCancelled(true);
-        }
+  @EventHandler
+  public void onClick(InventoryClickEvent event) {
+    if (event.getInventory().getName().equals("§cPlanning des event faction")) {
+      event.setCancelled(true);
     }
+  }
 }
 
