@@ -1,7 +1,7 @@
 package fr.blixow.factionevent;
 
 import com.massivecraft.factions.Faction;
-import fr.blixow.factionevent.commands.chat.ChatCommand;
+import fr.blixow.factionevent.commands.chat.WordGuessCommand;
 import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;
 import fr.blixow.factionevent.commands.dtc.DTCListCommand;
@@ -137,8 +137,10 @@ public final class FactionEvent extends JavaPlugin {
     getCommand("meteoritesetlist").setExecutor(new MeteoriteSetListCommand());
     getCommand("meteoritesetlist").setTabCompleter(new MeteoriteSetListCommand());
 
-    getCommand("chat").setExecutor(new ChatCommand());
-    getCommand("chat").setTabCompleter(new ChatCommand());
+    // Word chat guesser
+    getCommand("wcg").setExecutor(new WordGuessCommand());
+    getCommand("wcg").setTabCompleter(new WordGuessCommand());
+    getCommand("guess").setExecutor(new WordGuessCommand.Guess());
   }
 
   private void loadListeners() {
