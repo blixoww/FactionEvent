@@ -7,6 +7,8 @@ import fr.blixow.factionevent.commands.dtc.DTCListCommand;
 import fr.blixow.factionevent.commands.events.EventCommand;
 import fr.blixow.factionevent.commands.koth.KothCommand;
 import fr.blixow.factionevent.commands.koth.KothListCommand;
+import fr.blixow.factionevent.commands.lms.LMSCommand;
+import fr.blixow.factionevent.commands.lms.LMSListCommand;
 import fr.blixow.factionevent.commands.planning.PlanningAddCommand;
 import fr.blixow.factionevent.commands.planning.PlanningCommand;
 import fr.blixow.factionevent.commands.planning.PlanningRemoveCommand;
@@ -23,6 +25,8 @@ import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.event.EventOn;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
+import fr.blixow.factionevent.utils.lms.LMS;
+import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
@@ -51,6 +55,9 @@ public final class FactionEvent extends JavaPlugin {
     // DTC
     private ArrayList<DTC> listDTC;
 
+    // LMS
+    private ArrayList<LMS> listLMS;
+
     // EventOn instance manager
     private EventOn eventOn;
 
@@ -64,7 +71,7 @@ public final class FactionEvent extends JavaPlugin {
     private FileConfiguration kothFileConfiguration;
     private FileConfiguration totemFileConfiguration;
     private FileConfiguration dtcFileConfiguration;
-    private FileConfiguration meteoriteFileConfiguration;
+    private FileConfiguration lmsFileConfiguration;
     private FileConfiguration planningFileConfiguration;
     private FileConfiguration eventManagerFileConfiguration;
     private FileConfiguration classementFileConfiguration;
@@ -111,6 +118,12 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("dtc").setExecutor(new DTCCommand());
         getCommand("dtc").setTabCompleter(new DTCCommand());
         getCommand("dtclist").setExecutor(new DTCListCommand());
+
+        // LMS
+        getCommand("lms").setExecutor(new LMSCommand());
+        getCommand("lms").setTabCompleter(new LMSCommand());
+        getCommand("lmslist").setExecutor(new LMSListCommand());
+
         // Event
         getCommand("event").setExecutor(new EventCommand());
         getCommand("event").setTabCompleter(new EventCommand());
@@ -133,6 +146,7 @@ public final class FactionEvent extends JavaPlugin {
         listKOTH = new ArrayList<>();
         listTotem = new ArrayList<>();
         listDTC = new ArrayList<>();
+        listLMS = new ArrayList<>();
         playerTotemEditorHashMap = new HashMap<>();
         eventManagerMap = new HashMap<>();
         factionRankings = new LinkedHashMap<>();
@@ -143,6 +157,7 @@ public final class FactionEvent extends JavaPlugin {
         KOTHManager.loadKOTH();
         TotemManager.loadTotems();
         DTCManager.loadDTCfromFile();
+        LMSManager.loadLMSfromFile();
         planning = loadPlanning();
     }
 
@@ -151,6 +166,7 @@ public final class FactionEvent extends JavaPlugin {
     }
 
     private HashMap<String, String> loadPlanning() {
+        // TODO : add LMS to planning
         HashMap<String, String> scheduleMap = new HashMap<>();
         LocalDateTime currentDateTime = LocalDateTime.now();
         int currentWeek = DateManager.getWeekOfYear(currentDateTime);
@@ -244,6 +260,14 @@ public final class FactionEvent extends JavaPlugin {
         this.listDTC = listDTC;
     }
 
+    public void setListLMS(ArrayList<LMS> listLMS) {
+        this.listLMS = listLMS;
+    }
+
+    public ArrayList<LMS> getListLMS() {
+        return listLMS;
+    }
+
     public EventOn getEventOn() {
         return eventOn;
     }
@@ -274,10 +298,9 @@ public final class FactionEvent extends JavaPlugin {
         return dtcFileConfiguration;
     }
 
-    public FileConfiguration getMeteoriteFileConfiguration() {
-        return meteoriteFileConfiguration;
+    public FileConfiguration getLMSFileConfiguration() {
+        return lmsFileConfiguration;
     }
-
     public FileConfiguration getPlanningFileConfiguration() {
         return planningFileConfiguration;
     }
@@ -314,8 +337,8 @@ public final class FactionEvent extends JavaPlugin {
         this.dtcFileConfiguration = dtcFileConfiguration;
     }
 
-    public void setMeteoriteFileConfiguration(FileConfiguration meteoriteFileConfiguration) {
-        this.meteoriteFileConfiguration = meteoriteFileConfiguration;
+    public void setLMSFileConfiguration(FileConfiguration lmsFileConfiguration) {
+        this.lmsFileConfiguration = lmsFileConfiguration;
     }
 
     public void setPlanningFileConfiguration(FileConfiguration planningFileConfiguration) {

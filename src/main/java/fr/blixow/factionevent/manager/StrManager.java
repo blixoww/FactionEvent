@@ -89,10 +89,10 @@ public class StrManager {
         return this;
     }
 
-    public StrManager reMeteorite(String meteorite){
+    public StrManager reLMS(String LMSname){
         try {
-            this.message = this.message.replaceAll("\\{meteorite}", meteorite);
-            this.message = this.message.replaceAll("\\{meteoriteL}", meteorite.toLowerCase());
+            this.message = this.message.replaceAll("\\{lms}", LMSname);
+            this.message = this.message.replaceAll("\\{lmsL}", LMSname.toLowerCase());
         } catch (Exception exception){ exception.printStackTrace(); }
         return this;
     }

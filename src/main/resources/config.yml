@@ -31,14 +31,11 @@ dtc:
   # Nombre de points reçus par la faction gagnante :)
   win_points: 10
 
-meteorite:
-  # Temps en secondes nécessaire pour vérifier le temps pour la météorite (en secondes)
-  check_time: 1
+lms:
+  # Temps en secondes nécessaire pour vérifier le temps pour les lms (en secondes)
+  check_time: 10
+  # Temps minimum de création d'une faction pour participer à l'événement (en secondes)
+  min_faction_time: 86400
   # Temps maximum de l'événement
-  max_duration: 1800 # 1800 → 30 minutes
-
-chat:
-  max_time: 60.0 # en secondes
-  recompense_money: 1000 # en argent ($)
-
+  win_points: 20
 

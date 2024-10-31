@@ -8,6 +8,7 @@ import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
+import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemManager;
 import org.bukkit.command.Command;
@@ -165,7 +166,7 @@ public class PlanningRemoveCommand implements TabExecutor {
         List<String> stringList = new ArrayList<>();
         List<String> customs = new ArrayList<>();
         if (args.length == 1) {
-            customs = new ArrayList<>(Arrays.asList("koth", "totem", "dtc", "meteorite"));
+            customs = new ArrayList<>(Arrays.asList("koth", "totem", "dtc", "lms"));
         } else if (args.length == 2) {
             if (args[0].equalsIgnoreCase("koth")) {
                 customs = KOTHManager.getListKothNames();
@@ -173,6 +174,8 @@ public class PlanningRemoveCommand implements TabExecutor {
                 customs = TotemManager.getListTotemNames();
             } else if (args[0].equalsIgnoreCase("dtc")) {
                 customs = DTCManager.getDTCNames();
+            } else if (args[0].equalsIgnoreCase("lms")) {
+                customs = LMSManager.getListLMSNames();
             }
         } else if (args.length == 3) {
             customs = new ArrayList<>(Arrays.asList("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"));

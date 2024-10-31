@@ -23,6 +23,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -141,4 +142,13 @@ public class CustomEvents implements Listener {
             }
         }
     }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
+            FactionEvent.getInstance().getEventOn().getLMSEvent().handlePlayerDeath(player);
+        }
+    }
+
 }

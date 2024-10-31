@@ -104,10 +104,9 @@ public class FileManager {
         return FactionEvent.getInstance().getTotemFileConfiguration();
     }
 
-    public static FileConfiguration getMeteoriteDataFC() {
-        return FactionEvent.getInstance().getMeteoriteFileConfiguration();
+    public static FileConfiguration getLMSDataFC() {
+        return FactionEvent.getInstance().getLMSFileConfiguration();
     }
-
     public static FileConfiguration getPlanningDataFC() {
         return FactionEvent.getInstance().getPlanningFileConfiguration();
     }
@@ -135,7 +134,7 @@ public class FileManager {
         FileManager.createDataFile("koth.yml");
         FileManager.createDataFile("totem.yml");
         FileManager.createDataFile("dtc.yml");
-        FileManager.createDataFile("meteorite.yml");
+        FileManager.createDataFile("lms.yml");
         FileManager.createDataFile("planning.yml", false);
         FileManager.createDataFile("eventManager.yml");
         FileManager.createDataFile("classement.yml");
@@ -150,7 +149,7 @@ public class FileManager {
             instance.setKothFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/koth.yml")));
             instance.setTotemFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/totem.yml")));
             instance.setDtcFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/dtc.yml")));
-            instance.setMeteoriteFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/meteorite.yml")));
+            instance.setLMSFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/lms.yml")));
             instance.setPlanningFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/planning.yml")));
             instance.setEventManagerFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/eventManager.yml")));
             instance.setClassementFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/classement.yml")));
@@ -171,7 +170,7 @@ public class FileManager {
             instance.getKothFileConfiguration().save(getDataFile("koth.yml"));
             instance.getTotemFileConfiguration().save(getDataFile("totem.yml"));
             instance.getDtcFileConfiguration().save(getDataFile("dtc.yml"));
-            instance.getMeteoriteFileConfiguration().save(getDataFile("meteorite.yml"));
+            instance.getLMSFileConfiguration().save(getDataFile("lms.yml"));
             instance.getPlanningFileConfiguration().save(getDataFile("planning.yml"));
             instance.getEventManagerFileConfiguration().save(getDataFile("eventManager.yml"));
             instance.getClassementFileConfiguration().save(getDataFile("classement.yml"));
@@ -179,5 +178,4 @@ public class FileManager {
             e.printStackTrace();
         }
     }
-
 }

@@ -8,6 +8,8 @@ import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.lms.LMS;
+import fr.blixow.factionevent.utils.lms.LMSEvent;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
@@ -21,6 +23,7 @@ public class EventOn {
     private KOTHEvent kothEvent;
     private TotemEvent totemEvent;
     private DTCEvent dtcEvent;
+    private LMSEvent lmsEvent;
     private ArrayList<Object> queue;
     private final FileConfiguration msg;
 
@@ -29,6 +32,7 @@ public class EventOn {
         this.kothEvent = null;
         this.totemEvent = null;
         this.dtcEvent = null;
+        this.lmsEvent = null;
         this.queue = new ArrayList<>();
         new BukkitRunnable() {
             @Override
@@ -46,6 +50,9 @@ public class EventOn {
                             } else if (o instanceof DTC) {
                                 DTC dtc = (DTC) o;
                                 dtc.start();
+                            } else if (o instanceof LMS) {
+                                LMS lms = (LMS) o;
+                                lms.startRegistration();
                             }
                             queue.remove(0);
                         }
@@ -164,6 +171,37 @@ public class EventOn {
         queue.add(totem);
     }
 
+    public void start(LMS lms, Player... players) {
+        if (this.canStartAnEvent()) {
+            this.lmsEvent = new LMSEvent(lms, lms.getRegisteredPlayers(), FileManager.getConfig(), lms);
+            lms.startRegistration();
+            FileConfiguration configuration = FileManager.getConfig();
+
+            Bukkit.broadcastMessage(msg.getString("lms.prefix") + " L'événement " + lms.getName() + " est ouvert. Inscrivez-vous pour participer !");
+            int check_time = 10;
+            try {
+                if (configuration.contains("lms.check_time")) {
+                    check_time = configuration.getInt("lms.check_time");
+                }
+            } catch (Exception ignored) {
+            }
+            check_time = check_time > 0 ? check_time : 1;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (lmsEvent == null) {
+                        lms.stop();
+                        cancel();
+                    } else {
+                        lmsEvent.startCombat();
+                    }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), (lms.getRegistrationTime() + lms.getPrepTime()) * 20L, check_time * 20L);
+            return;
+        }
+        queue.add(lms);
+        FactionMessageTitle.sendPlayersMessage(msg.getString("lms.prefix") + " L'événement " + lms.getName() + " a été ajouté à la file d'attente.", players);
+    }
 
     public void stopCurrentEvent() {
         if (!canStartAnEvent()) {
@@ -176,14 +214,17 @@ public class EventOn {
             if (dtcEvent != null) {
                 dtcEvent.getDtc().stop();
             }
+            if (lmsEvent != null) {
+                lmsEvent.getLMS().stop();
+            }
         }
     }
 
-    public void cancelEvent(){
+    public void cancelEvent() {
         try {
             queue = new ArrayList<>();
             stopCurrentEvent();
-        } catch (Exception exception){
+        } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
@@ -204,6 +245,10 @@ public class EventOn {
         return totemEvent;
     }
 
+    public LMSEvent getLMSEvent() {
+        return lmsEvent;
+    }
+
     public void setKothEvent(KOTHEvent kothEvent) {
         this.kothEvent = kothEvent;
     }
@@ -214,6 +259,10 @@ public class EventOn {
 
     public void setDtcEvent(DTCEvent dtcEvent) {
         this.dtcEvent = dtcEvent;
+    }
+
+    public void setLMSEvent(LMSEvent lmsEvent) {
+        this.lmsEvent = lmsEvent;
     }
 
     public void setQueue(ArrayList<Object> queue) {

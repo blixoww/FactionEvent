@@ -16,7 +16,7 @@ public class KothListCommand implements CommandExecutor {
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         String title = "§8§m----§r§8[ §cKOTH §8]§m----";
         try { title = msg.getString("kothlist.title"); } catch (Exception exception){ exception.printStackTrace(); }
-        String message, empty = "§7Aucun totem n'a été créé";
+        String message, empty = "§7Aucun KOTH n'a été créé";
         sender.sendMessage(title);
         sender.sendMessage("");
         if(FactionEvent.getInstance().getListKOTH().isEmpty()){
