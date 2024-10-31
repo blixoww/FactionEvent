@@ -3,6 +3,7 @@ package fr.blixow.factionevent.manager;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.koth.KOTH;
+import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.totem.Totem;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -92,6 +93,17 @@ public class PlanningManager {
                     h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
                     m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
                     listeEvents.add("§eDTC / Nexus §6" + nom + " §7à §c" + h + "h" + m);
+                }
+            }
+
+            for (LMS lms : FactionEvent.getInstance().getListLMS()) {
+                String nom = lms.getName();
+                String path_lms = path + ".lms." + nom;
+                List<String> stringList = fc.getStringList(path_lms);
+                for (String str : stringList) {
+                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
+                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
+                    listeEvents.add("§eLMS §6" + nom + " §7à §c" + h + "h" + m);
                 }
             }
 

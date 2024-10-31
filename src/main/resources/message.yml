@@ -46,6 +46,8 @@ planning:
   time_syntaxe: "§cErreur: §7Syntaxe pour la date : jour-heure-minute §e(Jeudi 16-00)"
   num_sem_req: "§7Numéro de semaine requis."
   no_event: "§7Aucun événement prévu."
+  not_exist: "§7L'événement §c{event} §7n'existe pas."
+  remove: "§7L'événement §c{event} §7a été supprimé."
 totem:
   prefix: "§8[§cTotem§8]§7 "
   usage: "§cCommande: §7/totem <nom> <action>\n§cActions: §fcreate/edit/save/pos/start/stop/info"

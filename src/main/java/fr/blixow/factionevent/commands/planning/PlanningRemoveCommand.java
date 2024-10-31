@@ -144,6 +144,34 @@ public class PlanningRemoveCommand implements TabExecutor {
                                 } catch (Exception exception) {
                                     exception.printStackTrace();
                                 }
+                            case "lms":
+                                List<String> lmsList = new ArrayList<>();
+                                try {
+                                    String valeurJour = args[2];
+                                    String lmsPath = valeurJour + ".lms";
+
+                                    if (fc.contains(lmsPath + "." + args[1])) {
+                                        lmsList = fc.getStringList(lmsPath + "." + args[1]);
+                                    } else {
+                                        player.sendMessage(prefix + new StrManager(msg.getString("planning.not_exist")).reType(args[0]).reLMS(args[1]).reTime(valeurJour).toString());
+                                        return true;
+                                    }
+
+                                    if (!lmsList.contains(heure + "h" + minutes)) {
+                                        player.sendMessage(prefix + new StrManager(msg.getString("planning.not_exist")).reType(args[0]).reLMS(args[1]).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
+                                        return true;
+                                    }
+
+                                    lmsList.remove(heure + "h" + minutes);
+                                    fc.set(lmsPath + "." + args[1], lmsList);
+                                    fc.save(FileManager.getDataFile("planning.yml"));
+                                    player.sendMessage(pPrefix + new StrManager(msg.getString("planning.remove")).reType(args[0]).reLMS(args[1]).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
+
+                                    FactionEvent.getInstance().reloadPlanning();
+                                    break;
+                                } catch (Exception exception) {
+                                    exception.printStackTrace();
+                                }
                         }
 
                     } else {

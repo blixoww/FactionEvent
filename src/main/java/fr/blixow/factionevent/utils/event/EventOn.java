@@ -177,7 +177,7 @@ public class EventOn {
             lms.startRegistration();
             FileConfiguration configuration = FileManager.getConfig();
 
-            Bukkit.broadcastMessage(msg.getString("lms.prefix") + " L'événement " + lms.getName() + " est ouvert. Inscrivez-vous pour participer !");
+            Bukkit.broadcastMessage(msg.getString("lms.prefix") + new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString());
             int check_time = 10;
             try {
                 if (configuration.contains("lms.check_time")) {
@@ -200,7 +200,7 @@ public class EventOn {
             return;
         }
         queue.add(lms);
-        FactionMessageTitle.sendPlayersMessage(msg.getString("lms.prefix") + " L'événement " + lms.getName() + " a été ajouté à la file d'attente.", players);
+        FactionMessageTitle.sendPlayersMessage(msg.getString("lms.prefix") + new StrManager(msg.getString("lms.adding_to_queue")).reLMS(lms.getName()).toString(), players);
     }
 
     public void stopCurrentEvent() {
