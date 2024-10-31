@@ -1,5 +1,8 @@
 package fr.blixow.factionevent.events;
 
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.EventManager;
 import fr.blixow.factionevent.manager.FileManager;
@@ -18,9 +21,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+
+import java.util.Map;
 
 
 public class CustomEvents implements Listener {
@@ -87,7 +93,27 @@ public class CustomEvents implements Listener {
                 if(dtcEvent != null){ event.setCancelled(true); dtcEvent.hit(player, event.getFinalDamage()); }
             }
         }
+    }
+    @EventHandler
+    public void onPlayerChat(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+        Faction faction = fPlayer.getFaction();
+        String format = event.getFormat();
 
+        if (!faction.isWilderness()) {
+            Map<Faction, Integer> rankings = FactionEvent.getInstance().getFactionRankings();
+            int factionRank = 1;
+            for (Faction faction1 : rankings.keySet()) {
+                if (faction1.equals(faction)) {
+                    String prefix = FileManager.getMessageFileConfiguration().getString("chat_format.faction_rank_prefix");
+                    String newFormat = prefix.replace("%faction_rank%", String.valueOf(factionRank)) + " [FACTION] " + format;
+                    event.setFormat(newFormat);
+                    break;
+                }
+                factionRank++;
+            }
+        }
     }
 
 }

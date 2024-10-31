@@ -3,6 +3,7 @@ package fr.blixow.factionevent.utils;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.enumeration.DayEnum;
 import fr.blixow.factionevent.manager.FileManager;
+import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
@@ -10,6 +11,7 @@ import fr.blixow.factionevent.utils.meteorite.Meteorite;
 import fr.blixow.factionevent.utils.meteorite.MeteoriteManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemManager;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -18,86 +20,94 @@ import java.util.List;
 
 public class PlanningScheduler extends BukkitRunnable {
 
+    private int messageCounter = 0;
 
     @Override
     public void run() {
         try {
             LocalDateTime localDateTime = LocalDateTime.now();
-
             String day = String.valueOf(DayEnum.valueOf(localDateTime.getDayOfWeek().toString()).getValeur());
             FileConfiguration planning = FileManager.getPlanningDataFC();
+            FileConfiguration messageConfiguration = FileManager.getMessageFileConfiguration();
 
-            for(KOTH koth : FactionEvent.getInstance().getListKOTH()) {
+            for (KOTH koth : FactionEvent.getInstance().getListKOTH()) {
                 String nom = koth.getName();
                 String path_koth = day + ".koth." + nom;
                 List<String> stringList = planning.getStringList(path_koth);
-                for(String str : stringList){
-                    String m = "", h = "";
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-
-                    String time = h + "h" + m;
-                    if(time.equals(localDateTime.getHour() + "h" + localDateTime.getMinute())){
-                        KOTH kothToLaunch = KOTH.getKOTH(nom);
-                        assert kothToLaunch != null;
-                        kothToLaunch.start();
+                for (String str : stringList) {
+                    int hour = Integer.parseInt(str.split("h")[0]);
+                    int minute = Integer.parseInt(str.split("h")[1]);
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
+                    if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
+                        String message = messageConfiguration.getString("koth.prefix") + new StrManager(messageConfiguration.getString("koth.starting_in_5mins")).reKoth(koth.getName()).toString();
+                        Bukkit.broadcastMessage(message);
+                        messageCounter++;
+                    } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
+                        String message = messageConfiguration.getString("koth.prefix") + new StrManager(messageConfiguration.getString("koth.starting_in_1mins")).reKoth(koth.getName()).toString();
+                        Bukkit.broadcastMessage(message);
+                        messageCounter++;
+                    }
+                    else if (hour == now.getHour() && minute == now.getMinute()) {
+                        koth.start();
+                        messageCounter = 0;
                     }
                 }
             }
 
-            for(DTC dtc : FactionEvent.getInstance().getListDTC()) {
+            for (DTC dtc : FactionEvent.getInstance().getListDTC()) {
                 String nom = dtc.getName();
                 String path_dtc = day + ".dtc." + nom;
                 List<String> stringList = planning.getStringList(path_dtc);
-                for(String str : stringList){
-                    String m = "", h = "";
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-
-                    String time = h + "h" + m;
-                    if(time.equals(localDateTime.getHour() + "h" + localDateTime.getMinute())){
-                        DTC dtcToLaunch = DTCManager.getDTCbyName(nom);
-                        assert dtcToLaunch != null;
-                        dtcToLaunch.start();
+                for (String str : stringList) {
+                    int hour = Integer.parseInt(str.split("h")[0]);
+                    int minute = Integer.parseInt(str.split("h")[1]);
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
+                    if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
+                        String message = messageConfiguration.getString("dtc.prefix") + new StrManager(messageConfiguration.getString("dtc.starting_in_5mins")).reDTC(dtc.getName()).toString();
+                        Bukkit.broadcastMessage(message);
+                        messageCounter++;
+                    } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
+                        String message = messageConfiguration.getString("dtc.prefix") + new StrManager(messageConfiguration.getString("dtc.starting_in_1mins")).reDTC(dtc.getName()).toString();
+                        Bukkit.broadcastMessage(message);
+                        messageCounter++;
+                    }
+                    else if (hour == now.getHour() && minute == now.getMinute()) {
+                        dtc.start();
+                        messageCounter = 0;
                     }
                 }
             }
 
-            for(Totem totem : FactionEvent.getInstance().getListTotem()) {
+            for (Totem totem : FactionEvent.getInstance().getListTotem()) {
                 String nom = totem.getName();
                 String path_totem = day + ".totem." + nom;
                 List<String> stringList = planning.getStringList(path_totem);
-                for(String str : stringList){
-                    String m = "", h = "";
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-
-                    String time = h + "h" + m;
-                    if(time.equals(localDateTime.getHour() + "h" + localDateTime.getMinute())){
-                        Totem totemToLaunch = TotemManager.getTotem(nom);
-                        assert totemToLaunch != null;
-                        totemToLaunch.start();
+                for (String str : stringList) {
+                    int hour = Integer.parseInt(str.split("h")[0]);
+                    int minute = Integer.parseInt(str.split("h")[1]);
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
+                    if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
+                        String message = messageConfiguration.getString("totem.prefix") + new StrManager(messageConfiguration.getString("totem.starting_in_5mins")).reTotem(totem.getName()).toString();
+                        Bukkit.broadcastMessage(message);
+                        messageCounter++;
+                    } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
+                        String message = messageConfiguration.getString("totem.prefix") + new StrManager(messageConfiguration.getString("totem.starting_in_1mins")).reTotem(totem.getName()).toString();
+                        Bukkit.broadcastMessage(message);
+                        messageCounter++;
+                    }
+                    else if (hour == now.getHour() && minute == now.getMinute()) {
+                        totem.start();
+                        messageCounter = 0;
                     }
                 }
             }
 
-            for(Meteorite totem : FactionEvent.getInstance().getListMeteorite()) {
-                String nom = totem.getName();
-                String path_meteorite = day + ".meteorite." + nom;
-                List<String> stringList = planning.getStringList(path_meteorite);
-                for(String str : stringList){
-                    String m = "", h = "";
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-
-                    String time = h + "h" + m;
-                    if(time.equals(localDateTime.getHour() + "h" + localDateTime.getMinute())){
-                        Meteorite meteoriteToLaunch = MeteoriteManager.getMeteoriteByName(nom);
-                        assert meteoriteToLaunch != null;
-                        meteoriteToLaunch.start();
-                    }
-                }
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 }

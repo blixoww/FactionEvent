@@ -25,7 +25,8 @@ koth:
   faction_point: "§a+{points} points §7classement ajouté à votre faction."
   time_in: "§7Conquête§8: §c{time}§f/§c{maxtime}"
   adding_to_queue: "§7Un événément est déjà en cours, le koth §c{koth} §7sera lancé automatiquement par la suite."
-  starting_in_5mins: "§7Le koth §c{koth}\n §7devrait apparaître dans 5 minutes"
+  starting_in_5mins: "§7Le koth §c{koth} §7va commencer dans §c5 §7minutes."
+  starting_in_1mins: "§7Le koth §c{koth} §7va commencer dans §c1 §7minute."
   scoreboard:
     title: "§8[§cKOTH§8]"
     lines:
@@ -71,7 +72,8 @@ totem:
   blocks_left: "§7Il reste §c{blocks}§7/§c{maxblocks} §7blocks."
   setup: "§7Le totem §c{totem} §8[§e/warp {totemL}§8] §7a été planifié pour le §c{time}§7."
   adding_to_queue: "§7Un événément est déjà en cours, le totem §c{totem} §7sera lancé automatiquement par la suite."
-  starting_in_5mins: "§7Le totem §c{totem}\n §7devrait apparaître dans 5 minutes"
+  starting_in_5mins: "§7Le totem §c{totem} §7va commencer dans §c5 §7minutes."
+  starting_in_1mins: "§7Le totem §c{totem} §7va commencer dans §c1 §7minute."
 dtc:
   prefix: "§8[§cDTC§8]§7 "
   usage: "§cCommande: §7/dtc <nom> <action>\n§cActions: §fcreate/pos/start/stop/info"
@@ -89,7 +91,8 @@ dtc:
   life_left_sb: "§c{life}§4❤ §f/ §c{max_life}§4❤"
   setup: "§7Le DTC §c{dtc} §8[§e/warp {dtcL}§8] §7a été planifié pour le §c{time}§7."
   adding_to_queue: "§7Un événément est déjà en cours, le dtc §c{dtc} §7sera lancé automatiquement par la suite."
-  starting_in_5mins: "§7Le DTC §c{dtc}\n §7devrait apparaître dans 5 minutes"
+  starting_in_5mins: "§7Le Nexus §c{dtc} §7va commencer dans §c5 §7minutes."
+  starting_in_1mins: "§7Le Nexus §c{dtc} §7va commencer dans §c1 §7minute."
   scoreboard:
     title: "§8[§cDTC§8]"
     lines:
