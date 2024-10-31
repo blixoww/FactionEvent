@@ -12,13 +12,11 @@ public enum DayEnum {
 
     private final String valeur;
 
-    private DayEnum(String valeur) {
+    DayEnum(String valeur) {
         this.valeur = valeur ;
     }
 
     public String getValeur() {
         return  this.valeur ;
     }
-
-
 }

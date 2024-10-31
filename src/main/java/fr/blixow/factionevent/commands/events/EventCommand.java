@@ -21,48 +21,38 @@ public class EventCommand implements TabExecutor {
             if(sender instanceof Player){
                 Player player = (Player)sender;
                 if(!FactionEvent.getInstance().getEventScoreboardOff().containsKey(player)){
-                    EventManager eventManager1 = EventManager.loadFromFile(player); // todo récupérer valeurs from events.yml
-                    FactionEvent.getInstance().getEventScoreboardOff().put(player, eventManager1);
+                    EventManager eventManager = EventManager.loadFromFile(player);
+                    FactionEvent.getInstance().getEventScoreboardOff().put(player, eventManager);
                 }
                 if(args.length == 0){
-                    // todo affiche infos :)
-                    if(FactionEvent.getInstance().getEventScoreboardOff().containsKey(player)){
-                        EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
-                        String scoreboard = eventManager.isScoreboard() ? "§aActivé" : "§cDésactivé";
-                        String title = eventManager.isTitle() ? "§aActivé" : "§cDésactivé";
-                        player.sendMessage("§7§m----§r§7[ §cEVENT §7]§m----");
-                        player.sendMessage("");
-                        player.sendMessage("§8» §7Scoreboard: " + scoreboard);
-                        player.sendMessage("§8» §7Titre: " + title);
-                        player.sendMessage("");
-                    } else {
-                        player.sendMessage("§cErreur lors de la récupération de vos informations");
-                    }
-                }  else if(args.length == 1){
-
-                    if(FactionEvent.getInstance().getEventScoreboardOff().containsKey(player)){
-                        FileConfiguration fc = FileManager.getEventManagerFC();
-                        EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
-                        switch(args[0]){
-                            case "scoreboard":
-                                eventManager.switchScoreboard(player);
-                                eventManager.saveFile();
-                                break;
-                            case "title":
-                                eventManager.switchTitle(player);
-                                eventManager.saveFile();
-                                break;
-                            case "actionbar":
-                                eventManager.switchActionbar(player);
-                                eventManager.saveFile();
-
-                                break;
-                        }
-                    } else {
-                        player.sendMessage("§cErreur??");
+                    EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
+                    String scoreboard = eventManager.isScoreboard() ? "§aActivé" : "§cDésactivé";
+                    String title = eventManager.isTitle() ? "§aActivé" : "§cDésactivé";
+                    String actionbar = eventManager.isActionbar() ? "§aActivé" : "§cDésactivé";
+                    player.sendMessage("§7§m----§r§7[ §cEVENT §7]§m----");
+                    player.sendMessage("");
+                    player.sendMessage("§8» §7Scoreboard: " + scoreboard);
+                    player.sendMessage("§8» §7Title: " + title);
+                    player.sendMessage("§8» §7Actionbar: " + actionbar);
+                    player.sendMessage("");
+                } else if(args.length == 1){
+                    EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
+                    switch(args[0]){
+                        case "scoreboard":
+                            eventManager.switchScoreboard(player);
+                            eventManager.saveFile();
+                            break;
+                        case "title":
+                            eventManager.switchTitle(player);
+                            eventManager.saveFile();
+                            break;
+                        case "actionbar":
+                            eventManager.switchActionbar(player);
+                            eventManager.saveFile();
+                            break;
                     }
                 } else {
-                    player.sendMessage("§7Commande: §f/" + label.toLowerCase() + " <scoreboard/title>");
+                    player.sendMessage("§7Commande: §f/" + label.toLowerCase() + " <scoreboard/title/actionbar>");
                 }
                 return true;
             }
@@ -72,7 +62,6 @@ public class EventCommand implements TabExecutor {
             exception.printStackTrace();
             return true;
         }
-
     }
 
     /**
@@ -88,12 +77,14 @@ public class EventCommand implements TabExecutor {
      */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        List<String> list = Arrays.asList("scoreboard", "title");
+        List<String> list = Arrays.asList("scoreboard", "title", "actionbar");
         List<String> stringList = new ArrayList<>();
         if(args.length == 1){
-           for(String l : list){ if(l.toLowerCase().startsWith(args[0].toLowerCase())){ stringList.add(l); } }
-           if(stringList.isEmpty()){ stringList = list; }
+            for(String l : list){ if(l.toLowerCase().startsWith(args[0].toLowerCase())){ stringList.add(l); } }
+            if(stringList.isEmpty()){ stringList = list; }
         }
         return stringList;
     }
 }
+
+

@@ -9,21 +9,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DTC {
 
-    private String name;
+    private final String name;
     private Location location;
-
     public DTC(String name, Location location) {
         this.name = name;
         this.location = location;
     }
-
     public void start(Player... players) {
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         String dtc_prefix = msg.getString("dtc.prefix");
@@ -32,18 +29,16 @@ public class DTC {
         if (eventOn.canStartAnEvent()) {
             message = dtc_prefix + new StrManager(msg.getString("dtc.already_started")).reDTC(this.name).toString();
             FactionMessageTitle.sendPlayersMessage(message, players);
+            FactionMessageTitle.sendPlayersTitle(20,40, 20,"§aNexus en cours", "préparez-vous au combat");
             eventOn.start(this);
-            //for(Player p : players){ p.sendMessage(message); }
             return;
         }
         message = dtc_prefix + new StrManager(msg.getString("dtc.started")).reDTC(this.getName()).toString();
         Bukkit.broadcastMessage(message);
         eventOn.start(this, players);
-
     }
 
     public void stop(Player... players) {
-        // todo arrêter l'event
         DTCEvent dtcEvent = DTCManager.getDTCEvent(this);
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         String dtc_prefix = msg.getString("dtc.prefix");
@@ -98,10 +93,6 @@ public class DTC {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public Location getLocation() {

@@ -5,6 +5,7 @@ import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
+import fr.blixow.factionevent.utils.FactionMessageTitle;
 import fr.blixow.factionevent.utils.Messages;
 import fr.blixow.factionevent.utils.ScoreBoardAPI;
 import org.bukkit.Bukkit;
@@ -172,8 +173,10 @@ public class KOTHEvent {
             try { if(config.contains("koth.win_points")){ points = config.getInt("koth.win_points"); if(points < 1){ points = 1; } } } catch (Exception ignored){}
             RankingManager.addKothWins(faction);
             RankingManager.addPoints(faction, points);
+            FactionMessageTitle.sendFactionTitle(faction, 20,40, 20,"§aKOTH remporté", "+10 points au classement");
         }
         this.won = true;
+        RankingManager.updateRanking(true);
     }
 
     public void updateScoreboard(){
@@ -240,3 +243,4 @@ public class KOTHEvent {
 
     public boolean isWon() { return won; }
 }
+

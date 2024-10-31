@@ -109,22 +109,7 @@ public class Messages {
         CraftPlayer p = (CraftPlayer) player;
         IChatBaseComponent cbc = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + message + "\"}");
         PacketPlayOutChat ppoc = new PacketPlayOutChat(cbc,(byte) 2);
-        ((CraftPlayer) p).getHandle().playerConnection.sendPacket(ppoc);
-    }
-
-    public static void sendActionBar(UUID uuid, String message){
-        try {
-            CraftPlayer p = (CraftPlayer) Bukkit.getPlayer(uuid);
-            IChatBaseComponent cbc = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + message + "\"}");
-            PacketPlayOutChat ppoc = new PacketPlayOutChat(cbc,(byte) 2);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(ppoc);
-        } catch (Exception ignored){}
-
-    }
-
-    public static void sendMessages(UUID uuid, String message){
-
-        try { Bukkit.getPlayer(uuid).sendMessage(message); } catch (Exception ignored){}
+        p.getHandle().playerConnection.sendPacket(ppoc);
     }
 
 }

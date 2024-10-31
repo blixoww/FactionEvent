@@ -1,53 +1,46 @@
 package fr.blixow.factionevent;
 
-import fr.blixow.factionevent.commands.chat.ChatCommand;
+import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;
 import fr.blixow.factionevent.commands.dtc.DTCListCommand;
 import fr.blixow.factionevent.commands.events.EventCommand;
 import fr.blixow.factionevent.commands.koth.KothCommand;
 import fr.blixow.factionevent.commands.koth.KothListCommand;
-import fr.blixow.factionevent.commands.meteorite.MeteoriteCommand;
-import fr.blixow.factionevent.commands.meteorite.MeteoriteListCommand;
-import fr.blixow.factionevent.commands.meteorite.MeteoriteSetListCommand;
 import fr.blixow.factionevent.commands.planning.PlanningAddCommand;
 import fr.blixow.factionevent.commands.planning.PlanningCommand;
+import fr.blixow.factionevent.commands.planning.PlanningRemoveCommand;
 import fr.blixow.factionevent.commands.totem.TotemCommand;
 import fr.blixow.factionevent.commands.totem.TotemListCommand;
+import fr.blixow.factionevent.enumeration.DayEnum;
 import fr.blixow.factionevent.events.CustomEvents;
-import fr.blixow.factionevent.events.DisbandFactionEvent;
+import fr.blixow.factionevent.events.ManagerFactionEvent;
 import fr.blixow.factionevent.events.InventoryEvent;
-import fr.blixow.factionevent.events.MeteoriteEventListener;
+import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.PlanningScheduler;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.event.EventOn;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
-import fr.blixow.factionevent.utils.meteorite.Meteorite;
-import fr.blixow.factionevent.utils.meteorite.MeteoriteManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
-import com.massivecraft.factions.Faction;
-import fr.blixow.factionevent.manager.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 public final class FactionEvent extends JavaPlugin {
     private static FactionEvent instance;
     // Planning
-    private HashMap<String, String> planning;
+    private Map<String, String> planning;
     // KOTH
     private ArrayList<KOTH> listKOTH;
 
@@ -57,9 +50,6 @@ public final class FactionEvent extends JavaPlugin {
 
     // DTC
     private ArrayList<DTC> listDTC;
-
-    // Météorite
-    private ArrayList<Meteorite> listMeteorite;
 
     // EventOn instance manager
     private EventOn eventOn;
@@ -75,12 +65,10 @@ public final class FactionEvent extends JavaPlugin {
     private FileConfiguration totemFileConfiguration;
     private FileConfiguration dtcFileConfiguration;
     private FileConfiguration meteoriteFileConfiguration;
-    private FileConfiguration chatEventFileConfiguration;
     private FileConfiguration planningFileConfiguration;
     private FileConfiguration eventManagerFileConfiguration;
     private FileConfiguration classementFileConfiguration;
     private FileConfiguration logsFileConfiguration;
-
 
     @Override
     public void onEnable() {
@@ -91,7 +79,7 @@ public final class FactionEvent extends JavaPlugin {
         loadCommand();
         loadListeners();
         loadEvents();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Activation du plugin");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Activation du plugin FactionEvent");
         startSchedulerForPlanning();
         actionsForOnlinePlayers();
         RankingManager.runTaskUpdateRankings();
@@ -109,6 +97,8 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("planning").setExecutor(new PlanningCommand());
         getCommand("planningadd").setExecutor(new PlanningAddCommand());
         getCommand("planningadd").setTabCompleter(new PlanningAddCommand());
+        getCommand("planningremove").setExecutor(new PlanningRemoveCommand());
+        getCommand("planningremove").setTabCompleter(new PlanningRemoveCommand());
         // KOTH
         getCommand("koth").setExecutor(new KothCommand());
         getCommand("koth").setTabCompleter(new KothCommand());
@@ -127,15 +117,6 @@ public final class FactionEvent extends JavaPlugin {
         // classement
         getCommand("classement").setExecutor(new ClassementCommand());
         getCommand("classement").setTabCompleter(new ClassementCommand());
-        // Meteorite
-        getCommand("meteorite").setExecutor(new MeteoriteCommand());
-        getCommand("meteorite").setTabCompleter(new MeteoriteCommand());
-        getCommand("meteoritelist").setExecutor(new MeteoriteListCommand());
-        getCommand("meteoritesetlist").setExecutor(new MeteoriteSetListCommand());
-        getCommand("meteoritesetlist").setTabCompleter(new MeteoriteSetListCommand());
-
-        getCommand("chat").setExecutor(new ChatCommand());
-        getCommand("chat").setTabCompleter(new ChatCommand());
     }
 
     private void loadListeners() {
@@ -143,10 +124,8 @@ public final class FactionEvent extends JavaPlugin {
         // Events
         pluginManager.registerEvents(new CustomEvents(), this);
         // Disband faction  actions
-        pluginManager.registerEvents(new DisbandFactionEvent(), this);
-        // MeteoriteEvents
-        pluginManager.registerEvents(new MeteoriteEventListener(), this);
-
+        pluginManager.registerEvents(new ManagerFactionEvent(), this);
+        // Inventory actions
         pluginManager.registerEvents(new InventoryEvent(), this);
     }
 
@@ -154,7 +133,6 @@ public final class FactionEvent extends JavaPlugin {
         listKOTH = new ArrayList<>();
         listTotem = new ArrayList<>();
         listDTC = new ArrayList<>();
-        listMeteorite = new ArrayList<>();
         playerTotemEditorHashMap = new HashMap<>();
         eventManagerMap = new HashMap<>();
         factionRankings = new LinkedHashMap<>();
@@ -165,7 +143,6 @@ public final class FactionEvent extends JavaPlugin {
         KOTHManager.loadKOTH();
         TotemManager.loadTotems();
         DTCManager.loadDTCfromFile();
-        MeteoriteManager.loadMeteoritesFromFile();
         planning = loadPlanning();
     }
 
@@ -174,44 +151,44 @@ public final class FactionEvent extends JavaPlugin {
     }
 
     private HashMap<String, String> loadPlanning() {
-        HashMap<String, String> planning_load = new HashMap<>();
-        LocalDateTime localDateTime = LocalDateTime.now();
-        int week = DateManager.getWeekOfYear(localDateTime);
-        String base_path = localDateTime.getYear() + "." + week;
-        for (String jour : DateManager.listJour) {
-            String path_jour = base_path + "." + jour;
-            String date = PlanningManager.getDate(path_jour);
-            HashMap<String, List<String>> dailyEvents = PlanningManager.getDailyEvents(path_jour);
-            dailyEvents.forEach((k, v) -> {
-                for (String s : v) {
+        HashMap<String, String> scheduleMap = new HashMap<>();
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        int currentWeek = DateManager.getWeekOfYear(currentDateTime);
+        String basePath = currentDateTime.getYear() + "." + currentWeek;
+
+        for (DayEnum day : DayEnum.values()) {
+            String value = day.getValeur();
+            String dayPath = basePath + "." + value;
+            String dayDate = PlanningManager.getDate(dayPath);
+            HashMap<String, List<String>> dailyEvents = PlanningManager.getDailyEvents(dayPath);
+
+            for (Map.Entry<String, List<String>> entry : dailyEvents.entrySet()) {
+                String category = entry.getKey();
+                List<String> events = entry.getValue();
+
+                for (String event : events) {
                     try {
-                        String hours = s.split("\\|")[0].split("h")[0];
-                        if (hours.length() == 1) {
-                            hours = "0" + hours;
-                        }
-                        String mins = s.split("\\|")[0].split("h")[1];
-                        if (mins.length() == 1) {
-                            mins = "0" + mins;
-                        }
-                        String name = s.split("\\|")[1];
-                        planning_load.put(date + "-" + hours + "-" + mins, k + "-" + name);
+                        String[] eventDetails = event.split("\\|");
+                        String time = eventDetails[0];
+                        String eventName = eventDetails[1];
+
+                        String formattedTime = DateManager.formatTime(time);
+                        String eventKey = dayDate + "-" + formattedTime;
+
+                        scheduleMap.put(eventKey, category + "-" + eventName);
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 }
-            });
+            }
         }
-        return planning_load;
-    }
-
-    private void cancelAllEvent() {
-        //EventOn.cancelEvents();
+        return scheduleMap;
     }
 
     private void startSchedulerForPlanning() {
-        new PlanningScheduler().runTaskTimer(this, 0L, 60 * 20L);
+        BukkitScheduler scheduler = Bukkit.getScheduler();
+        scheduler.runTaskTimer(this, new PlanningScheduler(), 0, 20 * 60);
     }
-
 
     @Override
     public void onDisable() {
@@ -227,7 +204,7 @@ public final class FactionEvent extends JavaPlugin {
         return instance;
     }
 
-    public HashMap<String, String> getPlanning() {
+    public Map<String, String> getPlanning() {
         return planning;
     }
 
@@ -247,7 +224,6 @@ public final class FactionEvent extends JavaPlugin {
         return playerTotemEditorHashMap;
     }
 
-
     public HashMap<Player, EventManager> getEventScoreboardOff() {
         return eventManagerMap;
     }
@@ -266,14 +242,6 @@ public final class FactionEvent extends JavaPlugin {
 
     public void setListDTC(ArrayList<DTC> listDTC) {
         this.listDTC = listDTC;
-    }
-
-    public ArrayList<Meteorite> getListMeteorite() {
-        return listMeteorite;
-    }
-
-    public void setListMeteorite(ArrayList<Meteorite> listMeteorite) {
-        this.listMeteorite = listMeteorite;
     }
 
     public EventOn getEventOn() {
@@ -308,10 +276,6 @@ public final class FactionEvent extends JavaPlugin {
 
     public FileConfiguration getMeteoriteFileConfiguration() {
         return meteoriteFileConfiguration;
-    }
-
-    public FileConfiguration getChatEventFileConfiguration() {
-        return chatEventFileConfiguration;
     }
 
     public FileConfiguration getPlanningFileConfiguration() {
@@ -354,10 +318,6 @@ public final class FactionEvent extends JavaPlugin {
         this.meteoriteFileConfiguration = meteoriteFileConfiguration;
     }
 
-    public void setChatEventFileConfiguration(FileConfiguration chatEventFileConfiguration) {
-        this.chatEventFileConfiguration = chatEventFileConfiguration;
-    }
-
     public void setPlanningFileConfiguration(FileConfiguration planningFileConfiguration) {
         this.planningFileConfiguration = planningFileConfiguration;
     }
@@ -373,5 +333,4 @@ public final class FactionEvent extends JavaPlugin {
     public void setLogsFileConfiguration(FileConfiguration logsFileConfiguration) {
         this.logsFileConfiguration = logsFileConfiguration;
     }
-
 }

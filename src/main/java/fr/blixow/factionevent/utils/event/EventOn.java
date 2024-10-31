@@ -8,8 +8,6 @@ import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
-import fr.blixow.factionevent.utils.meteorite.Meteorite;
-import fr.blixow.factionevent.utils.meteorite.MeteoriteEvent;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
@@ -20,11 +18,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.ArrayList;
 
 public class EventOn {
-
     private KOTHEvent kothEvent;
     private TotemEvent totemEvent;
     private DTCEvent dtcEvent;
-    private MeteoriteEvent meteoriteEvent;
     private ArrayList<Object> queue;
     private final FileConfiguration msg;
 
@@ -33,7 +29,6 @@ public class EventOn {
         this.kothEvent = null;
         this.totemEvent = null;
         this.dtcEvent = null;
-        this.meteoriteEvent = null;
         this.queue = new ArrayList<>();
         new BukkitRunnable() {
             @Override
@@ -51,14 +46,8 @@ public class EventOn {
                             } else if (o instanceof DTC) {
                                 DTC dtc = (DTC) o;
                                 dtc.start();
-                            } else if (o instanceof Meteorite) {
-                                Meteorite meteorite = (Meteorite) o;
-                                meteorite.start();
-                            } else {
-                                System.out.println("§cEvent started ?");
                             }
                             queue.remove(0);
-                            System.out.println("§cEvent started ?");
                         }
                     } catch (Exception exception) {
                         queue.remove(0);
@@ -70,7 +59,7 @@ public class EventOn {
     }
 
     public boolean canStartAnEvent() {
-        return kothEvent == null && totemEvent == null && dtcEvent == null && meteoriteEvent == null;
+        return kothEvent == null && totemEvent == null && dtcEvent == null;
     }
 
     public void start(KOTH koth, Player... players) {
@@ -175,17 +164,6 @@ public class EventOn {
         queue.add(totem);
     }
 
-    public void start(Meteorite meteorite, Player... players) {
-        if (canStartAnEvent()) {
-            String message = msg.getString("meteorite.prefix") == null ? "§8[§cMétéorite§8]§7 " : msg.getString("meteorite.prefix");
-            this.meteoriteEvent = new MeteoriteEvent(meteorite);
-            message += new StrManager(msg.getString("meteorite.started")).reMeteorite(meteorite.getName()).toString();
-            Bukkit.broadcastMessage(message);
-            return;
-        }
-        FactionMessageTitle.sendPlayersMessage(msg.getString("meteorite.prefix") + new StrManager(msg.getString("meteorite.adding_to_queue")).reMeteorite(meteorite.getName()).toString(), players);
-        queue.add(meteorite);
-    }
 
     public void stopCurrentEvent() {
         if (!canStartAnEvent()) {
@@ -198,17 +176,14 @@ public class EventOn {
             if (dtcEvent != null) {
                 dtcEvent.getDtc().stop();
             }
-            if (meteoriteEvent != null) {
-                meteoriteEvent.getMeteorite().stop();
-            }
         }
     }
 
-    public void cancelEvent() {
+    public void cancelEvent(){
         try {
             queue = new ArrayList<>();
             stopCurrentEvent();
-        } catch (Exception exception) {
+        } catch (Exception exception){
             exception.printStackTrace();
         }
     }
@@ -225,10 +200,6 @@ public class EventOn {
         return kothEvent;
     }
 
-    public MeteoriteEvent getMeteoriteEvent() {
-        return meteoriteEvent;
-    }
-
     public TotemEvent getTotemEvent() {
         return totemEvent;
     }
@@ -243,10 +214,6 @@ public class EventOn {
 
     public void setDtcEvent(DTCEvent dtcEvent) {
         this.dtcEvent = dtcEvent;
-    }
-
-    public void setMeteoriteEvent(MeteoriteEvent meteoriteEvent) {
-        this.meteoriteEvent = meteoriteEvent;
     }
 
     public void setQueue(ArrayList<Object> queue) {

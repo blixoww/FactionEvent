@@ -8,8 +8,6 @@ import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
-import fr.blixow.factionevent.utils.meteorite.Meteorite;
-import fr.blixow.factionevent.utils.meteorite.MeteoriteManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemManager;
 import org.bukkit.command.Command;
@@ -30,38 +28,38 @@ public class PlanningAddCommand implements TabExecutor {
         if (sender instanceof Player) {
             Player player = (Player) sender;
             FileConfiguration msg = FileManager.getMessageFileConfiguration();
-            String prefix = msg.getString("koth.prefix");
+            String prefix = msg.getString("prefix");
             String pPrefix = msg.getString("planning.prefix");
-            if (!player.hasPermission("cevent.admin.planningadd")) {
+            if (!player.hasPermission("factionevent.admin.planningadd")) {
                 player.sendMessage(prefix + msg.getString("no-permissions"));
                 return true;
             }
             if (args.length == 4) {
                 String[] split_date = args[3].split("-");
                 if (split_date.length == 2) {
-                    ArrayList<Integer> tabEntier = DateManager.getTabDateEntier(split_date);
+                    ArrayList<Integer> tabEntier = DateManager.getIntegerList(split_date);
                     if (!tabEntier.isEmpty()) {
                         int heure = tabEntier.get(0), minutes = tabEntier.get(1);
                         FileConfiguration fc = FileManager.getPlanningDataFC();
 
                         switch (args[0]) {
                             case "koth":
-                                KOTH koth = KOTH.getKOTH(args[1]);
+                                KOTH koth = KOTHManager.getKOTH(args[1]);
                                 if (koth == null) {
                                     player.sendMessage(prefix + new StrManager(msg.getString("koth.doesnt_exist")).reKoth(args[1]));
                                     return true;
                                 }
-                                List<String> koth_list = new ArrayList<>();
+                                List<String> kothList = new ArrayList<>();
                                 try {
                                     String valeurJour = args[2];
-                                    String koth_path = valeurJour + ".koth";
+                                    String kothPath = valeurJour + ".koth";
 
-                                    if (fc.contains(koth_path + "." + koth.getName())) {
-                                        koth_list = fc.getStringList(koth_path + "." + koth.getName());
+                                    if (fc.contains(kothPath + "." + koth.getName())) {
+                                        kothList = fc.getStringList(kothPath + "." + koth.getName());
                                     }
 
-                                    koth_list.add(heure + "h" + minutes);
-                                    fc.set(koth_path + "." + koth.getName(), koth_list);
+                                    kothList.add(heure + "h" + minutes);
+                                    fc.set(kothPath + "." + koth.getName(), kothList);
                                     fc.save(FileManager.getDataFile("planning.yml"));
                                     player.sendMessage(pPrefix + new StrManager(msg.getString("koth.setup")).reKoth(koth.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
 
@@ -76,17 +74,16 @@ public class PlanningAddCommand implements TabExecutor {
                                     player.sendMessage(prefix + new StrManager(msg.getString("totem.doesnt_exist")).reTotem(args[1]));
                                     return true;
                                 }
-                                List<String> totem_list = new ArrayList<>();
+                                List<String> totemList = new ArrayList<>();
                                 try {
                                     String valeurJour = args[2];
-                                    String totem_path = valeurJour + ".totem";
+                                    String totemPath = valeurJour + ".totem";
 
-                                    if (fc.contains(totem_path + "." + totem.getName())) {
-                                        totem_list = fc.getStringList(totem_path + "." + totem.getName());
+                                    if (fc.contains(totemPath + "." + totem.getName())) {
+                                        totemList = fc.getStringList(totemPath + "." + totem.getName());
                                     }
-
-                                    totem_list.add(heure + "h" + minutes);
-                                    fc.set(totem_path + "." + totem.getName(), totem_list);
+                                    totemList.add(heure + "h" + minutes);
+                                    fc.set(totemPath + "." + totem.getName(), totemList);
                                     fc.save(FileManager.getDataFile("planning.yml"));
                                     player.sendMessage(pPrefix + new StrManager(msg.getString("totem.setup")).reTotem(totem.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
 
@@ -102,46 +99,19 @@ public class PlanningAddCommand implements TabExecutor {
                                     player.sendMessage(prefix + new StrManager(msg.getString("dtc.doesnt_exist")).reDTC(args[1]));
                                     return true;
                                 }
-                                List<String> dtc_list = new ArrayList<>();
+                                List<String> dtcList = new ArrayList<>();
                                 try {
                                     String valeurJour = args[2];
-                                    String dtc_path = valeurJour + ".dtc";
+                                    String dtcPath = valeurJour + ".dtc";
 
-                                    if (fc.contains(dtc_path + "." + dtc.getName())) {
-                                        dtc_list = fc.getStringList(dtc_path + "." + dtc.getName());
+                                    if (fc.contains(dtcPath + "." + dtc.getName())) {
+                                        dtcList = fc.getStringList(dtcPath + "." + dtc.getName());
                                     }
 
-                                    dtc_list.add(heure + "h" + minutes);
-                                    fc.set(dtc_path + "." + dtc.getName(), dtc_list);
+                                    dtcList.add(heure + "h" + minutes);
+                                    fc.set(dtcPath + "." + dtc.getName(), dtcList);
                                     fc.save(FileManager.getDataFile("planning.yml"));
                                     player.sendMessage(pPrefix + new StrManager(msg.getString("dtc.setup")).reDTC(dtc.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
-
-                                    FactionEvent.getInstance().reloadPlanning();
-                                    break;
-                                } catch (Exception exception) {
-                                    exception.printStackTrace();
-                                }
-                                break;
-                            case "meteorite":
-                                Meteorite meteorite = MeteoriteManager.getMeteoriteByName(args[1]);
-                                if (meteorite == null) {
-                                    player.sendMessage(prefix + new StrManager(msg.getString("meteorite.doesnt_exist")).reMeteorite(args[1]));
-                                    return true;
-                                }
-                                List<String> meteorite_list = new ArrayList<>();
-                                try {
-                                    String valeurJour = args[2];
-                                    String meteorite_path = valeurJour + ".meteorite";
-
-                                    if (fc.contains(meteorite_path + "." + meteorite.getName())) {
-                                        meteorite_list = fc.getStringList(meteorite_path + "." + meteorite.getName());
-                                    }
-
-                                    meteorite_list.add(heure + "h" + minutes);
-                                    fc.set(meteorite_path + "." + meteorite.getName(), meteorite_list);
-                                    fc.save(FileManager.getDataFile("planning.yml"));
-                                    player.sendMessage(meteorite_path + " - " + meteorite_list);
-                                    player.sendMessage(pPrefix + new StrManager(msg.getString("meteorite.setup")).reMeteorite(meteorite.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
 
                                     FactionEvent.getInstance().reloadPlanning();
                                     break;
@@ -168,7 +138,7 @@ public class PlanningAddCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> stringList = new ArrayList<>();
-        ArrayList<String> customs = new ArrayList<>();
+        List<String> customs = new ArrayList<>();
         if (args.length == 1) {
             customs = new ArrayList<>(Arrays.asList("koth", "totem", "dtc", "meteorite"));
         } else if (args.length == 2) {
@@ -178,22 +148,20 @@ public class PlanningAddCommand implements TabExecutor {
                 customs = TotemManager.getListTotemNames();
             } else if (args[0].equalsIgnoreCase("dtc")) {
                 customs = DTCManager.getDTCNames();
-            } else if (args[0].equalsIgnoreCase("meteorite")) {
-                customs = MeteoriteManager.getMeteoriteListNames();
             }
         } else if (args.length == 3) {
             customs = new ArrayList<>(Arrays.asList("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"));
         } else if (args.length == 4) {
             LocalDateTime now = LocalDateTime.now();
-            int c_mins_int = now.getMinute();
-            if (c_mins_int < 30) {
-                now = now.plusMinutes(30 - c_mins_int);
+            int minutes = now.getMinute();
+            if (minutes < 30) {
+                now = now.plusMinutes(30 - minutes);
             } else {
-                now = now.plusMinutes(60 - c_mins_int);
+                now = now.plusMinutes(60 - minutes);
             }
-            String c_hours = String.valueOf(now.getHour()).length() == 1 ? "0" + now.getHour() : String.valueOf(now.getHour());
-            String c_minutes = String.valueOf(now.getMinute()).length() == 1 ? "0" + now.getMinute() : String.valueOf(now.getMinute());
-            String formated = c_hours + "-" + c_minutes;
+            String hours = String.valueOf(now.getHour()).length() == 1 ? "0" + now.getHour() : String.valueOf(now.getHour());
+            String minute = String.valueOf(now.getMinute()).length() == 1 ? "0" + now.getMinute() : String.valueOf(now.getMinute());
+            String formated = hours + "-" + minute;
             stringList.add(formated);
         }
         for (String str : customs) {

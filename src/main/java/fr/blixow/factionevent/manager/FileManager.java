@@ -120,10 +120,6 @@ public class FileManager {
         return FactionEvent.getInstance().getClassementFileConfiguration();
     }
 
-    public static FileConfiguration getChatEventDataFC() {
-        return FactionEvent.getInstance().getChatEventFileConfiguration();
-    }
-
     public static FileConfiguration getLogsFC() {
         return FactionEvent.getInstance().getLogsFileConfiguration();
     }
@@ -140,7 +136,6 @@ public class FileManager {
         FileManager.createDataFile("totem.yml");
         FileManager.createDataFile("dtc.yml");
         FileManager.createDataFile("meteorite.yml");
-        FileManager.createDataFile("chatEvent.yml");
         FileManager.createDataFile("planning.yml", false);
         FileManager.createDataFile("eventManager.yml");
         FileManager.createDataFile("classement.yml");
@@ -156,7 +151,6 @@ public class FileManager {
             instance.setTotemFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/totem.yml")));
             instance.setDtcFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/dtc.yml")));
             instance.setMeteoriteFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/meteorite.yml")));
-            instance.setChatEventFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/chatEvent.yml")));
             instance.setPlanningFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/planning.yml")));
             instance.setEventManagerFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/eventManager.yml")));
             instance.setClassementFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/classement.yml")));
@@ -178,7 +172,6 @@ public class FileManager {
             instance.getTotemFileConfiguration().save(getDataFile("totem.yml"));
             instance.getDtcFileConfiguration().save(getDataFile("dtc.yml"));
             instance.getMeteoriteFileConfiguration().save(getDataFile("meteorite.yml"));
-            instance.getChatEventFileConfiguration().save(getDataFile("chatEvent.yml"));
             instance.getPlanningFileConfiguration().save(getDataFile("planning.yml"));
             instance.getEventManagerFileConfiguration().save(getDataFile("eventManager.yml"));
             instance.getClassementFileConfiguration().save(getDataFile("classement.yml"));

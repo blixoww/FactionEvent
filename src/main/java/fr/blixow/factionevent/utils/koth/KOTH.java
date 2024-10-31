@@ -1,7 +1,9 @@
 package fr.blixow.factionevent.utils.koth;
 
 import fr.blixow.factionevent.FactionEvent;
+import fr.blixow.factionevent.manager.DateManager;
 import fr.blixow.factionevent.manager.FileManager;
+import fr.blixow.factionevent.manager.PlanningManager;
 import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.event.EventOn;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
@@ -9,7 +11,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,17 +55,6 @@ public class KOTH {
         int z = (int) Math.round(pos2.getZ());
         this.pos2 = new Location(Bukkit.getServer().getWorld(pos2.getWorld().getName()), x, y, z);
     }
-
-    public static KOTH getKOTH(String kothName) {
-        ArrayList<KOTH> kothArrayList = FactionEvent.getInstance().getListKOTH();
-        for (KOTH koth : kothArrayList) {
-            if (koth.getName().equalsIgnoreCase(kothName)) {
-                return koth;
-            }
-        }
-        return null;
-    }
-
     public boolean saveKOTH() {
         try {
             File file = FileManager.getFile("data/koth.yml");
@@ -100,6 +90,7 @@ public class KOTH {
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         String prefix = msg.contains("koth.prefix") ? msg.getString("koth.prefix") : "§8[§cKOTH§8]§7 ";
         EventOn eventOn = FactionEvent.getInstance().getEventOn();
+        FactionMessageTitle.sendPlayersTitle(20,40, 20,"§aKOTH en cours", "préparez-vous au combat");
         eventOn.start(this, players);
     }
 
@@ -112,7 +103,6 @@ public class KOTH {
             if (!kothEvent.isWon()) {
                 Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("koth.canceled")).reKoth(this.nom).toString());
             }
-            // todo? cancel other things
             kothEvent.getScoreBoardAPI().getObjective().unregister();
             kothEvent = null;
             eventOn.setKothEvent(null);

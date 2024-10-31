@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 
 public class StrManager {
 
-
     private String message;
 
     public StrManager(String message) {
@@ -23,7 +22,6 @@ public class StrManager {
         } catch (Exception exception){
             exception.printStackTrace();
         }
-
         return this;
     }
 
@@ -99,11 +97,6 @@ public class StrManager {
         return this;
     }
 
-    public StrManager reWord(String mot){
-        this.message = this.message.replaceAll("\\{mot}", mot);
-        return this;
-    }
-
     public StrManager rePlayerTarget(Player player, Player target){
         rePlayer(player);
         reTarget(target);
@@ -133,5 +126,10 @@ public class StrManager {
 
     @Override
     public String toString(){ return this.message; }
+
+    public StrManager reType(String type) {
+        this.message = message.replaceAll("\\{type}", type.toUpperCase());
+        return this;
+    }
 
 }

@@ -7,20 +7,21 @@ import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.ScoreBoardAPI;
+import fr.blixow.factionevent.utils.event.EventOn;
+import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Scoreboard;
 
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 public class TotemEvent {
-
     private ScoreBoardAPI scoreBoardAPI;
     private final Totem totem;
     private final long started;
@@ -50,40 +51,39 @@ public class TotemEvent {
         String win = new StrManager(msg.getString("totem.win")).rePlayer(player).reFaction(fPlayerFaction.getTag()).reTotem(totem.getName()).toString();
         Bukkit.broadcastMessage(msg.getString("totem.prefix") + win);
         totem.stop();
-        clearScoreboard();
         if(faction != null && !faction.isWilderness() && !faction.isSafeZone() && !faction.isWarZone()){
             int points = 10;
             try { if(config.contains("totem.win_points")){ points = config.getInt("totem.win_points"); if(points < 1){ points = 1; } } } catch (Exception ignored){}
             RankingManager.addTotemWins(faction);
             RankingManager.addPoints(faction, 10);
+            FactionMessageTitle.sendFactionTitle(faction, 20,40, 20,"§aTotem remporté", "+10 points au classement");
         }
+        RankingManager.updateRanking(true);
     }
 
-    public void blockDestroyed(Block b, Player player){
-        if(!blocks.containsKey(b.getLocation())){ return; }
+    public void blockDestroyed(Block block, Player player){
+        if(!blocks.containsKey(block.getLocation())){ return; }
         FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
         Faction fPlayerFaction = fPlayer.getFaction();
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         if(this.faction == null){ this.faction = fPlayerFaction; }
         if(this.faction.equals(fPlayerFaction)){
             // update score
-            blocks.remove(b.getLocation());
+            blocks.remove(block.getLocation());
             if(blocks.size() == 0){
                 grantVictory(player);
                 return;
             }
             String left = new StrManager(msg.getString("totem.blocks_left")).reBlocks(blocks.size(), totem.getBlocks().size()).toString();
             FactionMessageTitle.sendFactionActionBar(faction, left);
-
         } else {
             reset(player, this.faction);
-            blockDestroyed(b, player);
+            blockDestroyed(block, player);
         }
         updateScoreboard();
     }
 
     private void reset(Player player, Faction oldFaction){
-        // Title ?
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         Faction newFaction = FPlayers.getInstance().getByPlayer(player).getFaction();
         this.faction = newFaction;
@@ -107,6 +107,7 @@ public class TotemEvent {
     public void start(){
         setAllBlocks();
         updateScoreboard();
+        FactionMessageTitle.sendPlayersTitle(20,40, 20,"§aTotem en cours", "préparez-vous au combat");
     }
 
     public void copyBlocks(){
@@ -158,10 +159,6 @@ public class TotemEvent {
                 exception.printStackTrace();
             }
         }
-    }
-
-    public void clearScoreboard(){
-        scoreBoardAPI.getObjective().unregister();
     }
 
     // Getter

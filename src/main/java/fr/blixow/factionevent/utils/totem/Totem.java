@@ -8,7 +8,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -99,6 +98,7 @@ public class Totem {
                 return false;
             }
             TotemEvent totemEvent = eventOn.getTotemEvent();
+            totemEvent.getScoreBoardAPI().getObjective().unregister();
             totemEvent = null;
             eventOn.setTotemEvent(null);
             clearBlocks();

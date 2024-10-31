@@ -12,6 +12,8 @@ import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -25,36 +27,40 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-
+import org.bukkit.inventory.ItemStack;
 import java.util.Map;
-
 
 public class CustomEvents implements Listener {
 
     // KOTH
 
     @EventHandler
-    public void onMoveKoth(PlayerMoveEvent event){
+    public void onMoveKoth(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if(FactionEvent.getInstance().getEventOn().getKothEvent() != null){
+        if (FactionEvent.getInstance().getEventOn().getKothEvent() != null) {
             KOTHEvent kothEvent = FactionEvent.getInstance().getEventOn().getKothEvent();
-            if(KOTHManager.isInKOTH(player, kothEvent.getKoth())){ kothEvent.addPlayer(player); }
-            else { kothEvent.removePlayer(player); }
+            if (KOTHManager.isInKOTH(player, kothEvent.getKoth())) {
+                kothEvent.addPlayer(player);
+            } else {
+                kothEvent.removePlayer(player);
+            }
         }
     }
 
     @EventHandler
-    public void onLeave(PlayerQuitEvent event){
+    public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        if(FactionEvent.getInstance().getEventOn().getKothEvent() != null){
+        if (FactionEvent.getInstance().getEventOn().getKothEvent() != null) {
             KOTHEvent kothEvent = FactionEvent.getInstance().getEventOn().getKothEvent();
-            if(kothEvent.getPlayersInKOTH().containsKey(player)){ kothEvent.removePlayer(player); }
+            if (kothEvent.getPlayersInKOTH().containsKey(player)) {
+                kothEvent.removePlayer(player);
+            }
         }
         FactionEvent.getInstance().getEventScoreboardOff().remove(player);
     }
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent event){
+    public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         FactionEvent.getInstance().getEventScoreboardOff().put(player, EventManager.loadFromFile(player));
     }
@@ -62,9 +68,9 @@ public class CustomEvents implements Listener {
     // TOTEM
 
     @EventHandler
-    public void onPlace(BlockPlaceEvent event){
+    public void onPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
-        if(FactionEvent.getInstance().getPlayerTotemEditorHashMap().containsKey(player)){
+        if (FactionEvent.getInstance().getPlayerTotemEditorHashMap().containsKey(player)) {
             FileConfiguration fc = FileManager.getMessageFileConfiguration();
             TotemEditor totemEditor = FactionEvent.getInstance().getPlayerTotemEditorHashMap().get(player);
             String str = new StrManager(fc.getString("totem.block_placed")).rePlayer(player).reLocation(event.getBlock().getLocation()).toString();
@@ -74,26 +80,46 @@ public class CustomEvents implements Listener {
     }
 
     @EventHandler
-    public void onBreak(BlockBreakEvent event){
+    public void onBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if(FactionEvent.getInstance().getEventOn().getTotemEvent() != null){
-            FactionEvent.getInstance().getEventOn().getTotemEvent().blockDestroyed(event.getBlock(), player);
+        if (FactionEvent.getInstance().getEventOn().getTotemEvent() != null) {
+            if (FactionEvent.getInstance().getEventOn().getTotemEvent().getBlocks().containsKey(event.getBlock().getLocation())) {
+                ItemStack hand = player.getInventory().getItemInHand();
+                if (hand.getType().toString().contains("SWORD") || player.isOp() || player.getGameMode() == GameMode.CREATIVE) {
+                    FactionEvent.getInstance().getEventOn().getTotemEvent().blockDestroyed(event.getBlock(), player);
+                } else {
+                    for (Location location : FactionEvent.getInstance().getEventOn().getTotemEvent().getBlocks().keySet()) {
+                        if (location.getBlock() != null) {
+                            event.setCancelled(true);
+                            FileConfiguration fc = FileManager.getMessageFileConfiguration();
+                            String str = new StrManager(fc.getString("totem.sword")).rePlayer(player).reLocation(event.getBlock().getLocation()).toString();
+                            player.sendMessage(fc.getString("totem.prefix") + str);
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
     // DTC
     @EventHandler
-    public void onHitEntity(EntityDamageByEntityEvent event){
+    public void onHitEntity(EntityDamageByEntityEvent event) {
         Entity entity = event.getEntity();
         Entity damager = event.getDamager();
-        if(damager instanceof Player){
+        if (damager instanceof Player) {
             Player player = (Player) damager;
-            if(entity.getType().equals(EntityType.ENDER_CRYSTAL)){
+            if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
                 DTCEvent dtcEvent = DTCManager.getDTCEventByEntity(entity);
-                if(dtcEvent != null){ event.setCancelled(true); dtcEvent.hit(player, event.getFinalDamage()); }
+                if (dtcEvent != null) {
+                    event.setCancelled(true);
+                    dtcEvent.hit(player, event.getFinalDamage());
+                }
             }
         }
+
     }
+
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
@@ -115,5 +141,4 @@ public class CustomEvents implements Listener {
             }
         }
     }
-
 }

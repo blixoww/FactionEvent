@@ -81,7 +81,7 @@ public class ClassementCommand implements TabExecutor {
                             case "-update":
                             case "-reload":
                             case "-refresh":
-                                RankingManager.updateRanking();
+                                RankingManager.updateRanking(true);
                                 break;
                             default:
                                 player.sendMessage("§cCommande: §7/classement [faction]");

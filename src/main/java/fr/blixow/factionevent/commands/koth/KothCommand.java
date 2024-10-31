@@ -4,6 +4,7 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
+import fr.blixow.factionevent.utils.koth.KOTHManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -27,7 +28,7 @@ public class KothCommand implements TabExecutor {
                 return true;
             }
             if (args.length == 2) {
-                KOTH koth = KOTH.getKOTH(args[0]);
+                KOTH koth = KOTHManager.getKOTH(args[0]);
                 String message = prefix + "";
                 if (!args[1].equals("create") && koth == null) {
                     message += new StrManager(msg.getString("koth.doesnt_exist")).reKoth(args[0]).toString();
@@ -36,7 +37,7 @@ public class KothCommand implements TabExecutor {
                 }
                 switch (args[1]) {
                     case "create":
-                        if (KOTH.getKOTH(args[0]) != null) {
+                        if (KOTHManager.getKOTH(args[0]) != null) {
                             player.sendMessage(prefix + new StrManager(msg.getString("koth.doesnt_exist")).reKoth(args[0]));
                             break;
                         }
