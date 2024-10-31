@@ -37,14 +37,14 @@ public class LMS {
 
     public void registerPlayer(Player player) {
         if (isEventActive) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.is_started")).rePlayer(player).reLMS(name).toString()));
+            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).rePlayer(player).reLMS(name).toString()));
             return;
         }
 
         FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
         Faction faction = fPlayer.getFaction();
         if (faction == null || faction.isWilderness()) {
-            player.sendMessage(prefix + (new StrManager(msg.getString("lms.faction")).rePlayer(player).reLMS(name).toString()));
+            player.sendMessage(prefix + (new StrManager(msg.getString("lms.no_faction")).rePlayer(player).reLMS(name).toString()));
             return;
         }
 
@@ -69,28 +69,28 @@ public class LMS {
 
     public void unregisterPlayer(Player player) {
         if (isEventActive) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.is_started")).rePlayer(player).reLMS(name).toString()));
+            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).rePlayer(player).reLMS(name).toString()));
             return;
         }
         if (registeredPlayers.containsKey(player)) {
             registeredPlayers.remove(player);
             player.sendMessage(new StrManager(msg.getString("lms.unregistered")).rePlayer(player).reLMS(name).toString());
         } else {
-            player.sendMessage(new StrManager(msg.getString("lms.not_registered")).rePlayer(player).reLMS(name).toString());
+            player.sendMessage(new StrManager(msg.getString("lms.already_unregistered")).rePlayer(player).reLMS(name).toString());
         }
     }
 
     public void startRegistration() {
         if (isEventActive) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.is_started")).reLMS(name).toString()));
+            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).reLMS(name).toString()));
             return;
         }
         Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), this::prepareEvent, registrationTime * 20L);
     }
 
     private void prepareEvent() {
-        if (registeredPlayers.isEmpty()) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.no_registered")).reLMS(name).toString()));
+        if (registeredPlayers.size() < 2) {
+            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.any_register")).reLMS(name).toString()));
             return;
         }
 

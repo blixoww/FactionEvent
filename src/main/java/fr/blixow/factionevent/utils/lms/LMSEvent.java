@@ -38,7 +38,7 @@ public class LMSEvent {
 
     public void startCombat() {
         eventActive = true;
-        Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.start")).reLMS(lms.getName()).toString()));
+        Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString()));
     }
 
     public void handlePlayerDeath(Player player) {
@@ -70,7 +70,7 @@ public class LMSEvent {
             try { if(config.contains("lms.win_points")){ points = config.getInt("lms.win_points"); if(points < 1){ points = 1; } } } catch (Exception ignored){}
             RankingManager.addLMSWins(faction);
             RankingManager.addPoints(faction, points);
-            FactionMessageTitle.sendFactionTitle(faction, 20,40, 20,"§aLMS remporté", "+20 points au classement");
+            FactionMessageTitle.sendFactionTitle(faction, 20,40, 20,"§aLMS remporté", "+" + config.getInt("lms.win_points") +" points au classement");
         }
         RankingManager.updateRanking(true);
     }
