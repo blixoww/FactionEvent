@@ -121,7 +121,7 @@ public class PlanningScheduler extends BukkitRunnable {
                         this.messageCounter++;
                     }
                     else if (hour == now.getHour() && minute == now.getMinute()) {
-                        lms.start();
+                        lms.startRegistration();
                         this.messageCounter = 0;
                     }
                 }

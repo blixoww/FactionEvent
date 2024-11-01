@@ -49,6 +49,17 @@ public class PlanningManager {
                 }
             }
 
+            for (LMS event : FactionEvent.getInstance().getListLMS()) {
+                String nom = event.getName();
+                String path_event = path + ".lms." + nom;
+                if (pathExists(path_event)) {
+                    List<String> stringList = fc.getStringList(path_event);
+                    for (String str : stringList) {
+                        list.add(str + "|" + nom);
+                    }
+                }
+            }
+
             if (!list.isEmpty()) {
                 map.put("events", list);
             }

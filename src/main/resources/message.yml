@@ -110,49 +110,83 @@ dtc:
 lms:
   prefix: "§8[§cLMS§8]§7 "
   usage: "§cCommande: §7/lms <action>\n§cActions: §fcreate/start/stop/info"
-  created: "§7Le LMS §7{lms} vient d'être créé."
-  started: "§7Le LMS §7{lms} va débuter. §e(/warp {lmsL})§7."
-  canceled: "§7Le LMS §7{lms} a été annulé."
-  ended: "§7Le LMS §7{lms} est terminé."
-  already_exist: "§7Le LMS §7{lms} existe déjà."
-  doesnt_exist: "§7Le LMS §7{lms} n'existe pas."
-  already_started: "§7Le LMS §7{lms} est déjà en cours §e(/lmslist)§7."
-  not_started: "§7Le LMS §7{lms} n'est pas lancé."
+  usage_2: "§cCommande: §7/lmsr <action> \n§cActions: §fregister/unregister"
+  created: "§7Le LastManStanding §7{lms} vient d'être créé."
+  started: "§8§m----------------------------\n§r
+            \n
+            §eLe combat est prêt à débuter.\n
+            §7Spectateurs : §e(/warp {lmsL})\n
+            \n
+            §8§m----------------------------"
+  canceled: "§7Le LastManStanding §7{lms} a été annulé."
+  too_late: "§7Le LastManStanding §7{lms} est déjà en cours."
+  ended: "§7Le LastManStanding §7{lms} est terminé."
+  already_exist: "§7Le LastManStanding §7{lms} existe déjà."
+  not_found: "§7Le LastManStanding n'est pas lancé."
+  already_started: "§7Le LastManStanding §7{lms} est déjà en cours §e(/lmslist)§7."
+  not_started: "§7Le LastManStanding §7{lms} n'est pas lancé."
   set_arena_position: "§7La position du LMS §7{lms} a été mise à jour."
-  save_success: "§7Le LMS §7{lms} a été sauvegardé en configuration §e(lms.yml)§7."
-  save_failed: "§cErreur: §7Le LMS §7{lms} n'a pas été sauvegardé en configuration §e(lms.yml)§7."
+  save_success: "§7Le LastManStanding §7{lms} a été sauvegardé en configuration §e(lms.yml)§7."
+  save_failed: "§cErreur: §7Le LastManStanding §7{lms} n'a pas été sauvegardé en configuration §e(lms.yml)§7."
   no_faction: "§cVous devez avoir une faction pour pouvoir participer à l'événement."
-  faction_time: "§7Votre faction est trop récente pour pouvoir participer."
-  registered: "§7Vous avez été inscrit au LMS §7{lms}."
-  already_registered: "§7Vous êtes déjà inscrit au LMS §7{lms}."
-  unregistered: "§7Vous avez été désinscrit du LMS §7{lms}."
-  already_unregistered: "§7Vous n'êtes pas inscrit au LMS §7{lms}."
-  teleport: "§7Vous avez été téléporté à l'arène du LMS §7{lms}."
-  any_register: "§7Pas assez de joueurs ne se sont inscrit au LMS §7{lms}."
-  eliminated: "§7Vous avez été éliminé du LMS §7{lms}."
-  setup: "§7Le LMS §8[§e/warp {lmsL}§8] §7a été planifié pour le §c{time}§7."
-  adding_to_queue: "§7Un événément est déjà en cours, le LMS §7{lms} sera lancé automatiquement par la suite."
-  starting_in_5mins: "§7Le LMS §7{lms} va commencer dans §c5 §7minutes."
-  starting_in_1mins: "§7Le LMS §7{lms} va commencer dans §c1 §7minute."
-  winner: "§7Le joueur §c{player} §7vient de gagné le LMS !"
+  same_faction: "§cUn membre de votre faction s'est déjà inscrit à l'événement."
+  faction_time: "§7Votre faction est trop récente pour participer."
+  registration_started: "§8§m---------§r §8<§aINSCRIPTIONS OUVERTES §8>§m---------\n§r
+                           \n
+                           §7Le §cLast Man Standing §7commencera bientôt :\n
+                           \n
+                           §7- §aInscrivez-vous avec §e/lmsr register§7.\n
+                           §7- §aUn seul joueur par faction peut s'inscrire.\n
+                           \n
+                           §7Bonne chance à tous les participants !\n
+                           \n
+                           §8§m---------------------------------------"
+  registered: "§7Vous êtes inscrit au LastManStanding §7{lms}."
+  not_registered: "§7Vous n'êtes pas inscrit au LastManStanding §7{lms}."
+  not_registered_anymore: "§7Vous avez été désinscrit du LastManStanding §7{lms}."
+  already_registered: "§7Vous êtes déjà inscrit au LastManStanding §7{lms}."
+  unregistered: "§7Vous avez été désinscrit du LastManStanding §7{lms}."
+  already_unregistered: "§7Vous n'êtes pas inscrit au LastManStanding §7{lms}."
+  teleport: "§7Vous avez été téléporté à l'arène du LastManStanding §7{lms}."
+  any_register: "§7Pas assez de joueurs se sont inscrits au LastManStanding §7{lms}."
+  eliminated: "§7Vous avez été éliminé du LastManStanding."
+  setup: "§7Le LastManStanding a été planifié pour le §c{time}§7."
+  adding_to_queue: "§7Un événement est en cours, le LastManStanding §7{lms} sera lancé ensuite."
+  starting_in_5mins: "§8§m---------§r §8<§eDÉBUT IMMINENT §8>§m---------\n§r
+                        \n
+                        §7Le §eLast Man Standing commence dans §c5 §7minutes !\n
+                        §7Préparez-vous pour l'arène !\n
+                        \n
+                        §8§m----------------------------"
+  starting_in_1mins: "§8§m---------§r §8<§eDERNIÈRE MINUTE §8>§m---------\n§r
+                        \n
+                        §7Le §eLast Man Standing §7{lms} commence dans §c1 §7minute !\n
+                        §7Prêts à combattre ?\n
+                        \n
+                        §8§m----------------------------"
+  winner: "§8§m---------§r §8<§6VICTOIRE §8>§m---------\n§r
+             \n
+             §c{player} §7remporte le §eLast Man Standing §7pour la faction {faction} !\n
+             \n
+             §8§m----------------------------"
   scoreboard:
     title: "§8[§cLMS§8]"
     lines:
-    - ""
-    - "§c» §eJoueur"
-    - "§7{player}"
-    - ""
-    - "§c» §eTemps"
-    - "§7{time}"
-    - ""
-    - "§c» §eVie"
-    - "§c{life}§4❤"
-    - ""
-    - "§c» §eKills"
-    - "§7{kills}"
-    - ""
-    - "§c» §eMorts"
-    - "§7{deaths}"
+      - ""
+      - "§c» §eJoueur"
+      - "§7{player}"
+      - ""
+      - "§c» §eTemps"
+      - "§7{time}"
+      - ""
+      - "§c» §eVie"
+      - "§c{life}§4❤"
+      - ""
+      - "§c» §eKills"
+      - "§7{kills}"
+      - ""
+      - "§c» §eMorts"
+      - "§7{deaths}"
 kothlist:
   title: "§8§m----§r§8[ §cKOTH §8]§m----\n"
   item: "§8- §7{koth}"
@@ -169,10 +203,10 @@ dtclist:
   item-started: "§8- §7{dtc} §8(§aEn cours§8)\n"
   empty: "§7Aucun DTC n'a été créé"
 lmslist:
-    title: "§8§m----§r§8[ §cLMS §8]§m----"
-    item: "§8- §7{lms}"
-    item-started: "§8- §7{lms} §8(§aEn cours§8)\n"
-    empty: "§7Aucun LMS n'a été créé"
+  title: "§8§m----§r§8[ §cLMS §8]§m----"
+  item: "§8- §7{lms}"
+  item-started: "§8- §7{lms} §8(§aEn cours§8)\n"
+  empty: "§7Aucun LMS n'a été créé"
 classement:
   title: "§8§m----§r§8[ §cCLASSEMENT §8]§m----"
   lines:
@@ -194,3 +228,5 @@ faction_classement:
     - "§8» §cKoth gagnés : §7{nb_koth}"
     - "§8» §cTotem gagnés : §7{nb_totem}"
     - "§8» §cDTC gagnés : §7{nb_dtc}"
+chat_format:
+  faction_rank_prefix: "§7[§6%faction_rank%§7]"

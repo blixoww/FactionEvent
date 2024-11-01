@@ -173,7 +173,7 @@ public class EventOn {
 
     public void start(LMS lms, Player... players) {
         if (this.canStartAnEvent()) {
-            this.lmsEvent = new LMSEvent(lms, lms.getRegisteredPlayers(), FileManager.getConfig(), lms);
+            this.lmsEvent = new LMSEvent(lms, lms.getRegisteredPlayers(), FileManager.getConfig());
             lms.startRegistration();
             FileConfiguration configuration = FileManager.getConfig();
 
@@ -193,7 +193,7 @@ public class EventOn {
                         lms.stop();
                         cancel();
                     } else {
-                        lmsEvent.startCombat();
+                        lms.startRegistration();
                     }
                 }
             }.runTaskTimer(FactionEvent.getInstance(), (lms.getRegistrationTime() + lms.getPrepTime()) * 20L, check_time * 20L);

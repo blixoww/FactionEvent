@@ -27,6 +27,14 @@ public class LMSManager {
                 .orElse(null);
     }
 
+    public static LMS getStartingRegistration() {
+        return FactionEvent.getInstance().getListLMS()
+                .stream()
+                .filter(LMS::isRegistration)
+                .findFirst()
+                .orElse(null);
+    }
+
     public static List<String> getListLMSNames() {
         return FactionEvent.getInstance().getListLMS().stream()
                 .map(LMS::getName)

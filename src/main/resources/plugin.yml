@@ -46,3 +46,6 @@ commands:
   lmslist:
     usage: /lmslist
     description: Affiche la liste des lms
+  lmsr:
+    usage: /lmsr
+    description: Rejoindre un lms

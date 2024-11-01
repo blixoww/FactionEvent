@@ -12,14 +12,12 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Scoreboard;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class LMSEvent {
 
-    private final LMS lastManStanding;
     private final HashMap<Player, Boolean> participants;
     private boolean eventActive;
     private ScoreBoardAPI scoreBoardAPI;
@@ -28,24 +26,24 @@ public class LMSEvent {
     private final FileConfiguration msg = FileManager.getMessageFileConfiguration();
     private final String prefix = msg.contains("lms.prefix") ? msg.getString("lms.prefix") : "§8[§cLMS§8]§7 ";
 
-    public LMSEvent(LMS lastManStanding, HashMap<Player, Boolean> participants, FileConfiguration config, LMS lms) {
-        this.lastManStanding = lastManStanding;
-        this.participants = new HashMap<>();
-        this.config = FileManager.getConfig();
+    public LMSEvent(LMS lms, HashMap<Player, Boolean> participants, FileConfiguration config) {
         this.lms = lms;
+        this.participants = lms.getRegisteredPlayers();
+        this.config = FileManager.getConfig();
         this.eventActive = false;
     }
 
     public void startCombat() {
         eventActive = true;
-        Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString()));
+        Bukkit.broadcastMessage(new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString());
+        System.out.println("size: " + participants.size());
     }
 
     public void handlePlayerDeath(Player player) {
         if (!eventActive) return;
 
         participants.remove(player);
-        player.sendMessage(prefix + (new StrManager(msg.getString("lms.eliminated")).rePlayer(player).reLMS(lms.getName()).toString()));
+        player.sendMessage(prefix + new StrManager(msg.getString("lms.eliminated")).reLMS(lms.getName()).toString());
 
         if (participants.size() == 1) {
             Map.Entry<Player, Boolean> entry = participants.entrySet().iterator().next();
@@ -62,8 +60,8 @@ public class LMSEvent {
     public void grantVictory(Player player) {
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
-        String str = prefix + new StrManager(msg.getString("lms.winner")).rePlayer(player).reLMS(lms.getName()).toString();
         Faction faction = fPlayer.getFaction();
+        String str = new StrManager(msg.getString("lms.winner")).rePlayer(player).reLMS(lms.getName()).reFaction(faction.getTag()).toString();
         Bukkit.broadcastMessage(str);
         if(!faction.isWilderness()){
             int points = 10;
@@ -134,7 +132,7 @@ public class LMSEvent {
     public ScoreBoardAPI getScoreBoardAPI() { return scoreBoardAPI; }
 
     public LMS getLMS() {
-        return lastManStanding;
+        return lms;
     }
 
 }

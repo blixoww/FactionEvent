@@ -9,6 +9,7 @@ import fr.blixow.factionevent.commands.koth.KothCommand;
 import fr.blixow.factionevent.commands.koth.KothListCommand;
 import fr.blixow.factionevent.commands.lms.LMSCommand;
 import fr.blixow.factionevent.commands.lms.LMSListCommand;
+import fr.blixow.factionevent.commands.lms.LMSRCommand;
 import fr.blixow.factionevent.commands.planning.PlanningAddCommand;
 import fr.blixow.factionevent.commands.planning.PlanningCommand;
 import fr.blixow.factionevent.commands.planning.PlanningRemoveCommand;
@@ -118,12 +119,12 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("dtc").setExecutor(new DTCCommand());
         getCommand("dtc").setTabCompleter(new DTCCommand());
         getCommand("dtclist").setExecutor(new DTCListCommand());
-
         // LMS
         getCommand("lms").setExecutor(new LMSCommand());
         getCommand("lms").setTabCompleter(new LMSCommand());
+        getCommand("lmsr").setExecutor(new LMSRCommand());
+        getCommand("lmsr").setTabCompleter(new LMSRCommand());
         getCommand("lmslist").setExecutor(new LMSListCommand());
-
         // Event
         getCommand("event").setExecutor(new EventCommand());
         getCommand("event").setTabCompleter(new EventCommand());
@@ -166,7 +167,6 @@ public final class FactionEvent extends JavaPlugin {
     }
 
     private HashMap<String, String> loadPlanning() {
-        // TODO : add LMS to planning
         HashMap<String, String> scheduleMap = new HashMap<>();
         LocalDateTime currentDateTime = LocalDateTime.now();
         int currentWeek = DateManager.getWeekOfYear(currentDateTime);

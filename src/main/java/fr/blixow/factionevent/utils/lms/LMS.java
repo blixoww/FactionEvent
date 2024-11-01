@@ -21,11 +21,13 @@ public class LMS {
 
     private final String name;
     private Location arenaLocation;
-    private int registrationTime = 120; // temps d'inscription en secondes
-    private int prepTime = 20; // temps de préparation en secondes
-    private HashMap<Player, Boolean> registeredPlayers;
+    private int registrationTime = 30; // Temps d'inscription en secondes
+    private int prepTime = 30; // Temps de préparation en secondes
+    private final HashMap<Player, Boolean> registeredPlayers; // Stocke les joueurs inscrits
     private LMSEvent eventInstance;
     private boolean isEventActive = false;
+    private boolean isPreparation = false;
+    private boolean isRegister = false; // Indique si l'inscription est active
     private final FileConfiguration msg = FileManager.getMessageFileConfiguration();
     private final String prefix = msg.contains("lms.prefix") ? msg.getString("lms.prefix") : "§8[§cLMS§8]§7 ";
 
@@ -36,127 +38,175 @@ public class LMS {
     }
 
     public void registerPlayer(Player player) {
-        if (isEventActive) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).rePlayer(player).reLMS(name).toString()));
+        // Vérifie si l'inscription est active
+        if (!isRegister) {
+            player.sendMessage(prefix + new StrManager(msg.getString("lms.not_started")).reLMS(name).toString());
             return;
         }
 
+        // Vérifie si le joueur est déjà inscrit
+        if (registeredPlayers.containsKey(player) && registeredPlayers.get(player)) {
+            player.sendMessage(prefix + new StrManager(msg.getString("lms.already_registered")).rePlayer(player).reLMS(name).toString());
+            return;
+        }
+
+        // Vérifie si le joueur a une faction
         FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
         Faction faction = fPlayer.getFaction();
         if (faction == null || faction.isWilderness()) {
-            player.sendMessage(prefix + (new StrManager(msg.getString("lms.no_faction")).rePlayer(player).reLMS(name).toString()));
+            player.sendMessage(prefix + new StrManager(msg.getString("lms.no_faction")).rePlayer(player).reLMS(name).toString());
             return;
         }
 
+        // Vérifie s'il y a déjà un joueur de la même faction inscrit à l'événement
+        for (Player registeredPlayer : registeredPlayers.keySet()) {
+            FPlayer registeredFPlayer = FPlayers.getInstance().getByPlayer(registeredPlayer);
+            Faction registeredFaction = registeredFPlayer.getFaction();
+
+            if (registeredFaction.getId().equals(faction.getId())) {
+                player.sendMessage(prefix + new StrManager(msg.getString("lms.same_faction"))
+                        .rePlayer(player).reLMS(name).toString());
+                return;
+            }
+        }
+
+        // Vérifie le temps minimum d'existence de la faction
         long minFactionTime = FactionEvent.getInstance().getConfig().getLong("lms.min_faction_time", 86400);
         long factionDate = faction.getFoundedDate();
         long currentTime = System.currentTimeMillis();
-        long diff = currentTime - factionDate;
-        long diffSeconds = diff / 1000;
+        long diffSeconds = (currentTime - factionDate) / 1000;
 
         if (diffSeconds < minFactionTime) {
-            player.sendMessage(prefix + (new StrManager(msg.getString("lms.faction_time")).rePlayer(player).reLMS(name).toString()));
+            player.sendMessage(prefix + new StrManager(msg.getString("lms.faction_time")).rePlayer(player).reLMS(name).toString());
             return;
         }
 
-        if (!registeredPlayers.containsKey(player)) {
-            registeredPlayers.put(player, true);
-            player.sendMessage(new StrManager(msg.getString("lms.registered")).rePlayer(player).reLMS(name).toString());
-        } else {
-            player.sendMessage(new StrManager(msg.getString("lms.already_registered")).rePlayer(player).reLMS(name).toString());
-        }
+        // Inscrit le joueur
+        registeredPlayers.put(player, true);
+        player.sendMessage(prefix + new StrManager(msg.getString("lms.registered")).rePlayer(player).reLMS(name).toString());
     }
 
     public void unregisterPlayer(Player player) {
-        if (isEventActive) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).rePlayer(player).reLMS(name).toString()));
+        // Vérifie si l'inscription est active
+        if (!isRegister) {
+            player.sendMessage(prefix + new StrManager(msg.getString("lms.not_started")).reLMS(name).toString());
             return;
         }
-        if (registeredPlayers.containsKey(player)) {
-            registeredPlayers.remove(player);
-            player.sendMessage(new StrManager(msg.getString("lms.unregistered")).rePlayer(player).reLMS(name).toString());
-        } else {
-            player.sendMessage(new StrManager(msg.getString("lms.already_unregistered")).rePlayer(player).reLMS(name).toString());
+
+        // Vérifie si le joueur est inscrit
+        if (!registeredPlayers.containsKey(player) || !registeredPlayers.get(player)) {
+            player.sendMessage(prefix + new StrManager(msg.getString("lms.not_registered")).rePlayer(player).reLMS(name).toString());
+            return;
         }
+
+        // Désinscrit le joueur
+        registeredPlayers.put(player, false);
+        player.sendMessage(prefix + new StrManager(msg.getString("lms.unregistered")).rePlayer(player).reLMS(name).toString());
     }
 
     public void startRegistration() {
-        if (isEventActive) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.started")).reLMS(name).toString()));
+        // Vérifie si l'événement est déjà actif ou si l'inscription est déjà en cours
+        if (isEventActive || isPreparation || isRegister) {
+            Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.too_late")).reLMS(name).toString());
             return;
         }
+
+        // Démarre l'inscription
+        isRegister = true;
+        Bukkit.broadcastMessage(new StrManager(msg.getString("lms.registration_started")).reLMS(name).toString());
         Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), this::prepareEvent, registrationTime * 20L);
     }
 
+    private boolean isNotEnoughPlayers() {
+        long registeredCount = registeredPlayers.values().stream().filter(Boolean::booleanValue).count();
+        return registeredCount < 2;
+    }
+
     private void prepareEvent() {
-        if (registeredPlayers.size() < 2) {
-            Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.any_register")).reLMS(name).toString()));
-            return;
-        }
+        if (isNotEnoughPlayers()) {
+            Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.any_register")).reLMS(name).toString());
+            resetEvent();
+        } else {
+            isRegister = false;
+            isPreparation = true; // Marque le début de la phase de préparation
+            List<Player> playersToRemove = new ArrayList<>();
 
-        // Créer une liste temporaire pour éviter ConcurrentModificationException
-        List<Player> playersToRemove = new ArrayList<>();
-
-        for (Player player : registeredPlayers.keySet()) {
-            if (!player.isOnline()) {
-                playersToRemove.add(player); // Ajoutez le joueur à la liste de suppression
-            } else {
-                player.teleport(arenaLocation);
-                FactionMessageTitle.sendPlayersTitle(20, 40, 20, "§aPréparez-vous au combat", "Le LMS commence dans " + prepTime + " secondes");
-                player.sendMessage(prefix + (new StrManager(msg.getString("lms.teleport")).reLMS(name).toString()));
+            // Prépare les joueurs
+            for (Player player : registeredPlayers.keySet()) {
+                if (!player.isOnline()) {
+                    // Si le joueur est déconnecté pendant la préparation, il sera retiré
+                    playersToRemove.add(player);
+                } else if (registeredPlayers.get(player)) {
+                    player.teleport(arenaLocation);
+                    FactionMessageTitle.sendPlayersTitle(20, 60, 20, "§aPréparez-vous", "Le LMS commence dans 30 secondes");
+                    player.sendMessage(prefix + new StrManager(msg.getString("lms.teleport")).reLMS(name).toString());
+                }
             }
-        }
-        // Retirer les joueurs déconnectés
-        for (Player player : playersToRemove) {
-            registeredPlayers.remove(player);
-        }
 
-        Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), this::start, prepTime * 20L);
+            // Retire les joueurs déconnectés
+            for (Player player : playersToRemove) {
+                registeredPlayers.remove(player);
+            }
+
+            // Démarre l'événement après le temps de préparation
+            Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), this::start, prepTime * 20L);
+        }
     }
 
     public void start() {
-        eventInstance = new LMSEvent(this, registeredPlayers, FactionEvent.getInstance().getConfig(), this);
+        // Vérifie si au moins deux joueurs sont présents pour commencer l'événement
+        if (isNotEnoughPlayers()) {
+            Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.any_register")).reLMS(name).toString());
+            resetEvent();
+            return;
+        }
+
+        isPreparation = false;
         isEventActive = true;
+        eventInstance = new LMSEvent(this, registeredPlayers, FactionEvent.getInstance().getConfig());
         eventInstance.startCombat();
     }
 
     public void stop() {
+        // Termine l'événement en cours
         if (eventInstance != null) {
             eventInstance.endEvent();
             eventInstance = null;
         }
+        resetEvent();
+        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.ended")).reLMS(name).toString());
+    }
+
+    private void resetEvent() {
+        // Réinitialise l'état de l'événement
+        isRegister = false;
+        isPreparation = false;
         isEventActive = false;
         registeredPlayers.clear();
-        Bukkit.broadcastMessage(prefix + (new StrManager(msg.getString("lms.ended")).reLMS(name).toString()));
     }
 
     public boolean saveLMS() {
+        // Enregistre les informations de l'événement dans le fichier
         try {
             File file = FileManager.getFile("data/lms.yml");
             FileConfiguration fc = FileManager.getLMSDataFC();
-            List<String> listLMS = new ArrayList<>();
-            if (fc.contains("lmslist")) {
-                listLMS = fc.getStringList("lmslist");
-            }
+            List<String> listLMS = fc.getStringList("lmslist");
             if (!listLMS.contains(getName())) {
                 listLMS.add(getName());
             }
-            String world_name = arenaLocation.getWorld().getName();
-            int pos1_x = (int) arenaLocation.getX(), pos1_y = (int) arenaLocation.getY(), pos1_z = (int) arenaLocation.getZ();
-            fc.set(getName() + "." + "worldname", world_name);
-            fc.set(getName() + "." + "arenaLocation.x", pos1_x);
-            fc.set(getName() + "." + "arenaLocation.y", pos1_y);
-            fc.set(getName() + "." + "arenaLocation.z", pos1_z);
+            String worldName = arenaLocation.getWorld().getName();
+            fc.set(getName() + ".worldname", worldName);
+            fc.set(getName() + ".arenaLocation.x", arenaLocation.getBlockX());
+            fc.set(getName() + ".arenaLocation.y", arenaLocation.getBlockY());
+            fc.set(getName() + ".arenaLocation.z", arenaLocation.getBlockZ());
             fc.set("lmslist", listLMS);
             fc.save(file);
             return true;
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-        return false;
-
     }
-
 
     public void setArenaLocation(Location arenaLocation) {
         this.arenaLocation = arenaLocation;
@@ -174,6 +224,10 @@ public class LMS {
         return registeredPlayers;
     }
 
+    public boolean isRegister() {
+        return isRegister;
+    }
+
     public boolean isEventActive() {
         return isEventActive;
     }
@@ -186,4 +240,15 @@ public class LMS {
         return prepTime;
     }
 
+    @Override
+    public String toString() {
+        return "§8§m-----§r§8[§cLMS§8]§m-----\n\n§8» §cNom : §7" + name +
+                "\n§8» §cPosition :\n§8-> §7X = §f" + arenaLocation.getBlockX() +
+                "\n§8-> §7Y = §f" + arenaLocation.getBlockY() +
+                "\n§8-> §7Z = §f" + arenaLocation.getBlockZ();
+    }
+
+    public boolean isRegistration() {
+        return isRegister;
+    }
 }
