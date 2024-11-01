@@ -118,7 +118,7 @@ lms:
             §7Spectateurs : §e(/warp {lmsL})\n
             \n
             §8§m----------------------------"
-  canceled: "§7Le LastManStanding §7{lms} a été annulé."
+  canceled: "§7Le LastManStanding a été annulé."
   too_late: "§7Le LastManStanding §7{lms} est déjà en cours."
   ended: "§7Le LastManStanding §7{lms} est terminé."
   already_exist: "§7Le LastManStanding §7{lms} existe déjà."
@@ -141,14 +141,14 @@ lms:
                            §7Bonne chance à tous les participants !\n
                            \n
                            §8§m---------------------------------------"
-  registered: "§7Vous êtes inscrit au LastManStanding §7{lms}."
-  not_registered: "§7Vous n'êtes pas inscrit au LastManStanding §7{lms}."
-  not_registered_anymore: "§7Vous avez été désinscrit du LastManStanding §7{lms}."
-  already_registered: "§7Vous êtes déjà inscrit au LastManStanding §7{lms}."
-  unregistered: "§7Vous avez été désinscrit du LastManStanding §7{lms}."
-  already_unregistered: "§7Vous n'êtes pas inscrit au LastManStanding §7{lms}."
-  teleport: "§7Vous avez été téléporté à l'arène du LastManStanding §7{lms}."
-  any_register: "§7Pas assez de joueurs se sont inscrits au LastManStanding §7{lms}."
+  registered: "§7Vous êtes inscrit au LastManStanding."
+  not_registered: "§7Vous n'êtes pas inscrit au LastManStanding."
+  not_registered_anymore: "§7Vous avez été désinscrit du LastManStanding."
+  already_registered: "§7Vous êtes déjà inscrit au LastManStanding."
+  unregistered: "§7Vous avez été désinscrit du LastManStanding."
+  already_unregistered: "§7Vous n'êtes pas inscrit au LastManStanding."
+  teleport: "§7Vous avez été téléporté à l'arène du LastManStanding."
+  any_register: "§7Pas assez de joueurs se sont inscrits au LastManStanding."
   eliminated: "§7Vous avez été éliminé du LastManStanding."
   setup: "§7Le LastManStanding a été planifié pour le §c{time}§7."
   adding_to_queue: "§7Un événement est en cours, le LastManStanding §7{lms} sera lancé ensuite."
@@ -160,7 +160,7 @@ lms:
                         §8§m----------------------------"
   starting_in_1mins: "§8§m---------§r §8<§eDERNIÈRE MINUTE §8>§m---------\n§r
                         \n
-                        §7Le §eLast Man Standing §7{lms} commence dans §c1 §7minute !\n
+                        §7Le §eLast Man Standing commence dans §c1 §7minute !\n
                         §7Prêts à combattre ?\n
                         \n
                         §8§m----------------------------"
@@ -176,17 +176,12 @@ lms:
       - "§c» §eJoueur"
       - "§7{player}"
       - ""
-      - "§c» §eTemps"
-      - "§7{time}"
+      - "§c» §eFaction"
+      - "§7{faction}"
       - ""
-      - "§c» §eVie"
-      - "§c{life}§4❤"
+      - "§c» §eJoueurs Restants"
+      - "§7{total}"
       - ""
-      - "§c» §eKills"
-      - "§7{kills}"
-      - ""
-      - "§c» §eMorts"
-      - "§7{deaths}"
 kothlist:
   title: "§8§m----§r§8[ §cKOTH §8]§m----\n"
   item: "§8- §7{koth}"

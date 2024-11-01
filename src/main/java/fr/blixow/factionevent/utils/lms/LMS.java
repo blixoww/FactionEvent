@@ -7,6 +7,7 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.event.EventOn;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -25,25 +26,23 @@ public class LMS {
     private int prepTime = 30; // Temps de préparation en secondes
     private final HashMap<Player, Boolean> registeredPlayers; // Stocke les joueurs inscrits
     private LMSEvent eventInstance;
-    private boolean isEventActive = false;
-    private boolean isPreparation = false;
-    private boolean isRegister = false; // Indique si l'inscription est active
+    private Phase phase = null;
     private final FileConfiguration msg = FileManager.getMessageFileConfiguration();
     private final String prefix = msg.contains("lms.prefix") ? msg.getString("lms.prefix") : "§8[§cLMS§8]§7 ";
 
-    public LMS(String name, Location arenaLocation) {
+    public LMS(String name, Location arenaLocation, Phase phase) {
         this.name = name;
         this.arenaLocation = arenaLocation;
         this.registeredPlayers = new HashMap<>();
+        this.phase = phase;
     }
 
     public void registerPlayer(Player player) {
         // Vérifie si l'inscription est active
-        if (!isRegister) {
+        if (!phase.equals(Phase.REGISTRATION)) {
             player.sendMessage(prefix + new StrManager(msg.getString("lms.not_started")).reLMS(name).toString());
             return;
         }
-
         // Vérifie si le joueur est déjà inscrit
         if (registeredPlayers.containsKey(player) && registeredPlayers.get(player)) {
             player.sendMessage(prefix + new StrManager(msg.getString("lms.already_registered")).rePlayer(player).reLMS(name).toString());
@@ -88,7 +87,7 @@ public class LMS {
 
     public void unregisterPlayer(Player player) {
         // Vérifie si l'inscription est active
-        if (!isRegister) {
+        if (!phase.equals(Phase.REGISTRATION)) {
             player.sendMessage(prefix + new StrManager(msg.getString("lms.not_started")).reLMS(name).toString());
             return;
         }
@@ -104,16 +103,31 @@ public class LMS {
         player.sendMessage(prefix + new StrManager(msg.getString("lms.unregistered")).rePlayer(player).reLMS(name).toString());
     }
 
-    public void startRegistration() {
+    public void startRegistration(Player... player) {
         // Vérifie si l'événement est déjà actif ou si l'inscription est déjà en cours
-        if (isEventActive || isPreparation || isRegister) {
-            Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.too_late")).reLMS(name).toString());
+        if (phase.equals(Phase.PREPARATION) || phase.equals(Phase.COMBAT)) {
+            for (Player players : player) {
+                players.sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
+            }
             return;
         }
 
+        // si un LMS est déjà en cours alors ne pas en lancer un autre
+        if (this.isStarted() || this.isPreparation() || this.isRegistration()) {
+            for (Player players : player) {
+                players.sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
+            }
+            return;
+        }
         // Démarre l'inscription
-        isRegister = true;
-        Bukkit.broadcastMessage(new StrManager(msg.getString("lms.registration_started")).reLMS(name).toString());
+        phase = Phase.REGISTRATION;
+        try {
+            EventOn eventOn = FactionEvent.getInstance().getEventOn();
+            eventOn.start(this, player);
+            Bukkit.broadcastMessage(new StrManager(msg.getString("lms.registration_started")).reLMS(name).toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), this::prepareEvent, registrationTime * 20L);
     }
 
@@ -127,8 +141,7 @@ public class LMS {
             Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.any_register")).reLMS(name).toString());
             resetEvent();
         } else {
-            isRegister = false;
-            isPreparation = true; // Marque le début de la phase de préparation
+            phase = Phase.PREPARATION; // Marque le début de la phase de préparation
             List<Player> playersToRemove = new ArrayList<>();
 
             // Prépare les joueurs
@@ -149,11 +162,11 @@ public class LMS {
             }
 
             // Démarre l'événement après le temps de préparation
-            Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), this::start, prepTime * 20L);
+            Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), this::startMainEvent, prepTime * 20L);
         }
     }
 
-    public void start() {
+    public void startMainEvent() {
         // Vérifie si au moins deux joueurs sont présents pour commencer l'événement
         if (isNotEnoughPlayers()) {
             Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.any_register")).reLMS(name).toString());
@@ -161,10 +174,10 @@ public class LMS {
             return;
         }
 
-        isPreparation = false;
-        isEventActive = true;
-        eventInstance = new LMSEvent(this, registeredPlayers, FactionEvent.getInstance().getConfig());
-        eventInstance.startCombat();
+        // Démarre l'événement
+        eventInstance = new LMSEvent(this, registeredPlayers, FileManager.getConfig());
+        eventInstance.startEvent();
+        phase = Phase.COMBAT;
     }
 
     public void stop() {
@@ -179,9 +192,7 @@ public class LMS {
 
     private void resetEvent() {
         // Réinitialise l'état de l'événement
-        isRegister = false;
-        isPreparation = false;
-        isEventActive = false;
+        phase = Phase.NOT_STARTED;
         registeredPlayers.clear();
     }
 
@@ -224,14 +235,6 @@ public class LMS {
         return registeredPlayers;
     }
 
-    public boolean isRegister() {
-        return isRegister;
-    }
-
-    public boolean isEventActive() {
-        return isEventActive;
-    }
-
     public long getRegistrationTime() {
         return registrationTime;
     }
@@ -249,6 +252,14 @@ public class LMS {
     }
 
     public boolean isRegistration() {
-        return isRegister;
+        return phase.equals(Phase.REGISTRATION);
+    }
+
+    public boolean isPreparation() {
+        return phase.equals(Phase.PREPARATION);
+    }
+
+    public boolean isStarted() {
+        return phase.equals(Phase.COMBAT);
     }
 }

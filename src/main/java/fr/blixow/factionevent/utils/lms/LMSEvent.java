@@ -7,6 +7,8 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
 import fr.blixow.factionevent.utils.ScoreBoardAPI;
+import fr.blixow.factionevent.utils.event.EventOn;
+import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -33,19 +35,40 @@ public class LMSEvent {
         this.eventActive = false;
     }
 
-    public void startCombat() {
+    public void startEvent() {
         eventActive = true;
-        Bukkit.broadcastMessage(new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString());
-        System.out.println("size: " + participants.size());
+        participants.forEach((player, aBoolean) -> player.sendMessage(prefix + new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString()));
+        updateScoreboard();
     }
 
-    public void handlePlayerDeath(Player player) {
-        if (!eventActive) return;
 
+    public void handlePlayerDeath(Player player) {
         participants.remove(player);
         player.sendMessage(prefix + new StrManager(msg.getString("lms.eliminated")).reLMS(lms.getName()).toString());
-
+        System.out.println("Player " + player.getName() + " has been eliminated from the LMS event.");
+        System.out.println("Remaining players: " + participants.size());
         if (participants.size() == 1) {
+            if (lms.isPreparation()) {
+                lms.unregisterPlayer(player);
+                Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.canceled")).rePlayer(player).reLMS(lms.getName()).toString());
+                endEvent();
+            }
+            Map.Entry<Player, Boolean> entry = participants.entrySet().iterator().next();
+            grantVictory(entry.getKey());
+            endEvent();
+        }
+    }
+
+    public void handlePlayerQuit(Player player) {
+        participants.remove(player);
+        System.out.println("Player " + player.getName() + " has been eliminated from the LMS event.");
+        System.out.println("Remaining players: " + participants.size());
+        if (participants.size() == 1) {
+            if (lms.isPreparation()) {
+                lms.unregisterPlayer(player);
+                Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.canceled")).rePlayer(player).reLMS(lms.getName()).toString());
+                endEvent();
+            }
             Map.Entry<Player, Boolean> entry = participants.entrySet().iterator().next();
             grantVictory(entry.getKey());
             endEvent();
@@ -55,6 +78,7 @@ public class LMSEvent {
     public void endEvent() {
         participants.clear();
         eventActive = false;
+        this.getScoreBoardAPI().getObjective().unregister();
     }
 
     public void grantVictory(Player player) {
@@ -92,22 +116,26 @@ public class LMSEvent {
         scoreBoardAPI = new ScoreBoardAPI(board, "LMS", true);
 
         try {
-            String title = msg.getString("lms.scoreboard.title");
-            List<String> stringList = msg.getStringList("lms.scoreboard.lines");
-            int size = stringList.size();
+            // Récupère le titre et les lignes du scoreboard depuis la config
+            String title = msg.getString("scoreboard.title", "§8[§cLMS§8]");
+            List<String> stringList = msg.getStringList("scoreboard.lines");
+            int totalPlayersRemaining = participants.size();  // Nombre de joueurs restants
             scoreBoardAPI.setDisplayName(title);
 
-            // Met à jour chaque ligne du scoreboard sans les éléments liés au temps
+            // Met à jour chaque ligne du scoreboard avec les valeurs actuelles
+            int lineNumber = stringList.size();
             for (String line : stringList) {
-                String line2 = new StrManager(line)
-                        .reLMS(lms.getName())
-                        .reFaction(factionName)
-                        .toString();
-                scoreBoardAPI.setLine(size, line2);
-                size--;
+                String formattedLine = line
+                        .replace("{player}", participants.isEmpty() ? "N/A" : participants.keySet().iterator().next().getName())
+                        .replace("{faction}", factionName)
+                        .replace("{total}", String.valueOf(totalPlayersRemaining));
+
+                scoreBoardAPI.setLine(lineNumber, formattedLine);
+                lineNumber--;
             }
         } catch (Exception exception) {
             exception.printStackTrace();
+            // Définit un affichage par défaut en cas d'erreur dans la configuration
             scoreBoardAPI.setDisplayName("§8[§cLMS§8]");
             scoreBoardAPI.setLine(6, "");
             scoreBoardAPI.setLine(5, "§c» §eFaction");
@@ -115,7 +143,7 @@ public class LMSEvent {
             scoreBoardAPI.setLine(3, "");
         }
 
-        // Affecte le scoreboard aux joueurs participants
+        // Assigne le scoreboard aux joueurs participants
         for (Player player : FactionEvent.getInstance().getEventScoreboardOff().keySet()) {
             try {
                 EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
@@ -133,6 +161,10 @@ public class LMSEvent {
 
     public LMS getLMS() {
         return lms;
+    }
+
+    public boolean checkTimer() {
+        return eventActive;
     }
 
 }

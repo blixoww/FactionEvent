@@ -66,7 +66,7 @@ public class EventOn {
     }
 
     public boolean canStartAnEvent() {
-        return kothEvent == null && totemEvent == null && dtcEvent == null;
+        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null;
     }
 
     public void start(KOTH koth, Player... players) {
@@ -174,9 +174,7 @@ public class EventOn {
     public void start(LMS lms, Player... players) {
         if (this.canStartAnEvent()) {
             this.lmsEvent = new LMSEvent(lms, lms.getRegisteredPlayers(), FileManager.getConfig());
-            lms.startRegistration();
             FileConfiguration configuration = FileManager.getConfig();
-
             Bukkit.broadcastMessage(msg.getString("lms.prefix") + new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString());
             int check_time = 10;
             try {
@@ -192,8 +190,9 @@ public class EventOn {
                     if (lmsEvent == null) {
                         lms.stop();
                         cancel();
-                    } else {
-                        lms.startRegistration();
+                    } else if (lmsEvent.checkTimer()) {
+                        lms.stop();
+                        cancel();
                     }
                 }
             }.runTaskTimer(FactionEvent.getInstance(), (lms.getRegistrationTime() + lms.getPrepTime()) * 20L, check_time * 20L);

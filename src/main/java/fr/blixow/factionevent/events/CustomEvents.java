@@ -11,6 +11,9 @@ import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
+import fr.blixow.factionevent.utils.lms.LMS;
+import fr.blixow.factionevent.utils.lms.LMSEvent;
+import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -57,6 +60,11 @@ public class CustomEvents implements Listener {
                 kothEvent.removePlayer(player);
             }
         }
+        if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
+            FactionEvent.getInstance().getEventOn().getLMSEvent().handlePlayerQuit(player);
+        } else {
+            System.out.println("LMS est null !");
+        }
         FactionEvent.getInstance().getEventScoreboardOff().remove(player);
     }
 
@@ -65,6 +73,7 @@ public class CustomEvents implements Listener {
         Player player = event.getPlayer();
         FactionEvent.getInstance().getEventScoreboardOff().put(player, EventManager.loadFromFile(player));
     }
+
 
     // TOTEM
 
@@ -104,6 +113,7 @@ public class CustomEvents implements Listener {
     }
 
     // DTC
+
     @EventHandler
     public void onHitEntity(EntityDamageByEntityEvent event) {
         Entity entity = event.getEntity();
@@ -143,11 +153,47 @@ public class CustomEvents implements Listener {
         }
     }
 
+    //LMS
+
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
+            System.out.println("Player " + player.getName() + " has died in the LMS event.");
             FactionEvent.getInstance().getEventOn().getLMSEvent().handlePlayerDeath(player);
+        } else {
+            System.out.println("LMS est null !");
+        }
+    }
+
+
+    @EventHandler
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player) || !(event.getDamager() instanceof Player)) {
+            return;
+        }
+
+        LMS lms = FactionEvent.getInstance().getEventOn().getLMSEvent().getLMS();
+        if (lms == null) {
+            System.out.println("LMS est null !");
+            return;
+        }
+
+        Map<Player, Boolean> participants = lms.getRegisteredPlayers();
+        if (participants == null) {
+            System.out.println("Participants est null !");
+            return;
+        }
+
+        Player target = (Player) event.getEntity();
+        Player attacker = (Player) event.getDamager();
+
+        // Vérifie si les deux joueurs sont dans les participants inscrits
+        if (participants.containsKey(target) && participants.containsKey(attacker)) {
+            if (lms.isPreparation()) {
+                // Annule l'événement si le combat n'est pas encore actif
+                event.setCancelled(true);
+            }
         }
     }
 

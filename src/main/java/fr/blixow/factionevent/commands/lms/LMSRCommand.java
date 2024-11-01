@@ -1,7 +1,10 @@
 package fr.blixow.factionevent.commands.lms;
 
+import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
+import fr.blixow.factionevent.utils.dtc.DTC;
+import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSManager;
 import org.bukkit.command.Command;
@@ -37,7 +40,7 @@ public class LMSRCommand implements TabExecutor {
 
         String action = args[0].toLowerCase();
 
-        LMS lms = LMSManager.getStartingRegistration();
+        LMS lms = LMSManager.getStartedLMS();
 
         if (action.equals("register")) {
             if (lms == null) {

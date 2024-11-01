@@ -112,11 +112,11 @@ public class PlanningScheduler extends BukkitRunnable {
                     LocalDateTime now = LocalDateTime.now();
                     LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
                     if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
-                        String message = messageConfiguration.getString("lms.prefix") + new StrManager(messageConfiguration.getString("lms.starting_in_5mins")).reLMS(lms.getName()).toString();
+                        String message = new StrManager(messageConfiguration.getString("lms.starting_in_5mins")).reLMS(lms.getName()).toString();
                         Bukkit.broadcastMessage(message);
                         this.messageCounter++;
                     } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
-                        String message = messageConfiguration.getString("lms.prefix") + new StrManager(messageConfiguration.getString("lms.starting_in_1mins")).reLMS(lms.getName()).toString();
+                        String message = new StrManager(messageConfiguration.getString("lms.starting_in_1mins")).reLMS(lms.getName()).toString();
                         Bukkit.broadcastMessage(message);
                         this.messageCounter++;
                     }

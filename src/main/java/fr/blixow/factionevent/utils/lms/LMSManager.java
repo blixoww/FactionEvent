@@ -6,8 +6,6 @@ import fr.blixow.factionevent.utils.event.EventOn;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,18 +25,18 @@ public class LMSManager {
                 .orElse(null);
     }
 
-    public static LMS getStartingRegistration() {
-        return FactionEvent.getInstance().getListLMS()
-                .stream()
-                .filter(LMS::isRegistration)
-                .findFirst()
-                .orElse(null);
-    }
-
     public static List<String> getListLMSNames() {
         return FactionEvent.getInstance().getListLMS().stream()
                 .map(LMS::getName)
                 .collect(Collectors.toList());
+    }
+
+    public static LMS getStartedLMS() {
+        return FactionEvent.getInstance().getListLMS()
+                .stream()
+                .filter(LMSManager::isLMSStarted)
+                .findFirst()
+                .orElse(null);
     }
 
     public static void loadLMSfromFile() {
@@ -54,7 +52,7 @@ public class LMSManager {
                         int pos1_y = fc.getInt(lms + ".arenaLocation.y");
                         int pos1_z = fc.getInt(lms + ".arenaLocation.z");
                         Location loc1 = new Location(Bukkit.getServer().getWorld(world_name), pos1_x, pos1_y, pos1_z);
-                        lmsArrayList.add(new LMS(lms, loc1));
+                        lmsArrayList.add(new LMS(lms, loc1, Phase.NOT_STARTED));
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
