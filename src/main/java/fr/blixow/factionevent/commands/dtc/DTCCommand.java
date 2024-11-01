@@ -66,7 +66,7 @@ public class DTCCommand implements TabExecutor {
                         break;
                 }
             } else {
-                player.sendMessage(FileManager.getMessageFileConfiguration().getString("dtc.usage"));
+                player.sendMessage(prefix + new StrManager(msg.getString("dtc.usage")).toString());
             }
             return true;
         }

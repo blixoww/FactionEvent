@@ -104,6 +104,14 @@ public class LMS {
     }
 
     public void startRegistration(Player... player) {
+        // Check if an another LMS is already started
+        if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
+            for (Player players : player) {
+                players.sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
+            }
+            return;
+        }
+
         // Vérifie si l'événement est déjà actif ou si l'inscription est déjà en cours
         if (phase.equals(Phase.PREPARATION) || phase.equals(Phase.COMBAT)) {
             for (Player players : player) {
