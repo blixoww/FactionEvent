@@ -109,7 +109,7 @@ dtc:
       - "§7{time}"
 lms:
   prefix: "§8[§cLMS§8]§7 "
-  usage: "§cCommande: §7/lms <action>\n§cActions: §fcreate/start/stop/info"
+  usage: "§cCommande: §7/lms <nom> <action>\n§cActions: §fcreate/start/stop/info"
   usage_2: "§cCommande: §7/lmsr <action> \n§cActions: §fregister/unregister"
   created: "§7Le LastManStanding §7{lms} vient d'être créé."
   started: "§8§m----------------------------\n§r
