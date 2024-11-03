@@ -103,27 +103,27 @@ public class LMS {
         player.sendMessage(prefix + new StrManager(msg.getString("lms.unregistered")).rePlayer(player).reLMS(name).toString());
     }
 
-    public void startRegistration(Player... player) {
+    public void startRegistration(Player... players) {
         // Check if an another LMS is already started
         if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
-            for (Player players : player) {
-                players.sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
+            for (Player player : players) {
+                Bukkit.getPlayer(player.getName()).sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
             }
             return;
         }
 
         // Vérifie si l'événement est déjà actif ou si l'inscription est déjà en cours
         if (phase.equals(Phase.PREPARATION) || phase.equals(Phase.COMBAT)) {
-            for (Player players : player) {
-                players.sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
+            for (Player player : players) {
+                Bukkit.getPlayer(player.getName()).sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
             }
             return;
         }
 
         // si un LMS est déjà en cours alors ne pas en lancer un autre
         if (this.isStarted() || this.isPreparation() || this.isRegistration()) {
-            for (Player players : player) {
-                players.sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
+            for (Player player : players) {
+                Bukkit.getPlayer(player.getName()).sendMessage(prefix + new StrManager(msg.getString("lms.already_started")).reLMS(name).toString());
             }
             return;
         }
@@ -131,7 +131,7 @@ public class LMS {
         phase = Phase.REGISTRATION;
         try {
             EventOn eventOn = FactionEvent.getInstance().getEventOn();
-            eventOn.start(this, player);
+            eventOn.start(this, players);
             Bukkit.broadcastMessage(new StrManager(msg.getString("lms.registration_started")).reLMS(name).toString());
         } catch (Exception e) {
             e.printStackTrace();

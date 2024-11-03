@@ -32,6 +32,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+
 import java.util.Map;
 
 public class CustomEvents implements Listener {
@@ -193,6 +194,20 @@ public class CustomEvents implements Listener {
             if (lms.isPreparation()) {
                 // Annule l'événement si le combat n'est pas encore actif
                 event.setCancelled(true);
+            } else if (lms.isStarted()) {
+                // Vérifie les relations de factions
+                FPlayer fAttacker = FPlayers.getInstance().getByPlayer(attacker);
+                FPlayer fTarget = FPlayers.getInstance().getByPlayer(target);
+                Faction factionAttacker = fAttacker.getFaction();
+                Faction factionTarget = fTarget.getFaction();
+
+                // Annule les relations "ally" et "truce" pour les joueurs inscrits dans l'événement
+                if (factionAttacker != null && factionTarget != null) {
+                    if (factionAttacker.getRelationTo(factionTarget).isAlly() ||
+                            factionAttacker.getRelationTo(factionTarget).isTruce()) {
+                        event.setCancelled(false);
+                    }
+                }
             }
         }
     }
