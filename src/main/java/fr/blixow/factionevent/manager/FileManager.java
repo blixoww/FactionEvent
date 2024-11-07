@@ -4,6 +4,7 @@ import fr.blixow.factionevent.FactionEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,6 +108,10 @@ public class FileManager {
     public static FileConfiguration getLMSDataFC() {
         return FactionEvent.getInstance().getLMSFileConfiguration();
     }
+
+    public static FileConfiguration getGuessDataFC() {
+        return FactionEvent.getInstance().getGuessFileConfiguration();
+    }
     public static FileConfiguration getPlanningDataFC() {
         return FactionEvent.getInstance().getPlanningFileConfiguration();
     }
@@ -135,6 +140,7 @@ public class FileManager {
         FileManager.createDataFile("totem.yml");
         FileManager.createDataFile("dtc.yml");
         FileManager.createDataFile("lms.yml");
+        FileManager.createDataFile("guess.yml");
         FileManager.createDataFile("planning.yml", false);
         FileManager.createDataFile("eventManager.yml");
         FileManager.createDataFile("classement.yml");
@@ -150,6 +156,7 @@ public class FileManager {
             instance.setTotemFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/totem.yml")));
             instance.setDtcFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/dtc.yml")));
             instance.setLMSFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/lms.yml")));
+            instance.setGuessFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/guess.yml")));
             instance.setPlanningFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/planning.yml")));
             instance.setEventManagerFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/eventManager.yml")));
             instance.setClassementFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/classement.yml")));
@@ -171,11 +178,16 @@ public class FileManager {
             instance.getTotemFileConfiguration().save(getDataFile("totem.yml"));
             instance.getDtcFileConfiguration().save(getDataFile("dtc.yml"));
             instance.getLMSFileConfiguration().save(getDataFile("lms.yml"));
+            instance.getGuessFileConfiguration().save(getDataFile("guess.yml"));
             instance.getPlanningFileConfiguration().save(getDataFile("planning.yml"));
             instance.getEventManagerFileConfiguration().save(getDataFile("eventManager.yml"));
             instance.getClassementFileConfiguration().save(getDataFile("classement.yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static Plugin getInstance() {
+        return instance;
     }
 }

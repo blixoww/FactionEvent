@@ -1,5 +1,6 @@
 package fr.blixow.factionevent.manager;
 
+import fr.blixow.factionevent.utils.guess.Guess;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -121,6 +122,10 @@ public class StrManager {
         return this;
     }
 
+    public StrManager reWord(String guess){
+        this.message = this.message.replaceAll("\\{word}", "§7" + guess);
+        return this;
+    }
 
     public String get(){ return this.message; }
 

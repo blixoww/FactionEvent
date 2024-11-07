@@ -9,6 +9,7 @@ import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
+import fr.blixow.factionevent.utils.guess.GuessEvent;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
@@ -27,10 +28,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
@@ -212,4 +210,31 @@ public class CustomEvents implements Listener {
         }
     }
 
+    // GUESS
+
+    @EventHandler
+    public void onPlayerGuess(PlayerCommandPreprocessEvent event) {
+        GuessEvent currentEvent = FactionEvent.getInstance().getEventOn().getGuessEvent();
+        FileConfiguration msg = FileManager.getMessageFileConfiguration();
+        String prefix = msg.getString("guess.prefix");
+        if (currentEvent != null) {
+            Player player = event.getPlayer();
+
+            if (!event.getMessage().startsWith("/answer")) {
+                return;
+            }
+
+            String[] commandParts = event.getMessage().split(" ");
+            if (commandParts.length < 2) {
+                player.sendMessage(prefix + msg.getString("guess.answer_usage"));
+                event.setCancelled(true);
+                return;
+            } else {
+                String playerGuess = commandParts[1];
+                currentEvent.checkGuess(player, playerGuess);
+                event.setCancelled(true);
+            }
+            event.setCancelled(true);
+        }
+    }
 }

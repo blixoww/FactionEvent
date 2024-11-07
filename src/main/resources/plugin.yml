@@ -49,3 +49,9 @@ commands:
   lmsr:
     usage: /lmsr
     description: Rejoindre un lms
+  guess:
+    usage: /guess
+    description: Gestion des guess
+  answer:
+    usage: /answer
+    description: Répondre à un guess

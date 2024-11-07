@@ -7,8 +7,6 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
 import fr.blixow.factionevent.utils.ScoreBoardAPI;
-import fr.blixow.factionevent.utils.event.EventOn;
-import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;

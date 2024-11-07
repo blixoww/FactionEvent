@@ -5,6 +5,8 @@ import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;
 import fr.blixow.factionevent.commands.dtc.DTCListCommand;
 import fr.blixow.factionevent.commands.events.EventCommand;
+import fr.blixow.factionevent.commands.guess.AnswerCommand;
+import fr.blixow.factionevent.commands.guess.GuessCommand;
 import fr.blixow.factionevent.commands.koth.KothCommand;
 import fr.blixow.factionevent.commands.koth.KothListCommand;
 import fr.blixow.factionevent.commands.lms.LMSCommand;
@@ -24,6 +26,7 @@ import fr.blixow.factionevent.utils.PlanningScheduler;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.event.EventOn;
+import fr.blixow.factionevent.utils.guess.GuessManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
@@ -33,6 +36,7 @@ import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -73,6 +77,7 @@ public final class FactionEvent extends JavaPlugin {
     private FileConfiguration totemFileConfiguration;
     private FileConfiguration dtcFileConfiguration;
     private FileConfiguration lmsFileConfiguration;
+    private FileConfiguration guessFileConfiguration;
     private FileConfiguration planningFileConfiguration;
     private FileConfiguration eventManagerFileConfiguration;
     private FileConfiguration classementFileConfiguration;
@@ -125,6 +130,12 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("lmsr").setExecutor(new LMSRCommand());
         getCommand("lmsr").setTabCompleter(new LMSRCommand());
         getCommand("lmslist").setExecutor(new LMSListCommand());
+
+        // Guess
+        getCommand("guess").setExecutor(new GuessCommand());
+        getCommand("guess").setTabCompleter(new GuessCommand());
+        getCommand("answer").setExecutor(new AnswerCommand());
+
         // Event
         getCommand("event").setExecutor(new EventCommand());
         getCommand("event").setTabCompleter(new EventCommand());
@@ -159,6 +170,7 @@ public final class FactionEvent extends JavaPlugin {
         TotemManager.loadTotems();
         DTCManager.loadDTCfromFile();
         LMSManager.loadLMSfromFile();
+        GuessManager.loadWordsFromConfig();
         planning = loadPlanning();
     }
 
@@ -211,6 +223,7 @@ public final class FactionEvent extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Reloading new files");
         FileManager.loadNeededFiles();
         Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Saving new files");
+        GuessManager.saveWordsToConfig(new ArrayList<>());
         FileManager.saveFiles();
         eventOn.cancelEvent();
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Désactivation du plugin");
@@ -293,13 +306,15 @@ public final class FactionEvent extends JavaPlugin {
     public FileConfiguration getTotemFileConfiguration() {
         return totemFileConfiguration;
     }
-
     public FileConfiguration getDtcFileConfiguration() {
         return dtcFileConfiguration;
     }
 
     public FileConfiguration getLMSFileConfiguration() {
         return lmsFileConfiguration;
+    }
+    public FileConfiguration getGuessFileConfiguration() {
+        return guessFileConfiguration;
     }
     public FileConfiguration getPlanningFileConfiguration() {
         return planningFileConfiguration;
@@ -341,6 +356,10 @@ public final class FactionEvent extends JavaPlugin {
         this.lmsFileConfiguration = lmsFileConfiguration;
     }
 
+    public void setGuessFileConfiguration(FileConfiguration guessFileConfiguration) {
+        this.guessFileConfiguration = guessFileConfiguration;
+    }
+
     public void setPlanningFileConfiguration(FileConfiguration planningFileConfiguration) {
         this.planningFileConfiguration = planningFileConfiguration;
     }
@@ -356,4 +375,5 @@ public final class FactionEvent extends JavaPlugin {
     public void setLogsFileConfiguration(FileConfiguration logsFileConfiguration) {
         this.logsFileConfiguration = logsFileConfiguration;
     }
+
 }

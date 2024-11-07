@@ -5,6 +5,9 @@ import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCEvent;
+import fr.blixow.factionevent.utils.guess.Guess;
+import fr.blixow.factionevent.utils.guess.GuessEvent;
+import fr.blixow.factionevent.utils.guess.GuessManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
@@ -24,6 +27,7 @@ public class EventOn {
     private TotemEvent totemEvent;
     private DTCEvent dtcEvent;
     private LMSEvent lmsEvent;
+    private GuessEvent guessEvent;
     private ArrayList<Object> queue;
     private final FileConfiguration msg;
 
@@ -33,6 +37,7 @@ public class EventOn {
         this.totemEvent = null;
         this.dtcEvent = null;
         this.lmsEvent = null;
+        this.guessEvent = null;
         this.queue = new ArrayList<>();
         new BukkitRunnable() {
             @Override
@@ -53,6 +58,9 @@ public class EventOn {
                             } else if (o instanceof LMS) {
                                 LMS lms = (LMS) o;
                                 lms.startRegistration();
+                            } else if (o instanceof GuessEvent) {
+                                Guess guess = (Guess) o;
+                                guess.start();
                             }
                             queue.remove(0);
                         }
@@ -202,6 +210,50 @@ public class EventOn {
         FactionMessageTitle.sendPlayersMessage(msg.getString("lms.prefix") + new StrManager(msg.getString("lms.adding_to_queue")).reLMS(lms.getName()).toString(), players);
     }
 
+    public void start(Guess guess, Player... players) {
+        if (this.canStartAnEvent()) {
+            // Charge les mots depuis guess.yml en utilisant loadWordsFromConfig
+            guess = GuessManager.loadWordsFromConfig();
+
+            // Vérifie que les mots ont été correctement chargés
+            if (guess.getWords().isEmpty()) {
+                Bukkit.broadcastMessage(msg.getString("guess.prefix") + new StrManager(msg.getString("guess.no_words")).toString());
+                return;
+            }
+
+            Bukkit.broadcastMessage(msg.getString("guess.prefix") + new StrManager(msg.getString("guess.started")).toString());
+            this.guessEvent = new GuessEvent(guess);
+            FileConfiguration configuration = FileManager.getConfig();
+
+            int check_time = 10;
+            try {
+                if (configuration.contains("guess.check_time")) {
+                    check_time = configuration.getInt("guess.check_time");
+                }
+            } catch (Exception ignored) {
+            }
+            check_time = Math.max(check_time, 1);
+
+            Guess finalGuess = guess;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (guessEvent == null) {
+                        finalGuess.stop();
+                        cancel();
+                    } else if (guessEvent.checkTimer()) {
+                        finalGuess.stop();
+                        cancel();
+                    }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
+        } else {
+            guess = GuessManager.loadWordsFromConfig();
+            queue.add(guess);
+            FactionMessageTitle.sendPlayersMessage(msg.getString("guess.prefix") + new StrManager(msg.getString("guess.adding_to_queue")).toString(), players);
+        }
+    }
+
     public void stopCurrentEvent() {
         if (!canStartAnEvent()) {
             if (kothEvent != null) {
@@ -215,6 +267,9 @@ public class EventOn {
             }
             if (lmsEvent != null) {
                 lmsEvent.getLMS().stop();
+            }
+            if (guessEvent != null) {
+                guessEvent.getGuess().stop();
             }
         }
     }
@@ -248,6 +303,10 @@ public class EventOn {
         return lmsEvent;
     }
 
+    public GuessEvent getGuessEvent() {
+        return guessEvent;
+    }
+
     public void setKothEvent(KOTHEvent kothEvent) {
         this.kothEvent = kothEvent;
     }
@@ -260,6 +319,10 @@ public class EventOn {
         this.dtcEvent = dtcEvent;
     }
 
+    public void setGuessEvent(GuessEvent guessEvent) {
+        this.guessEvent = guessEvent;
+    }
+
     public void setLMSEvent(LMSEvent lmsEvent) {
         this.lmsEvent = lmsEvent;
     }
@@ -267,4 +330,5 @@ public class EventOn {
     public void setQueue(ArrayList<Object> queue) {
         this.queue = queue;
     }
+
 }
