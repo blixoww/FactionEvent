@@ -5,7 +5,11 @@ koth:
   prefix: "§8[§cKOTH§8]§7 "
   usage: "§cCommande: §7/koth <nom> <action>\n§cActions: §fcreate/pos1/pos2/save/start/stop/info"
   created: "§7Le koth §c{koth} §7vient d'être créé."
-  started: "§7Le koth §c{koth} §7va débuter. §e(/warp {kothL})§7."
+  started: "§8§m----------------------------\n§r
+            \n
+            §eLe KOTH a commencé.\n
+            \n
+            §8§m----------------------------"
   canceled: "§7Le koth §c{koth} §7a été annulé."
   already_exist: "§7Le koth §c{koth} §7existe déjà."
   doesnt_exist: "§7Le koth §c{koth} §7n'existe pas."
@@ -25,8 +29,18 @@ koth:
   faction_point: "§a+{points} points §7classement ajouté à votre faction."
   time_in: "§7Conquête§8: §c{time}§f/§c{maxtime}"
   adding_to_queue: "§7Un événément est déjà en cours, le koth §c{koth} §7sera lancé automatiquement par la suite."
-  starting_in_5mins: "§7Le koth §c{koth} §7va commencer dans §c5 §7minutes."
-  starting_in_1mins: "§7Le koth §c{koth} §7va commencer dans §c1 §7minute."
+  starting_in_5mins: "§8§m---------§r §8<§eDÉBUT IMMINENT §8>§m---------\n§r
+                        \n
+                        §7Le §eKOTH commence dans §c5 §7minutes !\n
+                        §7Préparez-vous pour dominer la zone !\n
+                        \n
+                        §8§m----------------------------"
+  starting_in_1mins: "§8§m---------§r §8<§eDERNIÈRE MINUTE §8>§m---------\n§r
+                        \n
+                        §7Le §eKOTH commence dans §c1 §7minute !\n
+                        §7La zone pourra bientôt être dominée !\n
+                        \n
+                        §8§m----------------------------"
   scoreboard:
     title: "§8[§cKOTH§8]"
     lines:
@@ -52,7 +66,11 @@ totem:
   prefix: "§8[§cTotem§8]§7 "
   usage: "§cCommande: §7/totem <nom> <action>\n§cActions: §fcreate/edit/save/pos/start/stop/info"
   created: "§7Le totem §c{totem} §7vient d'être créé."
-  started: "§7Le totem §c{totem} §7va débuter. §e(/warp {totemL})§7."
+  started: "§8§m----------------------------\n§r
+            \n
+            §eLe Totem a commencé.\n
+            \n
+            §8§m----------------------------"
   canceled: "§7Le totem §c{totem} §7a été annulé."
   editing: "§7L'édition du totem §c{totem} §7est en cours."
   save_success: "§7Le Totem §c{totem} §7a été sauvegardé en configuration §e(totem.yml)§7."
@@ -74,13 +92,27 @@ totem:
   blocks_left: "§7Il reste §c{blocks}§7/§c{maxblocks} §7blocks."
   setup: "§7Le totem §c{totem} §8[§e/warp {totemL}§8] §7a été planifié pour le §c{time}§7."
   adding_to_queue: "§7Un événément est déjà en cours, le totem §c{totem} §7sera lancé automatiquement par la suite."
-  starting_in_5mins: "§7Le totem §c{totem} §7va commencer dans §c5 §7minutes."
-  starting_in_1mins: "§7Le totem §c{totem} §7va commencer dans §c1 §7minute."
+  starting_in_5mins: "§8§m---------§r §8<§eDÉBUT IMMINENT §8>§m---------\n§r
+                        \n
+                        §7Le §eTotem commence dans §c5 §7minutes !\n
+                        §7Préparez-vous pour la destruction de la tour !\n
+                        \n
+                        §8§m----------------------------"
+  starting_in_1mins: "§8§m---------§r §8<§eDERNIÈRE MINUTE §8>§m---------\n§r
+                        \n
+                        §7Le §eTotem commence dans §c1 §7minute !\n
+                        §7La tour doit être détruite !\n
+                        \n
+                        §8§m----------------------------"
 dtc:
   prefix: "§8[§cDTC§8]§7 "
   usage: "§cCommande: §7/dtc <nom> <action>\n§cActions: §fcreate/pos/start/stop/info"
   created: "§7Le DTC §c{dtc} §7vient d'être créé."
-  started: "§7Le DTC §c{dtc} §7va débuter. §e(/warp {dtcL})§7."
+  started: "§8§m----------------------------\n§r
+            \n
+            §eLe DTC a commencé.\n
+            \n
+            §8§m----------------------------"
   canceled: "§7Le DTC §c{dtc} §7a été annulé."
   ended: "§7Le DTC §c{dtc} §7est terminé, §caucun vainqueur§7."
   already_exist: "§7Le DTC §c{dtc} §7existe déjà."
@@ -93,8 +125,18 @@ dtc:
   life_left_sb: "§c{life}§4❤ §f/ §c{max_life}§4❤"
   setup: "§7Le DTC §c{dtc} §8[§e/warp {dtcL}§8] §7a été planifié pour le §c{time}§7."
   adding_to_queue: "§7Un événément est déjà en cours, le dtc §c{dtc} §7sera lancé automatiquement par la suite."
-  starting_in_5mins: "§7Le Nexus §c{dtc} §7va commencer dans §c5 §7minutes."
-  starting_in_1mins: "§7Le Nexus §c{dtc} §7va commencer dans §c1 §7minute."
+  starting_in_5mins: "§8§m---------§r §8<§eDÉBUT IMMINENT §8>§m---------\n§r
+                        \n
+                        §7Le §eDTC commence dans §c5 §7minutes !\n
+                        §7Préparez-vous pour la destruction du coeur !\n
+                        \n
+                        §8§m----------------------------"
+  starting_in_1mins: "§8§m---------§r §8<§eDERNIÈRE MINUTE §8>§m---------\n§r
+                        \n
+                        §7Le §eDTC commence dans §c1 §7minute !\n
+                        §7Le coeur doit être détruit !\n
+                        \n
+                        §8§m----------------------------"
   scoreboard:
     title: "§8[§cDTC§8]"
     lines:

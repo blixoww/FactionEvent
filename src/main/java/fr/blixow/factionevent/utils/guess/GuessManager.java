@@ -2,10 +2,9 @@ package fr.blixow.factionevent.utils.guess;
 
 import fr.blixow.factionevent.manager.FileManager;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Collections;
@@ -25,10 +24,14 @@ public class GuessManager {
     }
 
     private static List<String> selectRandomWords(List<String> words) {
-        int maxWords = Math.min(5, words.size()); // Limite maximale de 5 mots
-        int numberOfWords = 2 + (int)(Math.random() * (maxWords - 1)); // Nombre aléatoire de mots entre 2 et maxWords
+        if (words.size() < 2) {
+            return new ArrayList<>(words); // Retourne tous les mots si la liste contient moins de 2 éléments
+        }
+
+        int maxWords = Math.min(5, words.size());
+        int numberOfWords = 2 + (int)(Math.random() * (maxWords - 2 + 1)); // Nombre aléatoire de mots entre 2 et maxWords
         Collections.shuffle(words); // Mélange les mots
-        return words.subList(0, numberOfWords); // Sélectionne le sous-ensemble
+        return words.subList(0, numberOfWords);
     }
 
     public static void saveWordsToConfig(List<String> words) {
