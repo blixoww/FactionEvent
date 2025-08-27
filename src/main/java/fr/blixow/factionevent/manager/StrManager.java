@@ -1,5 +1,6 @@
 package fr.blixow.factionevent.manager;
 
+import fr.blixow.factionevent.utils.guess.Guess;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -89,10 +90,10 @@ public class StrManager {
         return this;
     }
 
-    public StrManager reMeteorite(String meteorite){
+    public StrManager reLMS(String LMSname){
         try {
-            this.message = this.message.replaceAll("\\{meteorite}", meteorite);
-            this.message = this.message.replaceAll("\\{meteoriteL}", meteorite.toLowerCase());
+            this.message = this.message.replaceAll("\\{lms}", LMSname);
+            this.message = this.message.replaceAll("\\{lmsL}", LMSname.toLowerCase());
         } catch (Exception exception){ exception.printStackTrace(); }
         return this;
     }
@@ -121,6 +122,10 @@ public class StrManager {
         return this;
     }
 
+    public StrManager reWord(String guess){
+        this.message = this.message.replaceAll("\\{word}", "§7" + guess);
+        return this;
+    }
 
     public String get(){ return this.message; }
 

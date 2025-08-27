@@ -8,6 +8,8 @@ import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
+import fr.blixow.factionevent.utils.lms.LMS;
+import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemManager;
 import org.bukkit.command.Command;
@@ -119,6 +121,31 @@ public class PlanningAddCommand implements TabExecutor {
                                     exception.printStackTrace();
                                 }
                                 break;
+                            case "lms":
+                                LMS lms = LMSManager.getLMS(args[1]);
+                                if (lms == null) {
+                                    player.sendMessage(prefix + new StrManager(msg.getString("lms.doesnt_exist")).reLMS(args[1]));
+                                    return true;
+                                }
+                                List<String> lmsList = new ArrayList<>();
+                                try {
+                                    String valeurJour = args[2];
+                                    String lmsPath = valeurJour + ".lms";
+
+                                    if (fc.contains(lmsPath + "." + lms.getName())) {
+                                        lmsList = fc.getStringList(lmsPath + "." + lms.getName());
+                                    }
+
+                                    lmsList.add(heure + "h" + minutes);
+                                    fc.set(lmsPath + "." + lms.getName(), lmsList);
+                                    fc.save(FileManager.getDataFile("planning.yml"));
+                                    player.sendMessage(pPrefix + new StrManager(msg.getString("lms.setup")).reLMS(lms.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
+
+                                    FactionEvent.getInstance().reloadPlanning();
+                                    break;
+                                } catch (Exception exception) {
+                                    exception.printStackTrace();
+                                }
                         }
                     } else {
                         player.sendMessage(msg.getString("planning.time_syntaxe"));
@@ -140,7 +167,7 @@ public class PlanningAddCommand implements TabExecutor {
         List<String> stringList = new ArrayList<>();
         List<String> customs = new ArrayList<>();
         if (args.length == 1) {
-            customs = new ArrayList<>(Arrays.asList("koth", "totem", "dtc", "meteorite"));
+            customs = new ArrayList<>(Arrays.asList("koth", "totem", "dtc", "lms"));
         } else if (args.length == 2) {
             if (args[0].equalsIgnoreCase("koth")) {
                 customs = KOTHManager.getListKothNames();
@@ -148,6 +175,8 @@ public class PlanningAddCommand implements TabExecutor {
                 customs = TotemManager.getListTotemNames();
             } else if (args[0].equalsIgnoreCase("dtc")) {
                 customs = DTCManager.getDTCNames();
+            } else if (args[0].equalsIgnoreCase("lms")) {
+                customs = LMSManager.getListLMSNames();
             }
         } else if (args.length == 3) {
             customs = new ArrayList<>(Arrays.asList("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"));

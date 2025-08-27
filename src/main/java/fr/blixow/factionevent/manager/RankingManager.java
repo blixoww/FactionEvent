@@ -122,6 +122,32 @@ public class RankingManager {
         }
     }
 
+    public static int getLMSWins(Faction faction) {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            String path = faction.getId() + ".lms";
+            if (fc.contains(path)) {
+                return Integer.parseInt(fc.getString(path));
+            }
+            return 0;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return 0;
+        }
+    }
+
+    public static void addLMSWins(Faction faction) {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            String path = faction.getId() + ".lms";
+            int lms_wins = getLMSWins(faction) + 1;
+            fc.set(path, lms_wins);
+            fc.save(FileManager.getDataFile("classement.yml"));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
     public static void logsMessage(String message) {
         try {
             FileConfiguration logs = FileManager.getLogsFC();
@@ -158,8 +184,8 @@ public class RankingManager {
                 if (fc.contains(id + ".dtc")) {
                     dtc = String.valueOf(fc.getInt(id + ".dtc"));
                 }
-                if (fc.contains(id + ".meteorite")) {
-                    meteorite = String.valueOf(fc.getInt(id + ".meteorite"));
+                if (fc.contains(id + ".lms")) {
+                    meteorite = String.valueOf(fc.getInt(id + ".lms"));
                 }
                 return points + "-" + koth + "-" + totem + "-" + dtc + "-" + meteorite;
             }

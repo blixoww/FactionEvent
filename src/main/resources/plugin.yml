@@ -9,6 +9,9 @@ commands:
   planningadd:
     usage: /planningadd
     description: Planification des events.
+  planningremove:
+    usage: /planningremove
+    description: Suppression d'un event du planning.
   koth:
     usage: /koth
     description: Gestion des koths.
@@ -36,16 +39,19 @@ commands:
   dtclist:
     usage: /dtclist
     description: Affiche la liste des dtc
-  meteorite:
-    usage: /meteorite
-    description: Gestion des météorites
-  meteoritelist:
-    usage: /meteoritelist
-    description: Affiche la liste des météorites.
-  meteoritesetlist:
-    usage: /meteoritesetlist
-    description: Défini les blocks dans un rayon de 40 (Longueur) * 40 (Largeur) * 12 (Hauteur)
-  chat:
-    usage: /chat
-    description: Permet de gérer les attributs du chat des événements
-
+  lms:
+    usage: /lms
+    description: Gestion des lms
+    aliases: [lastmanstanding]
+  lmslist:
+    usage: /lmslist
+    description: Affiche la liste des lms
+  lmsr:
+    usage: /lmsr
+    description: Rejoindre un lms
+  guess:
+    usage: /guess
+    description: Gestion des guess
+  answer:
+    usage: /answer
+    description: Répondre à un guess

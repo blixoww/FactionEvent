@@ -70,7 +70,7 @@ public class TotemEvent {
         if(this.faction.equals(fPlayerFaction)){
             // update score
             blocks.remove(block.getLocation());
-            if(blocks.size() == 0){
+            if(blocks.isEmpty()){
                 grantVictory(player);
                 return;
             }

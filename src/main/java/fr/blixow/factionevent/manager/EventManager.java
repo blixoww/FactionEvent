@@ -4,6 +4,7 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.event.EventOn;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
+import fr.blixow.factionevent.utils.lms.LMSEvent;
 import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -46,6 +47,11 @@ public class EventManager {
         if (dtcEvent != null) {
             dtcEvent.getScoreBoardAPI().getObjective().unregister();
             dtcEvent.updateScoreboard();
+        }
+        LMSEvent lmsEvent = eventOn.getLMSEvent();
+        if (lmsEvent != null) {
+            lmsEvent.getScoreBoardAPI().getObjective().unregister();
+            lmsEvent.updateScoreboard();
         }
 
     }
