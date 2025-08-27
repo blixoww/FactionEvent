@@ -23,6 +23,7 @@ import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.event.EventOn;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
+import fr.blixow.factionevent.utils.meteorite.Meteorite;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
@@ -43,6 +44,7 @@ public final class FactionEvent extends JavaPlugin {
     private Map<String, String> planning;
     // KOTH
     private ArrayList<KOTH> listKOTH;
+    private ArrayList<Meteorite> listMeteorite;
 
     // Totem
     private ArrayList<Totem> listTotem;
@@ -133,6 +135,7 @@ public final class FactionEvent extends JavaPlugin {
         listKOTH = new ArrayList<>();
         listTotem = new ArrayList<>();
         listDTC = new ArrayList<>();
+        listMeteorite = new ArrayList<>();
         playerTotemEditorHashMap = new HashMap<>();
         eventManagerMap = new HashMap<>();
         factionRankings = new LinkedHashMap<>();
@@ -219,6 +222,8 @@ public final class FactionEvent extends JavaPlugin {
     public ArrayList<Totem> getListTotem() {
         return listTotem;
     }
+
+    public ArrayList<Meteorite> getList() { return listMeteorite; }
 
     public HashMap<Player, TotemEditor> getPlayerTotemEditorHashMap() {
         return playerTotemEditorHashMap;
