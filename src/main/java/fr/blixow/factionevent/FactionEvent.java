@@ -5,8 +5,13 @@ import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;
 import fr.blixow.factionevent.commands.dtc.DTCListCommand;
 import fr.blixow.factionevent.commands.events.EventCommand;
+import fr.blixow.factionevent.commands.guess.AnswerCommand;
+import fr.blixow.factionevent.commands.guess.GuessCommand;
 import fr.blixow.factionevent.commands.koth.KothCommand;
 import fr.blixow.factionevent.commands.koth.KothListCommand;
+import fr.blixow.factionevent.commands.lms.LMSCommand;
+import fr.blixow.factionevent.commands.lms.LMSListCommand;
+import fr.blixow.factionevent.commands.lms.LMSRCommand;
 import fr.blixow.factionevent.commands.planning.PlanningAddCommand;
 import fr.blixow.factionevent.commands.planning.PlanningCommand;
 import fr.blixow.factionevent.commands.planning.PlanningRemoveCommand;
@@ -21,13 +26,17 @@ import fr.blixow.factionevent.utils.PlanningScheduler;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.event.EventOn;
+import fr.blixow.factionevent.utils.guess.GuessManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
+import fr.blixow.factionevent.utils.lms.LMS;
+import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -50,6 +59,9 @@ public final class FactionEvent extends JavaPlugin {
 
     // DTC
     private ArrayList<DTC> listDTC;
+
+    // LMS
+    private ArrayList<LMS> listLMS;
 
     // EventOn instance manager
     private EventOn eventOn;
@@ -112,6 +124,18 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("dtc").setExecutor(new DTCCommand());
         getCommand("dtc").setTabCompleter(new DTCCommand());
         getCommand("dtclist").setExecutor(new DTCListCommand());
+        // LMS
+        getCommand("lms").setExecutor(new LMSCommand());
+        getCommand("lms").setTabCompleter(new LMSCommand());
+        getCommand("lmsr").setExecutor(new LMSRCommand());
+        getCommand("lmsr").setTabCompleter(new LMSRCommand());
+        getCommand("lmslist").setExecutor(new LMSListCommand());
+
+        // Guess
+        getCommand("guess").setExecutor(new GuessCommand());
+        getCommand("guess").setTabCompleter(new GuessCommand());
+        getCommand("answer").setExecutor(new AnswerCommand());
+
         // Event
         getCommand("event").setExecutor(new EventCommand());
         getCommand("event").setTabCompleter(new EventCommand());
@@ -134,6 +158,7 @@ public final class FactionEvent extends JavaPlugin {
         listKOTH = new ArrayList<>();
         listTotem = new ArrayList<>();
         listDTC = new ArrayList<>();
+        listLMS = new ArrayList<>();
         playerTotemEditorHashMap = new HashMap<>();
         eventManagerMap = new HashMap<>();
         factionRankings = new LinkedHashMap<>();
@@ -144,6 +169,8 @@ public final class FactionEvent extends JavaPlugin {
         KOTHManager.loadKOTH();
         TotemManager.loadTotems();
         DTCManager.loadDTCfromFile();
+        LMSManager.loadLMSfromFile();
+        GuessManager.loadWordsFromConfig();
         planning = loadPlanning();
     }
 
@@ -196,6 +223,7 @@ public final class FactionEvent extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Reloading new files");
         FileManager.loadNeededFiles();
         Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Saving new files");
+        GuessManager.saveWordsToConfig(new ArrayList<>());
         FileManager.saveFiles();
         eventOn.cancelEvent();
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Désactivation du plugin");
@@ -245,6 +273,14 @@ public final class FactionEvent extends JavaPlugin {
         this.listDTC = listDTC;
     }
 
+    public void setListLMS(ArrayList<LMS> listLMS) {
+        this.listLMS = listLMS;
+    }
+
+    public ArrayList<LMS> getListLMS() {
+        return listLMS;
+    }
+
     public EventOn getEventOn() {
         return eventOn;
     }
@@ -270,7 +306,6 @@ public final class FactionEvent extends JavaPlugin {
     public FileConfiguration getTotemFileConfiguration() {
         return totemFileConfiguration;
     }
-
     public FileConfiguration getDtcFileConfiguration() {
         return dtcFileConfiguration;
     }
@@ -278,11 +313,9 @@ public final class FactionEvent extends JavaPlugin {
     public FileConfiguration getLMSFileConfiguration() {
         return lmsFileConfiguration;
     }
-
     public FileConfiguration getGuessFileConfiguration() {
         return guessFileConfiguration;
     }
-
     public FileConfiguration getPlanningFileConfiguration() {
         return planningFileConfiguration;
     }
