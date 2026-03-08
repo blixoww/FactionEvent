@@ -64,12 +64,11 @@ public class PlanningAddCommand implements TabExecutor {
                                     fc.set(kothPath + "." + koth.getName(), kothList);
                                     fc.save(FileManager.getDataFile("planning.yml"));
                                     player.sendMessage(pPrefix + new StrManager(msg.getString("koth.setup")).reKoth(koth.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
-
                                     FactionEvent.getInstance().reloadPlanning();
-                                    break;
                                 } catch (Exception exception) {
                                     exception.printStackTrace();
                                 }
+                                break;
                             case "totem":
                                 Totem totem = TotemManager.getTotem(args[1]);
                                 if (totem == null) {
@@ -88,9 +87,7 @@ public class PlanningAddCommand implements TabExecutor {
                                     fc.set(totemPath + "." + totem.getName(), totemList);
                                     fc.save(FileManager.getDataFile("planning.yml"));
                                     player.sendMessage(pPrefix + new StrManager(msg.getString("totem.setup")).reTotem(totem.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
-
                                     FactionEvent.getInstance().reloadPlanning();
-                                    break;
                                 } catch (Exception exception) {
                                     exception.printStackTrace();
                                 }
@@ -114,9 +111,7 @@ public class PlanningAddCommand implements TabExecutor {
                                     fc.set(dtcPath + "." + dtc.getName(), dtcList);
                                     fc.save(FileManager.getDataFile("planning.yml"));
                                     player.sendMessage(pPrefix + new StrManager(msg.getString("dtc.setup")).reDTC(dtc.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
-
                                     FactionEvent.getInstance().reloadPlanning();
-                                    break;
                                 } catch (Exception exception) {
                                     exception.printStackTrace();
                                 }
@@ -140,12 +135,14 @@ public class PlanningAddCommand implements TabExecutor {
                                     fc.set(lmsPath + "." + lms.getName(), lmsList);
                                     fc.save(FileManager.getDataFile("planning.yml"));
                                     player.sendMessage(pPrefix + new StrManager(msg.getString("lms.setup")).reLMS(lms.getName()).reTime(valeurJour + " " + heure + "h" + minutes + "m").toString());
-
                                     FactionEvent.getInstance().reloadPlanning();
-                                    break;
                                 } catch (Exception exception) {
                                     exception.printStackTrace();
                                 }
+                                break;
+                            default:
+                                player.sendMessage(pPrefix + "§cType d'événement invalide. Utilisez: koth/totem/dtc/lms");
+                                break;
                         }
                     } else {
                         player.sendMessage(msg.getString("planning.time_syntaxe"));

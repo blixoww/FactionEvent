@@ -193,7 +193,7 @@ public class KOTHEvent {
             if(!fac.isWarZone() && !fac.isSafeZone() && !fac.isWilderness()){ factionName = fac.getTag(); }
         }
         String formated_maxtime = DateManager.getFormattedTime(win_time);
-        long diff = Math.round((current_time - joined) / (long) 100) / 10;
+        long diff = (current_time - joined) / 1000;
         String formated_diff = DateManager.getFormattedTime((int) diff);
         Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
         scoreBoardAPI = new ScoreBoardAPI(board, "KOTH", true);
@@ -203,13 +203,12 @@ public class KOTHEvent {
             int size = stringList.size();
             scoreBoardAPI.setDisplayName(title);
             for(String line : stringList){
-                String line2 = new StrManager(line)
-                        .reKoth(koth.getName())
-                        .reFaction(factionName)
-                        .reTime(timeRemainingString)
-                        .reCustom("\\{time_capture}", formated_diff)
-                        .reCustom("\\{maxtime}", formated_maxtime)
-                        .toString();
+                String line2 = line
+                        .replace("{koth}", koth.getName())
+                        .replace("{faction}", factionName)
+                        .replace("{time}", timeRemainingString)
+                        .replace("{time_capture}", formated_diff)
+                        .replace("{maxtime}", formated_maxtime);
                 scoreBoardAPI.setLine(size, line2);
                 size--;
             }

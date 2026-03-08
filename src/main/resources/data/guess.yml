@@ -1,0 +1,27 @@
+guess:
+  words:
+    - "minecraft"
+    - "faction"
+    - "creeper"
+    - "enderman"
+    - "diamant"
+    - "chateau"
+    - "epee"
+    - "bouclier"
+    - "dragon"
+    - "nether"
+    - "totem"
+    - "victoire"
+    - "alliance"
+    - "guerre"
+    - "territoire"
+    - "ressources"
+    - "batiment"
+    - "armure"
+    - "potion"
+    - "explosion"
+  # Delai minimum entre deux Guess aleatoires (en minutes)
+  random_min_delay: 30
+  # Delai maximum entre deux Guess aleatoires (en minutes)
+  random_max_delay: 90
+

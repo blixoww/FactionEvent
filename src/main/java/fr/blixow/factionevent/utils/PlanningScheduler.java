@@ -1,7 +1,6 @@
 package fr.blixow.factionevent.utils;
 
 import fr.blixow.factionevent.FactionEvent;
-import fr.blixow.factionevent.enumeration.DayEnum;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.dtc.DTC;
@@ -12,124 +11,125 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class PlanningScheduler extends BukkitRunnable {
 
-    private int messageCounter = 0;
-
     @Override
     public void run() {
         try {
-            LocalDateTime localDateTime = LocalDateTime.now();
-            String day = String.valueOf(DayEnum.valueOf(localDateTime.getDayOfWeek().toString()).getValeur());
-            FileConfiguration planning = FileManager.getPlanningDataFC();
-            FileConfiguration messageConfiguration = FileManager.getMessageFileConfiguration();
+            LocalDateTime now = LocalDateTime.now();
+            FileConfiguration msg = FileManager.getMessageFileConfiguration();
+            List<ScheduledEvent> planning = FactionEvent.getInstance().getPlanning();
 
-            for (KOTH koth : FactionEvent.getInstance().getListKOTH()) {
-                String nom = koth.getName();
-                String path_koth = day + ".koth." + nom;
-                List<String> stringList = planning.getStringList(path_koth);
-                for (String str : stringList) {
-                    int hour = Integer.parseInt(str.split("h")[0]);
-                    int minute = Integer.parseInt(str.split("h")[1]);
-                    LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
-                    if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
-                        String message = messageConfiguration.getString("koth.prefix") + new StrManager(messageConfiguration.getString("koth.starting_in_5mins")).reKoth(koth.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
-                        String message = messageConfiguration.getString("koth.prefix") + new StrManager(messageConfiguration.getString("koth.starting_in_1mins")).reKoth(koth.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    }
-                    else if (hour == now.getHour() && minute == now.getMinute()) {
-                        koth.start();
-                        this.messageCounter = 0;
-                    }
+            boolean allDone = true;
+            for (ScheduledEvent event : planning) {
+                if (!event.isStarted()) {
+                    allDone = false;
+                    break;
                 }
             }
-
-            for (DTC dtc : FactionEvent.getInstance().getListDTC()) {
-                String nom = dtc.getName();
-                String path_dtc = day + ".dtc." + nom;
-                List<String> stringList = planning.getStringList(path_dtc);
-                for (String str : stringList) {
-                    int hour = Integer.parseInt(str.split("h")[0]);
-                    int minute = Integer.parseInt(str.split("h")[1]);
-                    LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
-                    if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
-                        String message = messageConfiguration.getString("dtc.prefix") + new StrManager(messageConfiguration.getString("dtc.starting_in_5mins")).reDTC(dtc.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
-                        String message = messageConfiguration.getString("dtc.prefix") + new StrManager(messageConfiguration.getString("dtc.starting_in_1mins")).reDTC(dtc.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    }
-                    else if (hour == now.getHour() && minute == now.getMinute()) {
-                        dtc.start();
-                        this.messageCounter = 0;
-                    }
-                }
+            // Si tous les events sont démarrés, recharger le planning (nouveaux events de la semaine)
+            if (allDone && !planning.isEmpty()) {
+                FactionEvent.getInstance().reloadPlanning();
+                return;
             }
 
-            for (Totem totem : FactionEvent.getInstance().getListTotem()) {
-                String nom = totem.getName();
-                String path_totem = day + ".totem." + nom;
-                List<String> stringList = planning.getStringList(path_totem);
-                for (String str : stringList) {
-                    int hour = Integer.parseInt(str.split("h")[0]);
-                    int minute = Integer.parseInt(str.split("h")[1]);
-                    LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
-                    if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
-                        String message = messageConfiguration.getString("totem.prefix") + new StrManager(messageConfiguration.getString("totem.starting_in_5mins")).reTotem(totem.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
-                        String message = messageConfiguration.getString("totem.prefix") + new StrManager(messageConfiguration.getString("totem.starting_in_1mins")).reTotem(totem.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    }
-                    else if (hour == now.getHour() && minute == now.getMinute()) {
-                        totem.start();
-                        this.messageCounter = 0;
-                    }
+            for (ScheduledEvent event : planning) {
+                if (event.isStarted()) continue;
+
+                Duration duration = Duration.between(now, event.getTime());
+                long secondsUntil = duration.getSeconds();
+
+                // Déclenchement : dans les 30 secondes après l'heure prévue
+                if (secondsUntil <= 0 && secondsUntil > -30) {
+                    event.setStarted(true);
+                    startEvent(event);
+                    continue;
+                }
+
+                // Avertissement 5 minutes (entre 300s et 90s pour éviter le chevauchement)
+                if (secondsUntil <= 300 && secondsUntil > 90 && !event.isWarned5min()) {
+                    sendWarning(event, msg, 5);
+                    event.setWarned5min(true);
+                }
+                // Avertissement 1 minute (entre 90s et 30s)
+                // On n'envoie pas ce message si l'event démarre dans moins de 90s au total
+                // (pour éviter d'avoir "commence dans 1 min" et "a commencé" en même temps)
+                else if (secondsUntil <= 90 && secondsUntil > 30 && !event.isWarned1min()) {
+                    sendWarning(event, msg, 1);
+                    event.setWarned1min(true);
                 }
             }
-
-            for (LMS lms : FactionEvent.getInstance().getListLMS()) {
-                String nom = lms.getName();
-                String path_lms = day + ".lms." + nom;
-                List<String> stringList = planning.getStringList(path_lms);
-                for (String str : stringList) {
-                    int hour = Integer.parseInt(str.split("h")[0]);
-                    int minute = Integer.parseInt(str.split("h")[1]);
-                    LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime eventTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth(), hour, minute);
-                    if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(5)) && messageCounter < 1) {
-                        String message = new StrManager(messageConfiguration.getString("lms.starting_in_5mins")).reLMS(lms.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    } else if (eventTime.isAfter(localDateTime) && eventTime.isBefore(localDateTime.plusMinutes(1)) && messageCounter < 2) {
-                        String message = new StrManager(messageConfiguration.getString("lms.starting_in_1mins")).reLMS(lms.getName()).toString();
-                        Bukkit.broadcastMessage(message);
-                        this.messageCounter++;
-                    }
-                    else if (hour == now.getHour() && minute == now.getMinute()) {
-                        lms.startRegistration();
-                        this.messageCounter = 0;
-                    }
-                }
-            }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void sendWarning(ScheduledEvent event, FileConfiguration msg, int minutes) {
+        String type = event.getType().toLowerCase();
+        String name = event.getName();
+        String key = type + ".starting_in_" + minutes + "mins";
+
+        String format = msg.getString(key);
+        if (format == null) return;
+
+        StrManager strManager = new StrManager(format);
+        switch (type) {
+            case "koth":   strManager.reKoth(name);   break;
+            case "totem":  strManager.reTotem(name);  break;
+            case "dtc":    strManager.reDTC(name);    break;
+            case "lms":    strManager.reLMS(name);    break;
+        }
+
+        Bukkit.broadcastMessage(strManager.toString());
+    }
+
+    private void startEvent(ScheduledEvent event) {
+        String type = event.getType().toLowerCase();
+        String name = event.getName();
+
+        switch (type) {
+            case "koth":
+                for (KOTH koth : FactionEvent.getInstance().getListKOTH()) {
+                    if (koth.getName().equalsIgnoreCase(name)) {
+                        koth.start();
+                        return;
+                    }
+                }
+                Bukkit.getConsoleSender().sendMessage("[FactionEvent] KOTH introuvable pour le planning : " + name);
+                break;
+            case "totem":
+                for (Totem totem : FactionEvent.getInstance().getListTotem()) {
+                    if (totem.getName().equalsIgnoreCase(name)) {
+                        totem.start();
+                        return;
+                    }
+                }
+                Bukkit.getConsoleSender().sendMessage("[FactionEvent] Totem introuvable pour le planning : " + name);
+                break;
+            case "dtc":
+                for (DTC dtc : FactionEvent.getInstance().getListDTC()) {
+                    if (dtc.getName().equalsIgnoreCase(name)) {
+                        dtc.start();
+                        return;
+                    }
+                }
+                Bukkit.getConsoleSender().sendMessage("[FactionEvent] DTC introuvable pour le planning : " + name);
+                break;
+            case "lms":
+                for (LMS lms : FactionEvent.getInstance().getListLMS()) {
+                    if (lms.getName().equalsIgnoreCase(name)) {
+                        lms.startRegistration();
+                        return;
+                    }
+                }
+                Bukkit.getConsoleSender().sendMessage("[FactionEvent] LMS introuvable pour le planning : " + name);
+                break;
+        }
+    }
 }
+
+

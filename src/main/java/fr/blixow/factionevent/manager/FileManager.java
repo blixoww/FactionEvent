@@ -6,8 +6,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 public class FileManager {
@@ -46,7 +46,7 @@ public class FileManager {
         if (!file.exists()) {
             try {
                 file.getParentFile().mkdirs();
-                FactionEvent.getInstance().saveResource(filename, bool);
+                saveResourceUtf8(filename, file);
                 Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Création du fichier : " + filename);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -62,10 +62,30 @@ public class FileManager {
         if (!file.exists()) {
             try {
                 file.getParentFile().mkdirs();
-                FactionEvent.getInstance().saveResource("data/" + filename, bool);
+                saveResourceUtf8("data/" + filename, file);
                 Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Création du fichier : " + filename);
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Copie une ressource du JAR vers un fichier en forçant l'encodage UTF-8.
+     */
+    private static void saveResourceUtf8(String resourcePath, File destination) throws IOException {
+        InputStream in = FactionEvent.getInstance().getResource(resourcePath);
+        if (in == null) {
+            // Ressource introuvable dans le JAR, créer fichier vide
+            destination.createNewFile();
+            return;
+        }
+        try (InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
+             OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(destination), StandardCharsets.UTF_8)) {
+            char[] buffer = new char[8192];
+            int len;
+            while ((len = reader.read(buffer)) != -1) {
+                writer.write(buffer, 0, len);
             }
         }
     }
@@ -86,11 +106,17 @@ public class FileManager {
     }
 
     public static FileConfiguration getFileConfiguration(String filename) {
-        return YamlConfiguration.loadConfiguration(new File(FactionEvent.getInstance().getDataFolder(), filename));
+        File file = new File(FactionEvent.getInstance().getDataFolder(), filename);
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            return YamlConfiguration.loadConfiguration(reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return YamlConfiguration.loadConfiguration(file);
+        }
     }
 
     public static FileConfiguration getMessageFileConfiguration() {
-        return FactionEvent.getInstance().getMessageFileConfiguration();
+        return getFileConfiguration("message.yml");
     }
 
     public static FileConfiguration getKothDataFC() {
@@ -140,7 +166,7 @@ public class FileManager {
         FileManager.createDataFile("totem.yml");
         FileManager.createDataFile("dtc.yml");
         FileManager.createDataFile("lms.yml");
-        FileManager.createDataFile("guess.yml");
+        FileManager.createDataFile("guess.yml", true);
         FileManager.createDataFile("planning.yml", false);
         FileManager.createDataFile("eventManager.yml");
         FileManager.createDataFile("classement.yml");
@@ -150,40 +176,55 @@ public class FileManager {
     public static void loadNeededFiles() {
         try {
             createNeededFiles();
-            instance.setConfig(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "config.yml")));
-            instance.setMessageFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "message.yml")));
-            instance.setKothFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/koth.yml")));
-            instance.setTotemFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/totem.yml")));
-            instance.setDtcFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/dtc.yml")));
-            instance.setLMSFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/lms.yml")));
-            instance.setGuessFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/guess.yml")));
-            instance.setPlanningFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/planning.yml")));
-            instance.setEventManagerFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/eventManager.yml")));
-            instance.setClassementFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), "data/classement.yml")));
+            instance.setConfig(loadUtf8(getFile("config.yml")));
+            instance.setMessageFileConfiguration(loadUtf8(getFile("message.yml")));
+            instance.setKothFileConfiguration(loadUtf8(getDataFile("koth.yml")));
+            instance.setTotemFileConfiguration(loadUtf8(getDataFile("totem.yml")));
+            instance.setDtcFileConfiguration(loadUtf8(getDataFile("dtc.yml")));
+            instance.setLMSFileConfiguration(loadUtf8(getDataFile("lms.yml")));
+            instance.setGuessFileConfiguration(loadUtf8(getDataFile("guess.yml")));
+            instance.setPlanningFileConfiguration(loadUtf8(getDataFile("planning.yml")));
+            instance.setEventManagerFileConfiguration(loadUtf8(getDataFile("eventManager.yml")));
+            instance.setClassementFileConfiguration(loadUtf8(getDataFile("classement.yml")));
             LocalDateTime localDateTime = LocalDateTime.now();
             int day = localDateTime.getDayOfMonth(), months = localDateTime.getMonthValue(), year = localDateTime.getYear();
             String dayly_logs = "logs/logs-" + day + "-" + months + "-" + year + ".yml";
             FileManager.createFile(dayly_logs);
-            instance.setLogsFileConfiguration(YamlConfiguration.loadConfiguration(new File(instance.getDataFolder(), dayly_logs)));
+            instance.setLogsFileConfiguration(loadUtf8(getFile(dayly_logs)));
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
-    public static void saveFiles() {
-        try {
-            instance.getFileConfig().save(getFile("config.yml"));
-            instance.getMessageFileConfiguration().save(getFile("message.yml"));
-            instance.getKothFileConfiguration().save(getDataFile("koth.yml"));
-            instance.getTotemFileConfiguration().save(getDataFile("totem.yml"));
-            instance.getDtcFileConfiguration().save(getDataFile("dtc.yml"));
-            instance.getLMSFileConfiguration().save(getDataFile("lms.yml"));
-            instance.getGuessFileConfiguration().save(getDataFile("guess.yml"));
-            instance.getPlanningFileConfiguration().save(getDataFile("planning.yml"));
-            instance.getEventManagerFileConfiguration().save(getDataFile("eventManager.yml"));
-            instance.getClassementFileConfiguration().save(getDataFile("classement.yml"));
+    private static FileConfiguration loadUtf8(File file) {
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            return YamlConfiguration.loadConfiguration(reader);
         } catch (IOException e) {
             e.printStackTrace();
+            return YamlConfiguration.loadConfiguration(file);
+        }
+    }
+
+    public static void saveFiles() {
+        try {
+            saveWithUtf8(instance.getFileConfig(), getFile("config.yml"));
+            saveWithUtf8(instance.getMessageFileConfiguration(), getFile("message.yml"));
+            saveWithUtf8(instance.getKothFileConfiguration(), getDataFile("koth.yml"));
+            saveWithUtf8(instance.getTotemFileConfiguration(), getDataFile("totem.yml"));
+            saveWithUtf8(instance.getDtcFileConfiguration(), getDataFile("dtc.yml"));
+            saveWithUtf8(instance.getLMSFileConfiguration(), getDataFile("lms.yml"));
+            saveWithUtf8(instance.getGuessFileConfiguration(), getDataFile("guess.yml"));
+            saveWithUtf8(instance.getPlanningFileConfiguration(), getDataFile("planning.yml"));
+            saveWithUtf8(instance.getEventManagerFileConfiguration(), getDataFile("eventManager.yml"));
+            saveWithUtf8(instance.getClassementFileConfiguration(), getDataFile("classement.yml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveWithUtf8(FileConfiguration config, File file) throws IOException {
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+            writer.write(config.saveToString());
         }
     }
 

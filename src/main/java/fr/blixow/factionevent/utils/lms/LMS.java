@@ -22,7 +22,7 @@ public class LMS {
 
     private final String name;
     private Location arenaLocation;
-    private int registrationTime = 30; // Temps d'inscription en secondes
+    private int registrationTime = 120; // Temps d'inscription en secondes
     private int prepTime = 30; // Temps de préparation en secondes
     private final HashMap<Player, Boolean> registeredPlayers; // Stocke les joueurs inscrits
     private LMSEvent eventInstance;
@@ -35,6 +35,18 @@ public class LMS {
         this.arenaLocation = arenaLocation;
         this.registeredPlayers = new HashMap<>();
         this.phase = phase;
+        // Charger les valeurs de configuration si disponibles
+        try {
+            FileConfiguration cfg = FileManager.getConfig();
+            if (cfg != null) {
+                if (cfg.contains("lms.registration_time")) {
+                    this.registrationTime = cfg.getInt("lms.registration_time");
+                }
+                if (cfg.contains("lms.prep_time")) {
+                    this.prepTime = cfg.getInt("lms.prep_time");
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     public void registerPlayer(Player player) {
@@ -93,13 +105,13 @@ public class LMS {
         }
 
         // Vérifie si le joueur est inscrit
-        if (!registeredPlayers.containsKey(player) || !registeredPlayers.get(player)) {
+        if (!registeredPlayers.containsKey(player)) {
             player.sendMessage(prefix + new StrManager(msg.getString("lms.not_registered")).rePlayer(player).reLMS(name).toString());
             return;
         }
 
-        // Désinscrit le joueur
-        registeredPlayers.put(player, false);
+        // Désinscrit le joueur (suppression réelle)
+        registeredPlayers.remove(player);
         player.sendMessage(prefix + new StrManager(msg.getString("lms.unregistered")).rePlayer(player).reLMS(name).toString());
     }
 
@@ -140,8 +152,7 @@ public class LMS {
     }
 
     private boolean isNotEnoughPlayers() {
-        long registeredCount = registeredPlayers.values().stream().filter(Boolean::booleanValue).count();
-        return registeredCount < 2;
+        return registeredPlayers.size() < 2;
     }
 
     private void prepareEvent() {
@@ -159,7 +170,7 @@ public class LMS {
                     playersToRemove.add(player);
                 } else if (registeredPlayers.get(player)) {
                     player.teleport(arenaLocation);
-                    FactionMessageTitle.sendPlayersTitle(20, 60, 20, "§aPréparez-vous", "Le LMS commence dans 30 secondes");
+                    FactionMessageTitle.sendPlayersTitle(20, 60, 20, "§aPréparez-vous", "Le LMS commence dans " + prepTime + " secondes");
                     player.sendMessage(prefix + new StrManager(msg.getString("lms.teleport")).reLMS(name).toString());
                 }
             }
@@ -179,26 +190,40 @@ public class LMS {
         if (isNotEnoughPlayers()) {
             Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.any_register")).reLMS(name).toString());
             resetEvent();
+            // Libérer la slot EventOn
+            FactionEvent.getInstance().getEventOn().setLMSEvent(null);
             return;
         }
 
-        // Démarre l'événement
-        eventInstance = new LMSEvent(this, registeredPlayers, FileManager.getConfig());
-        eventInstance.startEvent();
+        // Récupère le LMSEvent déjà réservé dans EventOn et démarre le combat
+        LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
+        if (lmsEvent == null) {
+            // Cas de secours : créer un nouveau
+            lmsEvent = new LMSEvent(this);
+            FactionEvent.getInstance().getEventOn().setLMSEvent(lmsEvent);
+        }
+        eventInstance = lmsEvent;
         phase = Phase.COMBAT;
+        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.started", "§aLe LMS §e{lms}§a a commencé !")).reLMS(name).toString());
+        eventInstance.startEvent();
     }
 
     public void stop() {
-        // Termine l'événement en cours
         if (eventInstance != null) {
             eventInstance.endEvent();
             eventInstance = null;
+        } else {
+            FactionEvent.getInstance().getEventOn().setLMSEvent(null);
         }
-        resetEvent();
-        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.ended")).reLMS(name).toString());
+        resetPhase();
+        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.ended", "§cLe LMS §e{lms}§c est terminé.")).reLMS(name).toString());
     }
 
     private void resetEvent() {
+        resetPhase();
+    }
+
+    public void resetPhase() {
         // Réinitialise l'état de l'événement
         phase = Phase.NOT_STARTED;
         registeredPlayers.clear();

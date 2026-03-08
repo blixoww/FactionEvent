@@ -114,10 +114,10 @@ public class ClassementCommand implements TabExecutor {
                             for(String  line : lines){
                                 String line_custom = new StrManager(line)
                                         .rePoints(points)
-                                        .reCustom("\\{nb_koth}", String.valueOf(koth))
-                                        .reCustom("\\{nb_totem}", String.valueOf(totem))
-                                        .reCustom("\\{nb_dtc}", String.valueOf(dtc))
-                                        .reCustom("\\{nb_lms}", String.valueOf(lms))
+                                        .reCustom("{nb_koth}", String.valueOf(koth))
+                                        .reCustom("{nb_totem}", String.valueOf(totem))
+                                        .reCustom("{nb_dtc}", String.valueOf(dtc))
+                                        .reCustom("{nb_lms}", String.valueOf(lms))
                                         .toString();
                                 player.sendMessage(line_custom);
                             }

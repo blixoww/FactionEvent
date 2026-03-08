@@ -13,88 +13,88 @@ public class StrManager {
     }
 
     public StrManager reTarget(Player target){
-        this.message = this.message.replaceAll("\\{target}", target.getName());
+        if (target != null) {
+            this.message = this.message.replace("{target}", target.getName());
+        }
         return this;
     }
 
     public StrManager rePlayer(Player player){
-        try {
-            this.message = this.message.replaceAll("\\{player}", player.getName());
-        } catch (Exception exception){
-            exception.printStackTrace();
+        if (player != null) {
+            this.message = this.message.replace("{player}", player.getName());
         }
         return this;
     }
 
     public StrManager reTime(String time){
-        try {
-            this.message = this.message.replaceAll("\\{time}", time);
-        } catch (Exception exception){ exception.printStackTrace(); }
+        if (time != null) {
+            this.message = this.message.replace("{time}", time);
+        }
         return this;
     }
     public StrManager reMaxTime(String time){
-        this.message = this.message.replaceAll("\\{maxtime}", time);
+        if (time != null) {
+            this.message = this.message.replace("{maxtime}", time);
+        }
         return this;
     }
 
     public StrManager reCurrentDTCLife(int vie, int max_vie){
-        try {
-            this.message = this.message.replaceAll("\\{life}", String.valueOf(vie));
-            this.message = this.message.replaceAll("\\{max_life}", String.valueOf(max_vie));
-        } catch (Exception exception){ exception.printStackTrace(); }
+        this.message = this.message.replace("{life}", String.valueOf(vie));
+        this.message = this.message.replace("{max_life}", String.valueOf(max_vie));
         return this;
     }
 
     public StrManager reDamageDealtDTC(int damageDealt){
-        try {
-            this.message = this.message.replaceAll("\\{damage}", String.valueOf(damageDealt));
-        } catch (Exception exception){ exception.printStackTrace(); }
+        this.message = this.message.replace("{damage}", String.valueOf(damageDealt));
         return this;
     }
 
-    public StrManager reCustom(String regex, String value){
-        this.message = this.message.replaceAll(regex, value);
+    public StrManager reCustom(String target, String value){
+        if (target != null && value != null) {
+            this.message = this.message.replace(target, value);
+        }
         return this;
     }
 
     public StrManager reKoth(String kothName){
-        try {
-            this.message = this.message.replaceAll("\\{koth}", kothName);
-            this.message = this.message.replaceAll("\\{kothL}", kothName.toLowerCase());
-        } catch (Exception exception){ exception.printStackTrace(); }
+        if (kothName != null) {
+            this.message = this.message.replace("{koth}", kothName);
+            this.message = this.message.replace("{kothL}", kothName.toLowerCase());
+        }
         return this;
     }
 
 
     public StrManager reTotem(String totemName){
-        try {
-            this.message = this.message.replaceAll("\\{totem}", totemName);
-            this.message = this.message.replaceAll("\\{totemL}", totemName.toLowerCase());
-        } catch (Exception exception){ exception.printStackTrace(); }
+        if (totemName != null) {
+            this.message = this.message.replace("{totem}", totemName);
+            this.message = this.message.replace("{totemL}", totemName.toLowerCase());
+        }
         return this;
     }
 
 
     public StrManager reBlocks(int blocks, int maxblocks){
-        try {
-            this.message = this.message.replaceAll("\\{blocks}", String.valueOf(blocks)).replaceAll("\\{maxblocks}", String.valueOf(maxblocks));
-        } catch (Exception exception){ exception.printStackTrace(); }
+        this.message = this.message
+                .replace("{blocks}", String.valueOf(blocks))
+                .replace("{maxblocks}", String.valueOf(maxblocks));
         return this;
     }
 
     public StrManager reDTC(String DTCname){
-        try {
-            this.message = this.message.replaceAll("\\{dtc}", DTCname);
-            this.message = this.message.replaceAll("\\{dtcL}", DTCname.toLowerCase());
-        } catch (Exception exception){ exception.printStackTrace(); }
+        if (DTCname != null) {
+            this.message = this.message.replace("{dtc}", DTCname);
+            this.message = this.message.replace("{dtcL}", DTCname.toLowerCase());
+        }
         return this;
     }
 
     public StrManager reLMS(String LMSname){
-        try {
-            this.message = this.message.replaceAll("\\{lms}", LMSname);
-            this.message = this.message.replaceAll("\\{lmsL}", LMSname.toLowerCase());
-        } catch (Exception exception){ exception.printStackTrace(); }
+        if (LMSname != null) {
+            this.message = this.message.replace("{lms}", LMSname);
+            this.message = this.message.replace("{lmsL}", LMSname.toLowerCase());
+        }
         return this;
     }
 
@@ -105,25 +105,29 @@ public class StrManager {
     }
 
     public StrManager reLocation(Location location){
-        try {
+        if (location != null) {
             String str = location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ();
-            this.message = this.message.replaceAll("\\{location}", str);
-        } catch (Exception exception){ exception.printStackTrace(); }
+            this.message = this.message.replace("{location}", str);
+        }
         return this;
     }
 
     public StrManager reFaction(String faction){
-        this.message = this.message.replaceAll("\\{faction}", faction);
+        if (faction != null) {
+            this.message = this.message.replace("{faction}", faction);
+        }
         return this;
     }
 
     public StrManager rePoints(int points){
-        this.message = this.message.replaceAll("\\{points}", String.valueOf(points));
+        this.message = this.message.replace("{points}", String.valueOf(points));
         return this;
     }
 
     public StrManager reWord(String guess){
-        this.message = this.message.replaceAll("\\{word}", "§7" + guess);
+        if (guess != null) {
+            this.message = this.message.replace("{word}", "§7" + guess);
+        }
         return this;
     }
 
@@ -133,7 +137,9 @@ public class StrManager {
     public String toString(){ return this.message; }
 
     public StrManager reType(String type) {
-        this.message = message.replaceAll("\\{type}", type.toUpperCase());
+        if (type != null) {
+            this.message = message.replace("{type}", type.toUpperCase());
+        }
         return this;
     }
 

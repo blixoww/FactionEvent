@@ -38,8 +38,14 @@ public class GuessCommand implements TabExecutor {
                         if (currentEvent != null) {
                             player.sendMessage(prefix + msg.getString("guess.already_started"));
                         } else {
-                            Guess loadedGuess = GuessManager.loadWordsFromConfig();
-                            FactionEvent.getInstance().getEventOn().start(loadedGuess, player);
+                            // Prefer create from prepared selection if exists
+                            Guess prepared = GuessManager.createGuessFromPrepared();
+                            if (prepared != null) {
+                                FactionEvent.getInstance().getEventOn().start(prepared, player);
+                            } else {
+                                Guess loadedGuess = GuessManager.loadWordsFromConfig();
+                                FactionEvent.getInstance().getEventOn().start(loadedGuess, player);
+                            }
                         }
                         break;
                     case "stop":
@@ -51,12 +57,25 @@ public class GuessCommand implements TabExecutor {
                         }
                         break;
                     case "info":
-                        if (FactionEvent.getInstance().getEventOn().getGuessEvent() == null) {
-                            //Show all words in the config
-                            List<String> words = FileManager.getConfig().getStringList("guess.words");
-                            player.sendMessage(prefix + "§7Mots disponibles :");
-                            for (String word : words) {
-                                player.sendMessage("§8- §7" + word);
+                        // Premièrement, afficher la sélection préparée si disponible
+                        List<String> prepared = GuessManager.getLastSelectedWords();
+                        if (!prepared.isEmpty()) {
+                            player.sendMessage(prefix + "§7Mots préparés pour le prochain Guess (§e" + prepared.size() + "§7) :");
+                            for (String w : prepared) player.sendMessage("§8- §7" + w);
+                        } else {
+                            // Sinon afficher tous les mots du fichier
+                            FileConfiguration guessFc = FileManager.getGuessDataFC();
+                            List<String> words = new ArrayList<>();
+                            if (guessFc != null && guessFc.contains("guess.words")) {
+                                words = guessFc.getStringList("guess.words");
+                            }
+                            if (words.isEmpty()) {
+                                player.sendMessage(prefix + "§cAucun mot disponible.");
+                            } else {
+                                player.sendMessage(prefix + "§7Mots disponibles (§e" + words.size() + "§7) :");
+                                for (String word : words) {
+                                    player.sendMessage("§8- §7" + word);
+                                }
                             }
                         }
                         break;
@@ -64,6 +83,23 @@ public class GuessCommand implements TabExecutor {
                         player.sendMessage(prefix + msg.getString("guess.usage"));
                         break;
                 }
+
+                // Afficher le temps avant le prochain Guess aléatoire, si planifié
+                long nextTs = FactionEvent.getInstance().getNextGuessTimestampMillis();
+                if (nextTs > 0) {
+                    long remainingMs = nextTs - System.currentTimeMillis();
+                    if (remainingMs > 0) {
+                        long seconds = remainingMs / 1000;
+                        long mins = seconds / 60;
+                        long secs = seconds % 60;
+                        player.sendMessage(prefix + "§7Prochain Guess aléatoire dans §e" + mins + "m " + secs + "s§7.");
+                    } else {
+                        player.sendMessage(prefix + "§7Un Guess va bientôt démarrer.");
+                    }
+                } else {
+                    player.sendMessage(prefix + "§7Aucun Guess aléatoire planifié.");
+                }
+
             } else {
                 player.sendMessage(prefix + msg.getString("guess.usage"));
             }

@@ -14,55 +14,58 @@ public class PlanningManager {
     public static HashMap<String, List<String>> getDailyEvents(String path) {
         HashMap<String, List<String>> map = new HashMap<>();
         FileConfiguration fc = FileManager.getPlanningDataFC();
-        if (pathExists(path)) {
-            List<String> list = new ArrayList<>();
+        if (fc.contains(path)) {
+            List<String> listKoth = new ArrayList<>();
             for (KOTH event : FactionEvent.getInstance().getListKOTH()) {
                 String nom = event.getName();
                 String path_event = path + ".koth." + nom;
-                if (pathExists(path_event)) {
+                if (fc.contains(path_event)) {
                     List<String> stringList = fc.getStringList(path_event);
                     for (String str : stringList) {
-                        list.add(str + "|" + nom);
+                        listKoth.add(str + "|" + nom);
                     }
                 }
             }
+            if (!listKoth.isEmpty()) map.put("koth", listKoth);
 
+            List<String> listTotem = new ArrayList<>();
             for (Totem event : FactionEvent.getInstance().getListTotem()) {
                 String nom = event.getName();
                 String path_event = path + ".totem." + nom;
-                if (pathExists(path_event)) {
+                if (fc.contains(path_event)) {
                     List<String> stringList = fc.getStringList(path_event);
                     for (String str : stringList) {
-                        list.add(str + "|" + nom);
+                        listTotem.add(str + "|" + nom);
                     }
                 }
             }
+            if (!listTotem.isEmpty()) map.put("totem", listTotem);
 
+            List<String> listDtc = new ArrayList<>();
             for (DTC event : FactionEvent.getInstance().getListDTC()) {
                 String nom = event.getName();
                 String path_event = path + ".dtc." + nom;
-                if (pathExists(path_event)) {
+                if (fc.contains(path_event)) {
                     List<String> stringList = fc.getStringList(path_event);
                     for (String str : stringList) {
-                        list.add(str + "|" + nom);
+                        listDtc.add(str + "|" + nom);
                     }
                 }
             }
+            if (!listDtc.isEmpty()) map.put("dtc", listDtc);
 
+            List<String> listLms = new ArrayList<>();
             for (LMS event : FactionEvent.getInstance().getListLMS()) {
                 String nom = event.getName();
                 String path_event = path + ".lms." + nom;
-                if (pathExists(path_event)) {
+                if (fc.contains(path_event)) {
                     List<String> stringList = fc.getStringList(path_event);
                     for (String str : stringList) {
-                        list.add(str + "|" + nom);
+                        listLms.add(str + "|" + nom);
                     }
                 }
             }
-
-            if (!list.isEmpty()) {
-                map.put("events", list);
-            }
+            if (!listLms.isEmpty()) map.put("lms", listLms);
         }
         return map;
     }
@@ -71,42 +74,37 @@ public class PlanningManager {
         ArrayList<String> listeEvents = new ArrayList<>();
         FileConfiguration fc = FileManager.getPlanningDataFC();
         String m = "", h = "";
-        if(pathExists(path)){
-            for(KOTH koth : FactionEvent.getInstance().getListKOTH()) {
+        if (fc.contains(path)) {
+            for (KOTH koth : FactionEvent.getInstance().getListKOTH()) {
                 String nom = koth.getName();
                 String path_koth = path + ".koth." + nom;
                 List<String> stringList = fc.getStringList(path_koth);
-                for(String str : stringList){
+                for (String str : stringList) {
                     h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
                     m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
                     listeEvents.add("§eKOTH §6" + nom + " §7à §c" + h + "h" + m);
                 }
             }
-
-
-            for(Totem totem : FactionEvent.getInstance().getListTotem()){
+            for (Totem totem : FactionEvent.getInstance().getListTotem()) {
                 String nom = totem.getName();
                 String path_totem = path + ".totem." + nom;
                 List<String> stringList = fc.getStringList(path_totem);
-                for(String str : stringList){
+                for (String str : stringList) {
                     h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
                     m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
                     listeEvents.add("§eTotem §6" + nom + " §7à §c" + h + "h" + m);
                 }
             }
-
-
-            for(DTC dtc : FactionEvent.getInstance().getListDTC()){
+            for (DTC dtc : FactionEvent.getInstance().getListDTC()) {
                 String nom = dtc.getName();
                 String path_dtc = path + ".dtc." + nom;
                 List<String> stringList = fc.getStringList(path_dtc);
-                for(String str : stringList){
+                for (String str : stringList) {
                     h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
                     m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-                    listeEvents.add("§eDTC / Nexus §6" + nom + " §7à §c" + h + "h" + m);
+                    listeEvents.add("§eDTC §6" + nom + " §7à §c" + h + "h" + m);
                 }
             }
-
             for (LMS lms : FactionEvent.getInstance().getListLMS()) {
                 String nom = lms.getName();
                 String path_lms = path + ".lms." + nom;

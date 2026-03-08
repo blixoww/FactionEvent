@@ -7,7 +7,6 @@ import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.guess.Guess;
 import fr.blixow.factionevent.utils.guess.GuessEvent;
-import fr.blixow.factionevent.utils.guess.GuessManager;
 import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
@@ -58,7 +57,7 @@ public class EventOn {
                             } else if (o instanceof LMS) {
                                 LMS lms = (LMS) o;
                                 lms.startRegistration();
-                            } else if (o instanceof GuessEvent) {
+                            } else if (o instanceof Guess) {
                                 Guess guess = (Guess) o;
                                 guess.start();
                             }
@@ -81,7 +80,8 @@ public class EventOn {
         if (this.canStartAnEvent()) {
             this.kothEvent = new KOTHEvent(koth);
             String kothName = koth.getName() == null ? "KOTH NULL" : koth.getName();
-            Bukkit.broadcastMessage(msg.getString("koth.prefix") + new StrManager(msg.getString("koth.started")).reKoth(kothName));
+            String message = new StrManager(msg.getString("koth.started")).reKoth(kothName).toString();
+            Bukkit.broadcastMessage(addProportionalLines(message));
             FileConfiguration configuration = FileManager.getConfig();
             int check_time = 2;
             try {
@@ -107,7 +107,8 @@ public class EventOn {
             }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
             return;
         }
-        FactionMessageTitle.sendPlayersMessage(msg.getString("koth.prefix") + new StrManager(msg.getString("koth.adding_to_queue")).reKoth(koth.getName()).toString(), players);
+        String queueMessage = msg.getString("koth.prefix") + new StrManager(msg.getString("koth.adding_to_queue")).reKoth(koth.getName()).toString();
+        FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
         queue.add(koth);
     }
 
@@ -123,6 +124,8 @@ public class EventOn {
         check_time = check_time > 0 ? check_time : 1;
         if (canStartAnEvent()) {
             this.dtcEvent = new DTCEvent(dtc);
+            String message = new StrManager(msg.getString("dtc.started")).reDTC(dtc.getName()).toString();
+            Bukkit.broadcastMessage(addProportionalLines(message));
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -139,7 +142,8 @@ public class EventOn {
             }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
             return;
         }
-        FactionMessageTitle.sendPlayersMessage(msg.getString("dtc.prefix") + new StrManager(msg.getString("dtc.adding_to_queue")).reDTC(dtc.getName()).toString(), players);
+        String queueMessage = msg.getString("dtc.prefix") + new StrManager(msg.getString("dtc.adding_to_queue")).reDTC(dtc.getName()).toString();
+        FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
         queue.add(dtc);
     }
 
@@ -147,8 +151,8 @@ public class EventOn {
         if (canStartAnEvent()) {
             this.totemEvent = new TotemEvent(totem);
             FileConfiguration msg = FileManager.getMessageFileConfiguration();
-            String str = msg.getString("totem.prefix") + new StrManager(msg.getString("totem.started")).reTotem(totem.getName()).toString();
-            Bukkit.broadcastMessage(str);
+            String str = new StrManager(msg.getString("totem.started")).reTotem(totem.getName()).toString();
+            Bukkit.broadcastMessage(addProportionalLines(str));
             totemEvent.start();
             FileConfiguration configuration = FileManager.getConfig();
             int check_time = 10;
@@ -175,82 +179,73 @@ public class EventOn {
             }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
             return;
         }
-        FactionMessageTitle.sendPlayersMessage(msg.getString("totem.prefix") + new StrManager(msg.getString("totem.adding_to_queue")).reTotem(totem.getName()).toString(), players);
+        String queueMessage = msg.getString("totem.prefix") + new StrManager(msg.getString("totem.adding_to_queue")).reTotem(totem.getName()).toString();
+        FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
         queue.add(totem);
     }
 
     public void start(LMS lms, Player... players) {
         if (this.canStartAnEvent()) {
-            this.lmsEvent = new LMSEvent(lms, lms.getRegisteredPlayers(), FileManager.getConfig());
-            FileConfiguration configuration = FileManager.getConfig();
-            Bukkit.broadcastMessage(msg.getString("lms.prefix") + new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString());
+            this.lmsEvent = new LMSEvent(lms);
+            String message = new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString();
+            Bukkit.broadcastMessage(addProportionalLines(message));
             int check_time = 10;
             try {
+                FileConfiguration configuration = FileManager.getConfig();
                 if (configuration.contains("lms.check_time")) {
-                    check_time = configuration.getInt("lms.check_time");
+                    check_time = Math.max(1, configuration.getInt("lms.check_time"));
                 }
-            } catch (Exception ignored) {
-            }
-            check_time = check_time > 0 ? check_time : 1;
+            } catch (Exception ignored) {}
+
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     if (lmsEvent == null) {
+                        cancel();
+                    } else if (lmsEvent.isEventActive() && lmsEvent.checkTimer()) {
                         lms.stop();
-                        cancel();
-                    } else if (lmsEvent.checkTimer()) {
-                        lms.stop();
-                        cancel();
-                    }
-                }
-            }.runTaskTimer(FactionEvent.getInstance(), (lms.getRegistrationTime() + lms.getPrepTime()) * 20L, check_time * 20L);
-            return;
-        }
-        queue.add(lms);
-        FactionMessageTitle.sendPlayersMessage(msg.getString("lms.prefix") + new StrManager(msg.getString("lms.adding_to_queue")).reLMS(lms.getName()).toString(), players);
-    }
-
-    public void start(Guess guess, Player... players) {
-        if (this.canStartAnEvent()) {
-            // Charge les mots depuis guess.yml en utilisant loadWordsFromConfig
-            guess = GuessManager.loadWordsFromConfig();
-
-            // Vérifie que les mots ont été correctement chargés
-            if (guess.getWords().isEmpty()) {
-                Bukkit.broadcastMessage(msg.getString("guess.prefix") + new StrManager(msg.getString("guess.no_words")).toString());
-                return;
-            }
-
-            Bukkit.broadcastMessage(msg.getString("guess.prefix") + new StrManager(msg.getString("guess.started")).toString());
-            this.guessEvent = new GuessEvent(guess);
-            FileConfiguration configuration = FileManager.getConfig();
-
-            int check_time = 10;
-            try {
-                if (configuration.contains("guess.check_time")) {
-                    check_time = configuration.getInt("guess.check_time");
-                }
-            } catch (Exception ignored) {
-            }
-            check_time = Math.max(check_time, 1);
-
-            Guess finalGuess = guess;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (guessEvent == null) {
-                        finalGuess.stop();
-                        cancel();
-                    } else if (guessEvent.checkTimer()) {
-                        finalGuess.stop();
                         cancel();
                     }
                 }
             }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
+            return;
+        }
+        String queueMessage = msg.getString("lms.prefix") + new StrManager(msg.getString("lms.adding_to_queue")).reLMS(lms.getName()).toString();
+        FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
+        queue.add(lms);
+    }
+
+    public void start(Guess guess, Player... players) {
+        if (this.canStartAnEvent()) {
+            // Vérifie que les mots ont été correctement chargés
+            if (guess.getWords().isEmpty()) {
+                Bukkit.broadcastMessage(msg.getString("guess.prefix", "") + new StrManager(msg.getString("guess.no_words", "§cAucun mot disponible.")).toString());
+                return;
+            }
+
+            String message = new StrManager(msg.getString("guess.started", "§aUn Guess démarre !")).toString();
+            Bukkit.broadcastMessage(addProportionalLines(message));
+            // Créer le GuessEvent ici — source unique de création
+            this.guessEvent = new GuessEvent(guess);
+
+            // Tâche qui vérifie le timer toutes les secondes
+            int taskId = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (guessEvent == null) {
+                        cancel();
+                    } else {
+                        guessEvent.checkTimer();
+                    }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L).getTaskId();
+
+            // Stocker l'ID de tâche dans Guess pour pouvoir l'annuler au stop()
+            guess.setTaskId(taskId);
         } else {
-            guess = GuessManager.loadWordsFromConfig();
             queue.add(guess);
-            FactionMessageTitle.sendPlayersMessage(msg.getString("guess.prefix") + new StrManager(msg.getString("guess.adding_to_queue")).toString(), players);
+            String queueMessage = msg.getString("guess.prefix", "") + new StrManager(msg.getString("guess.adding_to_queue", "§7Ajouté à la file.")).toString();
+            FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
         }
     }
 
@@ -331,4 +326,8 @@ public class EventOn {
         this.queue = queue;
     }
 
+    private String addProportionalLines(String message) {
+        String lineSeparator = "\n";
+        return lineSeparator + message + lineSeparator;
+    }
 }

@@ -14,7 +14,8 @@ public class Guess {
     private final List<String> words;
     private final List<String> scrambledWords;
     private final FileConfiguration msg = FactionEvent.getInstance().getMessageFileConfiguration();
-    private final String prefix = msg.getString("guess.prefix");
+    private final String prefix = msg.getString("guess.prefix", "§8[§eGuess§8] §7");
+    private int taskId = -1;
 
     // Constructeur privé pour initialiser l'instance Guess
     public Guess(List<String> words) {
@@ -48,31 +49,27 @@ public class Guess {
     }
 
     public void start(Player... players) {
-        if (FactionEvent.getInstance().getEventOn().getGuessEvent() != null) {
+        EventOn eventOn = FactionEvent.getInstance().getEventOn();
+        if (eventOn.getGuessEvent() != null) {
             for (Player player : players) {
-                player.sendMessage(prefix + msg.getString("guess.already_started"));
+                player.sendMessage(prefix + msg.getString("guess.already_started", "§cUn Guess est déjà en cours."));
             }
             return;
         }
-        EventOn eventOn = FactionEvent.getInstance().getEventOn();
-        GuessEvent guessEvent = new GuessEvent(this);
-        eventOn.setGuessEvent(guessEvent);
+        // Délégation complète à EventOn qui gère la création du GuessEvent et la tâche
         eventOn.start(this, players);
-        Bukkit.getScheduler().runTaskTimer(FactionEvent.getInstance(), () -> {
-            GuessEvent currentEvent = FactionEvent.getInstance().getEventOn().getGuessEvent();
-            if (currentEvent != null) {
-                if (currentEvent.checkTimer()) {
-                    currentEvent.nextWord();
-                }
-            }
-        }, 20L, 20L);
     }
 
     public void stop() {
-        EventOn eventOn = FactionEvent.getInstance().getEventOn();
-        if (eventOn.getGuessEvent() != null) {
-            eventOn.getGuessEvent().setCurrentWordIndex(0);
-            eventOn.setGuessEvent(null);
+        if (taskId != -1) {
+            Bukkit.getScheduler().cancelTask(taskId);
+            taskId = -1;
         }
+        EventOn eventOn = FactionEvent.getInstance().getEventOn();
+        eventOn.setGuessEvent(null);
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
     }
 }

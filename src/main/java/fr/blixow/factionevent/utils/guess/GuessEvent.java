@@ -10,16 +10,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
-import java.util.LinkedHashMap;
-
 public class GuessEvent {
-    private Guess guess;
+    private final Guess guess;
     private boolean won = false;
     private long startTime;
     private int currentWordIndex = 0;
+    private boolean finished = false;
     private final long duration = 120 * 1000; // 2 minutes par mot
     private final FileConfiguration msg = FileManager.getMessageFileConfiguration();
-    private final String prefix = msg.getString("guess.prefix");
+    private final String prefix = msg.getString("guess.prefix", "§8[§eGuess§8] §7");
 
     public GuessEvent(Guess guess) {
         this.guess = guess;
@@ -27,13 +26,14 @@ public class GuessEvent {
         this.showCurrentWord();
     }
 
-    public void checkGuess(Player player, String guess) {
+    public void checkGuess(Player player, String answer) {
+        if (finished) return;
         String correctAnswer = this.guess.getWords().get(currentWordIndex);
 
-        if (guess.equalsIgnoreCase(correctAnswer)) {
+        if (answer.equalsIgnoreCase(correctAnswer)) {
             grantVictory(player);
         } else {
-            player.sendMessage(prefix + msg.getString("guess.incorrect"));
+            player.sendMessage(prefix + msg.getString("guess.incorrect", "§cMauvaise réponse !"));
         }
     }
 
@@ -41,9 +41,12 @@ public class GuessEvent {
         won = true;
         FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
         Faction faction = fPlayer.getFaction();
-        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("guess.correct"))
-                .rePlayer(player).reWord(String.valueOf(guess.getWords().get(currentWordIndex))).toString());
-        RankingManager.addPoints(faction, 1);
+        String correctWord = guess.getWords().get(currentWordIndex);
+        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("guess.correct", "§a{player} a trouvé le mot §e{word}§a !"))
+                .rePlayer(player).reWord(correctWord).toString());
+        if (!faction.isWilderness()) {
+            RankingManager.addPoints(faction, 1);
+        }
         nextWord();
     }
 
@@ -59,14 +62,21 @@ public class GuessEvent {
     }
 
     private void finishingGuess() {
-        Bukkit.broadcastMessage(prefix + msg.getString("guess.ended"));
+        if (finished) return;
+        finished = true;
+        Bukkit.broadcastMessage(prefix + msg.getString("guess.ended", "§6Le Guess est terminé !"));
         guess.stop();
     }
 
     private void showCurrentWord() {
         String currentScrambledWord = guess.getScrambledWords().get(currentWordIndex);
-        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("guess.word_message"))
-                .reWord(currentScrambledWord).toString());
+        int wordNumber = currentWordIndex + 1;
+        int totalWords = guess.getWords().size();
+        Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("guess.word_message", "§7Mot §e{word} §7({current}/{total})"))
+                .reWord(currentScrambledWord)
+                .reCustom("{current}", String.valueOf(wordNumber))
+                .reCustom("{total}", String.valueOf(totalWords))
+                .toString());
     }
 
     private void resetTimer() {
@@ -74,10 +84,15 @@ public class GuessEvent {
     }
 
     public boolean checkTimer() {
+        if (finished || won) return false;
         long currentTime = System.currentTimeMillis();
-        if ((currentTime - startTime) >= duration && !won) {
-            Bukkit.broadcastMessage(prefix + msg.getString("guess.time_up"));
+        if ((currentTime - startTime) >= duration) {
+            String correctWord = guess.getWords().get(currentWordIndex);
+            String timeUpMsg = new StrManager(msg.getString("guess.time_up", "§cTemps écoulé ! Le mot était : §e{word}"))
+                    .reWord(correctWord).toString();
+            Bukkit.broadcastMessage(prefix + timeUpMsg);
             nextWord();
+            return true;
         }
         return false;
     }
@@ -92,5 +107,9 @@ public class GuessEvent {
 
     public int getCurrentWordIndex() {
         return currentWordIndex;
+    }
+
+    public boolean isFinished() {
+        return finished;
     }
 }

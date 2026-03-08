@@ -14,7 +14,6 @@ import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
-import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -61,8 +60,6 @@ public class CustomEvents implements Listener {
         }
         if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
             FactionEvent.getInstance().getEventOn().getLMSEvent().handlePlayerQuit(player);
-        } else {
-            System.out.println("LMS est null !");
         }
         FactionEvent.getInstance().getEventScoreboardOff().remove(player);
     }
@@ -157,11 +154,9 @@ public class CustomEvents implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
-            System.out.println("Player " + player.getName() + " has died in the LMS event.");
-            FactionEvent.getInstance().getEventOn().getLMSEvent().handlePlayerDeath(player);
-        } else {
-            System.out.println("LMS est null !");
+        LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
+        if (lmsEvent != null && lmsEvent.isParticipant(player)) {
+            lmsEvent.handlePlayerDeath(player);
         }
     }
 
@@ -172,39 +167,32 @@ public class CustomEvents implements Listener {
             return;
         }
 
-        LMS lms = FactionEvent.getInstance().getEventOn().getLMSEvent().getLMS();
-        if (lms == null) {
-            System.out.println("LMS est null !");
-            return;
-        }
+        LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
+        if (lmsEvent == null) return;
 
-        Map<Player, Boolean> participants = lms.getRegisteredPlayers();
-        if (participants == null) {
-            System.out.println("Participants est null !");
-            return;
-        }
+        LMS lms = lmsEvent.getLMS();
+        if (lms == null) return;
 
         Player target = (Player) event.getEntity();
         Player attacker = (Player) event.getDamager();
 
         // Vérifie si les deux joueurs sont dans les participants inscrits
-        if (participants.containsKey(target) && participants.containsKey(attacker)) {
-            if (lms.isPreparation()) {
-                // Annule l'événement si le combat n'est pas encore actif
-                event.setCancelled(true);
-            } else if (lms.isStarted()) {
-                // Vérifie les relations de factions
-                FPlayer fAttacker = FPlayers.getInstance().getByPlayer(attacker);
-                FPlayer fTarget = FPlayers.getInstance().getByPlayer(target);
-                Faction factionAttacker = fAttacker.getFaction();
-                Faction factionTarget = fTarget.getFaction();
+        if (!lmsEvent.isParticipant(target) || !lmsEvent.isParticipant(attacker)) return;
 
-                // Annule les relations "ally" et "truce" pour les joueurs inscrits dans l'événement
-                if (factionAttacker != null && factionTarget != null) {
-                    if (factionAttacker.getRelationTo(factionTarget).isAlly() ||
-                            factionAttacker.getRelationTo(factionTarget).isTruce()) {
-                        event.setCancelled(false);
-                    }
+        if (lms.isPreparation()) {
+            // Annule les dégâts pendant la phase de préparation
+            event.setCancelled(true);
+        } else if (lms.isStarted()) {
+            // Autorise les combats entre alliés et trêve dans le LMS
+            FPlayer fAttacker = FPlayers.getInstance().getByPlayer(attacker);
+            FPlayer fTarget = FPlayers.getInstance().getByPlayer(target);
+            Faction factionAttacker = fAttacker.getFaction();
+            Faction factionTarget = fTarget.getFaction();
+
+            if (factionAttacker != null && factionTarget != null) {
+                if (factionAttacker.getRelationTo(factionTarget).isAlly() ||
+                        factionAttacker.getRelationTo(factionTarget).isTruce()) {
+                    event.setCancelled(false);
                 }
             }
         }

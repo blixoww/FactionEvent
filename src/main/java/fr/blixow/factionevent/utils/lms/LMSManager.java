@@ -32,9 +32,10 @@ public class LMSManager {
     }
 
     public static LMS getStartedLMS() {
+        // Retourne le premier LMS dont la phase est REGISTRATION, PREPARATION ou COMBAT
         return FactionEvent.getInstance().getListLMS()
                 .stream()
-                .filter(LMSManager::isLMSStarted)
+                .filter(lms -> lms.isRegistration() || lms.isPreparation() || lms.isStarted())
                 .findFirst()
                 .orElse(null);
     }

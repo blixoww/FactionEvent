@@ -23,6 +23,7 @@ import fr.blixow.factionevent.events.ManagerFactionEvent;
 import fr.blixow.factionevent.events.InventoryEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.PlanningScheduler;
+import fr.blixow.factionevent.utils.ScheduledEvent;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.event.EventOn;
@@ -36,20 +37,19 @@ import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.*;
 
 public final class FactionEvent extends JavaPlugin {
     private static FactionEvent instance;
     // Planning
-    private Map<String, String> planning;
+    private List<ScheduledEvent> planningEvents;
     // KOTH
     private ArrayList<KOTH> listKOTH;
 
@@ -68,6 +68,8 @@ public final class FactionEvent extends JavaPlugin {
 
     // Scoreboard and Title lists
     private HashMap<Player, EventManager> eventManagerMap;
+    // Timestamp (ms) du prochain Guess aléatoire planifié (-1 si non planifié)
+    private volatile long nextGuessTimestampMillis = -1;
     // Faction rankings
     private LinkedHashMap<Faction, Integer> factionRankings;
     // FileConfig
@@ -94,6 +96,7 @@ public final class FactionEvent extends JavaPlugin {
         loadEvents();
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Activation du plugin FactionEvent");
         startSchedulerForPlanning();
+        startRandomGuessScheduler();
         actionsForOnlinePlayers();
         RankingManager.runTaskUpdateRankings();
     }
@@ -163,6 +166,7 @@ public final class FactionEvent extends JavaPlugin {
         eventManagerMap = new HashMap<>();
         factionRankings = new LinkedHashMap<>();
         eventOn = new EventOn();
+        planningEvents = new ArrayList<>();
     }
 
     private void loadEvents() {
@@ -171,24 +175,40 @@ public final class FactionEvent extends JavaPlugin {
         DTCManager.loadDTCfromFile();
         LMSManager.loadLMSfromFile();
         GuessManager.loadWordsFromConfig();
-        planning = loadPlanning();
+        planningEvents = loadPlanning();
     }
 
     public void reloadPlanning() {
-        this.planning = loadPlanning();
+        this.planningEvents = loadPlanning();
     }
 
-    private HashMap<String, String> loadPlanning() {
-        HashMap<String, String> scheduleMap = new HashMap<>();
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        int currentWeek = DateManager.getWeekOfYear(currentDateTime);
-        String basePath = currentDateTime.getYear() + "." + currentWeek;
+    private List<ScheduledEvent> loadPlanning() {
+        List<ScheduledEvent> eventsList = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        // Map jour (français) → DayOfWeek ISO (Lundi=1 ... Dimanche=7)
+        Map<String, Integer> dayOfWeekMap = new LinkedHashMap<>();
+        dayOfWeekMap.put("Lundi",    1);
+        dayOfWeekMap.put("Mardi",    2);
+        dayOfWeekMap.put("Mercredi", 3);
+        dayOfWeekMap.put("Jeudi",    4);
+        dayOfWeekMap.put("Vendredi", 5);
+        dayOfWeekMap.put("Samedi",   6);
+        dayOfWeekMap.put("Dimanche", 7);
+
+        int todayDow = now.getDayOfWeek().getValue(); // 1=Lundi, 7=Dimanche
 
         for (DayEnum day : DayEnum.values()) {
             String value = day.getValeur();
-            String dayPath = basePath + "." + value;
-            String dayDate = PlanningManager.getDate(dayPath);
-            HashMap<String, List<String>> dailyEvents = PlanningManager.getDailyEvents(dayPath);
+            Integer dow = dayOfWeekMap.get(value);
+            if (dow == null) continue;
+
+            // Calcule la date du prochain (ou actuel) jour de la semaine, dans les 7 prochains jours
+            int diff = dow - todayDow;
+            if (diff < 0) diff += 7;
+            LocalDate date = now.toLocalDate().plusDays(diff);
+
+            HashMap<String, List<String>> dailyEvents = PlanningManager.getDailyEvents(value);
 
             for (Map.Entry<String, List<String>> entry : dailyEvents.entrySet()) {
                 String category = entry.getKey();
@@ -196,26 +216,84 @@ public final class FactionEvent extends JavaPlugin {
 
                 for (String event : events) {
                     try {
+                        // format : "16h00|NomEvent"
                         String[] eventDetails = event.split("\\|");
                         String time = eventDetails[0];
                         String eventName = eventDetails[1];
 
-                        String formattedTime = DateManager.formatTime(time);
-                        String eventKey = dayDate + "-" + formattedTime;
+                        String[] parts = time.split("h");
+                        int hour   = Integer.parseInt(parts[0]);
+                        int minute = Integer.parseInt(parts[1]);
 
-                        scheduleMap.put(eventKey, category + "-" + eventName);
+                        LocalDateTime eventTime = LocalDateTime.of(date, java.time.LocalTime.of(hour, minute));
+                        eventsList.add(new ScheduledEvent(category, eventName, eventTime));
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 }
             }
         }
-        return scheduleMap;
+        Bukkit.getConsoleSender().sendMessage("[FactionEvent] Planning rechargé : " + eventsList.size() + " événement(s) chargé(s).");
+        return eventsList;
     }
 
-    private void startSchedulerForPlanning() {
-        BukkitScheduler scheduler = Bukkit.getScheduler();
-        scheduler.runTaskTimer(this, new PlanningScheduler(), 0, 20 * 60);
+    public void startSchedulerForPlanning() {
+        new PlanningScheduler().runTaskTimer(this, 0L, 20L * 20L); // toutes les 20 secondes
+    }
+
+    private void startRandomGuessScheduler() {
+        scheduleNextGuess();
+    }
+
+    private void scheduleNextGuess() {
+        FileConfiguration guessConfig = FileManager.getGuessDataFC();
+        int minDelay = guessConfig.getInt("guess.random_min_delay", 30);
+        int maxDelay = guessConfig.getInt("guess.random_max_delay", 90);
+        if (minDelay < 1) minDelay = 1;
+        if (maxDelay < minDelay) maxDelay = minDelay;
+        // Délai aléatoire en ticks (20 ticks = 1 seconde)
+        long delayMinutes = minDelay + (long)(Math.random() * (maxDelay - minDelay + 1));
+        long delayTicks = delayMinutes * 60L * 20L;
+        // Préparer la sélection maintenant et la rendre visible via GuessManager.getLastSelectedWords()
+        fr.blixow.factionevent.utils.guess.GuessManager.prepareNextSelection();
+        // Enregistrer le timestamp (ms) du prochain lancement
+        nextGuessTimestampMillis = System.currentTimeMillis() + (delayMinutes * 60L * 1000L);
+        Bukkit.getConsoleSender().sendMessage("[FactionEvent] Prochain Guess aléatoire dans " + delayMinutes + " minutes.");
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            try {
+                // Ne pas lancer si un event est déjà en cours
+                if (!eventOn.canStartAnEvent()) {
+                    Bukkit.getConsoleSender().sendMessage("[FactionEvent] Guess aléatoire annulé : un event est en cours.");
+                    scheduleNextGuess();
+                    return;
+                }
+                // Ne pas lancer si aucun joueur en ligne
+                if (Bukkit.getOnlinePlayers().isEmpty()) {
+                    scheduleNextGuess();
+                    return;
+                }
+                fr.blixow.factionevent.utils.guess.Guess guess = fr.blixow.factionevent.utils.guess.GuessManager.createGuessFromPrepared();
+                if (guess == null) {
+                    // Fallback
+                    guess = fr.blixow.factionevent.utils.guess.GuessManager.loadWordsFromConfig();
+                }
+                if (guess.getWords().isEmpty()) {
+                    Bukkit.getConsoleSender().sendMessage("[FactionEvent] Guess aléatoire annulé : aucun mot disponible.");
+                    scheduleNextGuess();
+                    return;
+                }
+                guess.start();
+                Bukkit.getConsoleSender().sendMessage("[FactionEvent] Guess aléatoire lancé !");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            scheduleNextGuess();
+        }, delayTicks);
+    }
+
+    // Retourne le timestamp (ms) du prochain Guess planifié, ou -1 si aucun
+    public long getNextGuessTimestampMillis() {
+        return nextGuessTimestampMillis;
     }
 
     @Override
@@ -233,8 +311,8 @@ public final class FactionEvent extends JavaPlugin {
         return instance;
     }
 
-    public Map<String, String> getPlanning() {
-        return planning;
+    public List<ScheduledEvent> getPlanning() {
+        return planningEvents;
     }
 
     public void setListKOTH(ArrayList<KOTH> listKOTH) {

@@ -63,6 +63,8 @@ public class Messages {
         if (subtitle != null) {
             subtitle = subtitle.replaceAll("%player%", player.getDisplayName());
             subtitle = ChatColor.translateAlternateColorCodes('&', subtitle);
+            // Pas de retour à la ligne dans un Title Minecraft !
+            subtitle = subtitle.replace("\n", " ");
             IChatBaseComponent titleSub = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + subtitle + "\"}");
             PacketPlayOutTitle packetPlayOutSubTitle = new PacketPlayOutTitle(
                     PacketPlayOutTitle.EnumTitleAction.SUBTITLE, titleSub);
@@ -71,12 +73,15 @@ public class Messages {
         if (title != null) {
             title = title.replaceAll("%player%", player.getDisplayName());
             title = ChatColor.translateAlternateColorCodes('&', title);
+            // Pas de retour à la ligne dans un Title Minecraft !
+            title = title.replace("\n", " ");
             IChatBaseComponent titleMain = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + title + "\"}");
             PacketPlayOutTitle packetPlayOutTitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE,
                     titleMain);
             connection.sendPacket(packetPlayOutTitle);
         }
     }
+
     public static void sendTabTitle(Player player, String header, String footer) {
         if (header == null) {
             header = "";

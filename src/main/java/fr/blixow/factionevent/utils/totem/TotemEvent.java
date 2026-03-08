@@ -2,6 +2,7 @@ package fr.blixow.factionevent.utils.totem;
 
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.Messages;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Faction;
@@ -49,14 +50,14 @@ public class TotemEvent {
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         Faction fPlayerFaction = FPlayers.getInstance().getByPlayer(player).getFaction();
         String win = new StrManager(msg.getString("totem.win")).rePlayer(player).reFaction(fPlayerFaction.getTag()).reTotem(totem.getName()).toString();
-        Bukkit.broadcastMessage(msg.getString("totem.prefix") + win);
+        Bukkit.broadcastMessage(win);
         totem.stop();
         if(faction != null && !faction.isWilderness() && !faction.isSafeZone() && !faction.isWarZone()){
             int points = 10;
             try { if(config.contains("totem.win_points")){ points = config.getInt("totem.win_points"); if(points < 1){ points = 1; } } } catch (Exception ignored){}
             RankingManager.addTotemWins(faction);
-            RankingManager.addPoints(faction, 10);
-            FactionMessageTitle.sendFactionTitle(faction, 20,40, 20,"§aTotem remporté", "+10 points au classement");
+            RankingManager.addPoints(faction, points);
+            FactionMessageTitle.sendFactionTitle(faction, 20,40, 20,"§aTotem remporté", "+" + points + " points au classement");
         }
         RankingManager.updateRanking(true);
     }
@@ -135,6 +136,11 @@ public class TotemEvent {
         String left = "§7" + blocks.size() + "§f/§7" + totem.getBlocks().size();
         String factionName = "Aucune";
         if(faction != null && !faction.isWilderness()){ factionName = faction.getTag(); }
+
+        FileConfiguration msg = FileManager.getMessageFileConfiguration();
+        String actionBarMsg = new StrManager(msg.getString("totem.blocks_left", "§7Blocs restants : §c{blocks}§7/§c{maxblocks}"))
+                .reBlocks(blocks.size(), totem.getBlocks().size()).toString();
+
         Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
         scoreBoardAPI = new ScoreBoardAPI(board, "§8[§cTotem§8]", true);
         scoreBoardAPI.setDisplayName("§8[§cTOTEM§8]");
@@ -142,19 +148,25 @@ public class TotemEvent {
         scoreBoardAPI.setLine(7, "§c» §eFaction");
         scoreBoardAPI.setLine(6, "§7" + factionName);
         scoreBoardAPI.setLine(5, "");
-        scoreBoardAPI.setLine(4, "§c» §eBlocks");
+        scoreBoardAPI.setLine(4, "§c» §eBlocs");
         scoreBoardAPI.setLine(3, left);
         scoreBoardAPI.setLine(2, "");
         scoreBoardAPI.setLine(1, "§c» §eTemps");
         scoreBoardAPI.setLine(0, "§7" + timeRemainingString);
-        for(Player player : FactionEvent.getInstance().getEventScoreboardOff().keySet()){
+
+        HashMap<Player, EventManager> managerHashMap = FactionEvent.getInstance().getEventScoreboardOff();
+        for(Player player : Bukkit.getOnlinePlayers()){
             try {
-                EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
-                if(eventManager.isScoreboard()){
-                    player.setScoreboard(scoreBoardAPI.getScoreboard());
-                    scoreBoardAPI.getObjective().setDisplaySlot(DisplaySlot.SIDEBAR);
+                EventManager eventManager = managerHashMap.get(player);
+                if(eventManager != null){
+                    if(eventManager.isScoreboard()){
+                        player.setScoreboard(scoreBoardAPI.getScoreboard());
+                        scoreBoardAPI.getObjective().setDisplaySlot(DisplaySlot.SIDEBAR);
+                    }
+                    if(eventManager.isActionbar()){
+                        Messages.sendActionBar(player, actionBarMsg);
+                    }
                 }
-                //mapi2.setTotemEventScoreboard(player, this, factionName, left);
             } catch (Exception exception){
                 exception.printStackTrace();
             }
