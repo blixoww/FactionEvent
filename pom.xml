@@ -68,7 +68,7 @@
             <artifactId>factionsuuid</artifactId>
             <version>0.7.0</version>
             <scope>system</scope>
-            <systemPath>C:/Users/Valentin/Desktop/JAVA MC/Project/FactionsX.jar</systemPath>
+            <systemPath>C:/Users/Valentin/Desktop/JAVA MC/Project/Factions.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.github.azbh111</groupId>
