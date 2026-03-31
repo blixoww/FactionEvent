@@ -15,20 +15,25 @@ import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
-import org.bukkit.GameMode;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
 
@@ -68,6 +73,7 @@ public class CustomEvents implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         FactionEvent.getInstance().getEventScoreboardOff().put(player, EventManager.loadFromFile(player));
+        // Le scoreboard sera réappliqué automatiquement lors du prochain updateScoreboard() (toutes les 5 ticks)
     }
 
 
@@ -85,46 +91,100 @@ public class CustomEvents implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         if (FactionEvent.getInstance().getEventOn().getTotemEvent() != null) {
-            if (FactionEvent.getInstance().getEventOn().getTotemEvent().getBlocks().containsKey(event.getBlock().getLocation())) {
-                ItemStack hand = player.getInventory().getItemInHand();
-                if (hand.getType().toString().contains("SWORD") || player.isOp() || player.getGameMode() == GameMode.CREATIVE) {
-                    FactionEvent.getInstance().getEventOn().getTotemEvent().blockDestroyed(event.getBlock(), player);
-                } else {
-                    for (Location location : FactionEvent.getInstance().getEventOn().getTotemEvent().getBlocks().keySet()) {
-                        if (location.getBlock() != null) {
-                            event.setCancelled(true);
-                            FileConfiguration fc = FileManager.getMessageFileConfiguration();
-                            String str = new StrManager(fc.getString("totem.sword")).rePlayer(player).reLocation(event.getBlock().getLocation()).toString();
-                            player.sendMessage(fc.getString("totem.prefix") + str);
-                            break;
-                        }
-                    }
-                }
+            Location blockLoc = new Location(event.getBlock().getWorld(),
+                    event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
+            if (FactionEvent.getInstance().getEventOn().getTotemEvent().getBlocks().containsKey(blockLoc)) {
+                // Annuler l'event (empêche le drop du bloc) et détruire manuellement
+                event.setCancelled(true);
+                event.getBlock().setType(Material.AIR);
+                FactionEvent.getInstance().getEventOn().getTotemEvent().blockDestroyed(event.getBlock(), player);
             }
         }
     }
 
     // DTC
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onHitEntity(EntityDamageByEntityEvent event) {
         Entity entity = event.getEntity();
+        if (!entity.getType().equals(EntityType.ENDER_CRYSTAL)) return;
+
+        DTCEvent dtcEvent = DTCManager.getDTCEventByEntity(entity);
+        if (dtcEvent == null) {
+            return;
+        }
+
+        // Annuler le dégât natif (évite l'explosion de l'EnderCrystal)
+        event.setCancelled(true);
+
         Entity damager = event.getDamager();
+        Player player = null;
+
         if (damager instanceof Player) {
-            Player player = (Player) damager;
-            if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
-                DTCEvent dtcEvent = DTCManager.getDTCEventByEntity(entity);
-                if (dtcEvent != null) {
-                    event.setCancelled(true);
-                    dtcEvent.hit(player, event.getFinalDamage());
-                }
+            player = (Player) damager;
+        } else if (damager instanceof Projectile) {
+            Projectile projectile = (Projectile) damager;
+            if (projectile.getShooter() instanceof Player) {
+                player = (Player) projectile.getShooter();
             }
         }
 
+        if (player != null) {
+            double damage = event.getDamage();
+            if (damage <= 0) damage = 1;
+            dtcEvent.hit(player, damage);
+        }
+    }
+
+    /**
+     * Empêche l'EnderCrystal du DTC d'exploser ou d'être détruit par des dégâts indirects
+     * (explosion d'un autre EnderCrystal, TNT, etc.)
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEnderCrystalDamage(EntityDamageEvent event) {
+        Entity entity = event.getEntity();
+        if (!entity.getType().equals(EntityType.ENDER_CRYSTAL)) return;
+        DTCEvent dtcEvent = DTCManager.getDTCEventByEntity(entity);
+        if (dtcEvent != null) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Empêche l'explosion générée par l'EnderCrystal du DTC.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEnderCrystalExplode(EntityExplodeEvent event) {
+        Entity entity = event.getEntity();
+        if (!entity.getType().equals(EntityType.ENDER_CRYSTAL)) return;
+        DTCEvent dtcEvent = DTCManager.getDTCEventByEntity(entity);
+        if (dtcEvent != null) {
+            event.setCancelled(true);
+        }
+
+    }
+
+    /**
+     * Empêche que les EnderCrystal du DTC prennent feu (ex: flèches flame)
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityCombust(EntityCombustEvent event) {
+        Entity entity = event.getEntity();
+        if (!entity.getType().equals(EntityType.ENDER_CRYSTAL)) return;
+        DTCEvent dtcEvent = DTCManager.getDTCEventByEntity(entity);
+        if (dtcEvent != null) {
+            event.setCancelled(true);
+            // Planifier une tâche pour s'assurer que le feu est éteint après le traitement de l'événement.
+            Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), () -> {
+                if (entity.isValid()) {
+                    entity.setFireTicks(0);
+                }
+            }, 1L);
+        }
     }
 
     @EventHandler

@@ -8,7 +8,7 @@ public class InventoryEvent implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent event){
-        if(event.getInventory().getName().equals("§cPlanning des event faction")){
+        if(event.getInventory().getName().equals("§8§lPlanning §8» §cÉvénements")){
             event.setCancelled(true);
         }
     }

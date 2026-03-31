@@ -24,17 +24,12 @@ public class DTC {
     public void start(Player... players) {
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         String dtc_prefix = msg.getString("dtc.prefix");
-        String message = "";
         EventOn eventOn = FactionEvent.getInstance().getEventOn();
-        if (eventOn.canStartAnEvent()) {
-            message = dtc_prefix + new StrManager(msg.getString("dtc.already_started")).reDTC(this.name).toString();
+        if (!eventOn.canStartAnEvent()) {
+            String message = dtc_prefix + new StrManager(msg.getString("dtc.already_started")).reDTC(this.name).toString();
             FactionMessageTitle.sendPlayersMessage(message, players);
-            FactionMessageTitle.sendPlayersTitle(20,40, 20,"§aNexus en cours", "préparez-vous au combat");
-            eventOn.start(this);
             return;
         }
-        message = dtc_prefix + new StrManager(msg.getString("dtc.started")).reDTC(this.getName()).toString();
-        Bukkit.broadcastMessage(message);
         eventOn.start(this, players);
     }
 
@@ -45,9 +40,6 @@ public class DTC {
         String message = "";
         if (dtcEvent != null) {
             dtcEvent.getEntity().remove();
-            if (dtcEvent.getScoreBoardAPI() != null) {
-                dtcEvent.getScoreBoardAPI().getObjective().unregister();
-            }
             if (!dtcEvent.isDead()) {
                 if (players.length > 0) {
                     message = dtc_prefix + new StrManager(msg.getString("dtc.canceled")).reDTC(this.name).toString();
@@ -55,9 +47,7 @@ public class DTC {
                     message = dtc_prefix + new StrManager(msg.getString("dtc.ended")).reDTC(this.name).toString();
                 }
                 Bukkit.broadcastMessage(message);
-
             }
-            dtcEvent = null;
             FactionEvent.getInstance().getEventOn().setDtcEvent(null);
         } else {
             message = dtc_prefix + new StrManager(msg.getString("dtc.not_started")).reDTC(this.name).toString();

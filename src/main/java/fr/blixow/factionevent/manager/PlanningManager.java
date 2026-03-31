@@ -11,6 +11,24 @@ import java.util.*;
 
 public class PlanningManager {
 
+    /**
+     * Entrée de planning avec heure, minutes, type et nom — comparable pour trier.
+     */
+    public static class PlanningEntry implements Comparable<PlanningEntry> {
+        public final int totalMinutes; // heure * 60 + minutes
+        public final String displayLine;
+
+        public PlanningEntry(int heure, int minutes, String displayLine) {
+            this.totalMinutes = heure * 60 + minutes;
+            this.displayLine = displayLine;
+        }
+
+        @Override
+        public int compareTo(PlanningEntry other) {
+            return Integer.compare(this.totalMinutes, other.totalMinutes);
+        }
+    }
+
     public static HashMap<String, List<String>> getDailyEvents(String path) {
         HashMap<String, List<String>> map = new HashMap<>();
         FileConfiguration fc = FileManager.getPlanningDataFC();
@@ -70,54 +88,77 @@ public class PlanningManager {
         return map;
     }
 
+    /**
+     * Retourne les events du jour triés par heure croissante.
+     * Format de chaque ligne : "§eKOTH §6nom §7à §c08h30"
+     */
     public static ArrayList<String> getWeeklyEvents(String path) {
-        ArrayList<String> listeEvents = new ArrayList<>();
+        List<PlanningEntry> entries = new ArrayList<>();
         FileConfiguration fc = FileManager.getPlanningDataFC();
-        String m = "", h = "";
+
         if (fc.contains(path)) {
+            // KOTH
             for (KOTH koth : FactionEvent.getInstance().getListKOTH()) {
                 String nom = koth.getName();
-                String path_koth = path + ".koth." + nom;
-                List<String> stringList = fc.getStringList(path_koth);
+                List<String> stringList = fc.getStringList(path + ".koth." + nom);
                 for (String str : stringList) {
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-                    listeEvents.add("§eKOTH §6" + nom + " §7à §c" + h + "h" + m);
+                    PlanningEntry e = parseEntry(str, "§eKOTH §6" + nom);
+                    if (e != null) entries.add(e);
                 }
             }
+            // Totem
             for (Totem totem : FactionEvent.getInstance().getListTotem()) {
                 String nom = totem.getName();
-                String path_totem = path + ".totem." + nom;
-                List<String> stringList = fc.getStringList(path_totem);
+                List<String> stringList = fc.getStringList(path + ".totem." + nom);
                 for (String str : stringList) {
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-                    listeEvents.add("§eTotem §6" + nom + " §7à §c" + h + "h" + m);
+                    PlanningEntry e = parseEntry(str, "§eTotem §6" + nom);
+                    if (e != null) entries.add(e);
                 }
             }
+            // DTC
             for (DTC dtc : FactionEvent.getInstance().getListDTC()) {
                 String nom = dtc.getName();
-                String path_dtc = path + ".dtc." + nom;
-                List<String> stringList = fc.getStringList(path_dtc);
+                List<String> stringList = fc.getStringList(path + ".dtc." + nom);
                 for (String str : stringList) {
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-                    listeEvents.add("§eDTC §6" + nom + " §7à §c" + h + "h" + m);
+                    PlanningEntry e = parseEntry(str, "§eDTC §6" + nom);
+                    if (e != null) entries.add(e);
                 }
             }
+            // LMS
             for (LMS lms : FactionEvent.getInstance().getListLMS()) {
                 String nom = lms.getName();
-                String path_lms = path + ".lms." + nom;
-                List<String> stringList = fc.getStringList(path_lms);
+                List<String> stringList = fc.getStringList(path + ".lms." + nom);
                 for (String str : stringList) {
-                    h = str.split("h")[0].length() == 1 ? "0" + str.split("h")[0] : str.split("h")[0];
-                    m = str.split("h")[1].length() == 1 ? "0" + str.split("h")[1] : str.split("h")[1];
-                    listeEvents.add("§eLMS §6" + nom + " §7à §c" + h + "h" + m);
+                    PlanningEntry e = parseEntry(str, "§eLMS §6" + nom);
+                    if (e != null) entries.add(e);
                 }
             }
-
         }
-        return listeEvents;
+
+        Collections.sort(entries);
+
+        ArrayList<String> result = new ArrayList<>();
+        for (PlanningEntry e : entries) {
+            result.add(e.displayLine);
+        }
+        return result;
+    }
+
+    /**
+     * Parse une chaîne "Xh Y" ou "XhY" et retourne un PlanningEntry trié.
+     */
+    private static PlanningEntry parseEntry(String str, String typeAndName) {
+        try {
+            String[] parts = str.split("h");
+            int heure = Integer.parseInt(parts[0].trim());
+            int minutes = Integer.parseInt(parts[1].trim());
+            String h = heure < 10 ? "0" + heure : String.valueOf(heure);
+            String m = minutes < 10 ? "0" + minutes : String.valueOf(minutes);
+            String display = typeAndName + " §7à §c" + h + "h" + m;
+            return new PlanningEntry(heure, minutes, display);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static String getDate(String path) {

@@ -63,9 +63,9 @@ public class Totem {
                 fc.set("totemlist", totemList);
             }
             fc.set(this.nom + ".worldname", location.getWorld().getName());
-            fc.set(this.nom + ".position.x", location.getX());
-            fc.set(this.nom + ".position.y", location.getY());
-            fc.set(this.nom + ".position.z", location.getZ());
+            fc.set(this.nom + ".position.x", location.getBlockX());
+            fc.set(this.nom + ".position.y", location.getBlockY());
+            fc.set(this.nom + ".position.z", location.getBlockZ());
             List<String> blocksListString = new ArrayList<>();
             blocks.forEach((k, v) -> {
                 String formatedLoc = CastUtils.getStringFormattedLocation(k);
@@ -97,9 +97,6 @@ public class Totem {
             if (eventOn.canStartAnEvent() || eventOn.getTotemEvent() == null || !eventOn.getTotemEvent().getTotem().equals(this)) {
                 return false;
             }
-            TotemEvent totemEvent = eventOn.getTotemEvent();
-            totemEvent.getScoreBoardAPI().getObjective().unregister();
-            totemEvent = null;
             eventOn.setTotemEvent(null);
             clearBlocks();
             return true;

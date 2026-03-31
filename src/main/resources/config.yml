@@ -24,8 +24,8 @@ totem:
 dtc:
   # Temps en secondes nécessaire pour vérifier le temps pour les dtc (en secondes)
   check_time: 10
-  # Nombre de coups nécessaire pour mettre à jour ?
-  check_hit: 10
+  # Nombre de coups nécessaire pour mettre à jour ? (1 = mise à jour à chaque coup)
+  check_hit: 1
   # Temps maximum de l'événement
   max_duration: 1800 # 1800 → 30 minutes
   # Nombre de points reçus par la faction gagnante :)

@@ -29,9 +29,9 @@ public class CastUtils {
     }
 
     public static String getStringFormattedLocation(Location location){
-        int x = (int) location.getX();
-        int y = (int) location.getY();
-        int z = (int) location.getZ();
+        int x = location.getBlockX();
+        int y = location.getBlockY();
+        int z = location.getBlockZ();
         return x + "," + y + "," + z;
     }
 

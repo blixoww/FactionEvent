@@ -58,10 +58,26 @@ public class FactionMessageTitle {
     }
 
     public static void sendFactionActionBar(Faction faction, String message) {
-        if (!faction.isWilderness()) {
+        if (faction != null && !faction.isWilderness()) {
             for (Player player : getOnlineFactionPlayers(faction)) {
                 Messages.sendActionBar(player, message);
             }
+        }
+    }
+
+    public static void sendPlayersActionBar(String message) {
+        HashMap<Player, EventManager> managerHashMap = FactionEvent.getInstance().getEventScoreboardOff();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            try {
+                EventManager eventManager = managerHashMap.get(player);
+                if (eventManager == null) {
+                    eventManager = EventManager.loadFromFile(player);
+                    managerHashMap.put(player, eventManager);
+                }
+                if (eventManager.isActionbar()) {
+                    Messages.sendActionBar(player, message);
+                }
+            } catch (Exception ignored) {}
         }
     }
 

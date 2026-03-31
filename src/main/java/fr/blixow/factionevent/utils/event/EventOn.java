@@ -88,23 +88,27 @@ public class EventOn {
                 if (configuration.contains("koth.check_time")) {
                     check_time = configuration.getInt("koth.check_time");
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
             check_time = check_time > 0 ? check_time : 1;
+            final int finalCheckTime = check_time;
+
+            // Runnable action bar : toutes les secondes
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (getKothEvent() == null) {
-                        koth.stop();
-                        cancel();
-                    } else if (kothEvent.checkTimer()) {
-                        koth.stop();
-                        cancel();
-                    } else {
-                        kothEvent.updateScoreboard();
-                    }
+                    if (kothEvent == null) { cancel(); return; }
+                    kothEvent.updateScoreboard();
                 }
-            }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L);
+
+            // Runnable vérification fin d'event
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (kothEvent == null) { cancel(); return; }
+                    if (kothEvent.checkTimer()) { koth.stop(); cancel(); }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
             return;
         }
         String queueMessage = msg.getString("koth.prefix") + new StrManager(msg.getString("koth.adding_to_queue")).reKoth(koth.getName()).toString();
@@ -119,27 +123,39 @@ public class EventOn {
             if (configuration.contains("dtc.check_time")) {
                 check_time = configuration.getInt("dtc.check_time");
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         check_time = check_time > 0 ? check_time : 1;
+        final int finalCheckTime = check_time;
         if (canStartAnEvent()) {
             this.dtcEvent = new DTCEvent(dtc);
+
             String message = new StrManager(msg.getString("dtc.started")).reDTC(dtc.getName()).toString();
             Bukkit.broadcastMessage(addProportionalLines(message));
+
+            // Envoyer un Title global configuré (si activé dans message.yml)
+            try {
+                String title = new StrManager(msg.getString("dtc.title.title", "§aNexus en cours")).reDTC(dtc.getName()).toString();
+                String subtitle = new StrManager(msg.getString("dtc.title.subtitle", "§7Préparez-vous au combat")).reDTC(dtc.getName()).toString();
+                FactionMessageTitle.sendPlayersTitle(20, 40, 20, title, subtitle);
+            } catch (Exception ignored) {}
+
+            // Runnable action bar : toutes les secondes
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (dtcEvent == null) {
-                        dtc.stop();
-                        cancel();
-                    } else if (dtcEvent.checkTimer()) {
-                        dtc.stop();
-                        cancel();
-                    } else {
-                        dtcEvent.updateScoreboard();
-                    }
+                    if (dtcEvent == null) { cancel(); return; }
+                    dtcEvent.updateScoreboard();
                 }
-            }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L);
+
+            // Runnable vérification fin d'event
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (dtcEvent == null) { cancel(); return; }
+                    if (dtcEvent.checkTimer()) { dtc.stop(); cancel(); }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
             return;
         }
         String queueMessage = msg.getString("dtc.prefix") + new StrManager(msg.getString("dtc.adding_to_queue")).reDTC(dtc.getName()).toString();
@@ -160,23 +176,31 @@ public class EventOn {
                 if (configuration.contains("totem.check_time")) {
                     check_time = configuration.getInt("totem.check_time");
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
             check_time = check_time > 0 ? check_time : 1;
+            final int finalCheckTime = check_time;
+
+            // Runnable action bar : toutes les secondes
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (totemEvent == null) { cancel(); return; }
+                    totemEvent.updateScoreboard();
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L);
+
+            // Runnable vérification fin d'event
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     try {
-                        if (totemEvent == null) {
-                            cancel();
-                        } else if (totemEvent.checkTimer()) {
-                            cancel();
-                        }
+                        if (totemEvent == null) { cancel(); return; }
+                        if (totemEvent.checkTimer()) { cancel(); }
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 }
-            }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
             return;
         }
         String queueMessage = msg.getString("totem.prefix") + new StrManager(msg.getString("totem.adding_to_queue")).reTotem(totem.getName()).toString();
@@ -196,18 +220,25 @@ public class EventOn {
                     check_time = Math.max(1, configuration.getInt("lms.check_time"));
                 }
             } catch (Exception ignored) {}
+            final int finalCheckTime = check_time;
 
+            // Runnable action bar : toutes les secondes
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (lmsEvent == null) {
-                        cancel();
-                    } else if (lmsEvent.isEventActive() && lmsEvent.checkTimer()) {
-                        lms.stop();
-                        cancel();
-                    }
+                    if (lmsEvent == null) { cancel(); return; }
+                    lmsEvent.updateScoreboard();
                 }
-            }.runTaskTimer(FactionEvent.getInstance(), 20L, check_time * 20L);
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L);
+
+            // Runnable vérification fin d'event
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (lmsEvent == null) { cancel(); return; }
+                    if (lmsEvent.isEventActive() && lmsEvent.checkTimer()) { lms.stop(); cancel(); }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
             return;
         }
         String queueMessage = msg.getString("lms.prefix") + new StrManager(msg.getString("lms.adding_to_queue")).reLMS(lms.getName()).toString();

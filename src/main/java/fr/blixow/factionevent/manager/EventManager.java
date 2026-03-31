@@ -1,11 +1,6 @@
 package fr.blixow.factionevent.manager;
 
 import fr.blixow.factionevent.FactionEvent;
-import fr.blixow.factionevent.utils.dtc.DTCEvent;
-import fr.blixow.factionevent.utils.event.EventOn;
-import fr.blixow.factionevent.utils.koth.KOTHEvent;
-import fr.blixow.factionevent.utils.lms.LMSEvent;
-import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -29,31 +24,10 @@ public class EventManager {
             player.sendMessage("§7Scoreboard §aactivé§7!");
         } else {
             player.sendMessage("§7Scoreboard §cdésactivé§7!");
+            // Restaurer le scoreboard par défaut quand on désactive
+            try { player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard()); } catch (Exception ignored) {}
         }
-        EventOn eventOn = FactionEvent.getInstance().getEventOn();
-        KOTHEvent kothEvent = eventOn.getKothEvent();
-        if (kothEvent != null) {
-            kothEvent.getScoreBoardAPI().getObjective().unregister();
-            kothEvent.updateScoreboard();
-        }
-
-        TotemEvent totemEvent = eventOn.getTotemEvent();
-        if (totemEvent != null) {
-            totemEvent.getScoreBoardAPI().getObjective().unregister();
-            totemEvent.updateScoreboard();
-        }
-
-        DTCEvent dtcEvent = eventOn.getDtcEvent();
-        if (dtcEvent != null) {
-            dtcEvent.getScoreBoardAPI().getObjective().unregister();
-            dtcEvent.updateScoreboard();
-        }
-        LMSEvent lmsEvent = eventOn.getLMSEvent();
-        if (lmsEvent != null) {
-            lmsEvent.getScoreBoardAPI().getObjective().unregister();
-            lmsEvent.updateScoreboard();
-        }
-
+        // Pas besoin de forcer un update, le runnable à 1 seconde s'en chargera
     }
 
     public void switchTitle(Player player) {

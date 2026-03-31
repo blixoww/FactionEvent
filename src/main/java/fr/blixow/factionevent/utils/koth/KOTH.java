@@ -103,12 +103,8 @@ public class KOTH {
             if (!kothEvent.isWon()) {
                 Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("koth.canceled")).reKoth(this.nom).toString());
             }
-            kothEvent.getScoreBoardAPI().getObjective().unregister();
-            kothEvent = null;
             eventOn.setKothEvent(null);
             return;
-        } else {
-            FactionMessageTitle.sendPlayersMessage(prefix + new StrManager(msg.getString("koth.not_started")).reKoth(this.nom).toString(), players);
         }
         FactionMessageTitle.sendPlayersMessage(prefix + new StrManager(msg.getString("koth.not_started")).reKoth(this.nom).toString(), players);
     }

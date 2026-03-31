@@ -37,10 +37,42 @@ public class DTCManager {
     }
 
     public static DTCEvent getDTCEventByEntity(Entity entity){
+        if(entity == null) return null;
         if(isDTCStarted()){
-            if(FactionEvent.getInstance().getEventOn().getDtcEvent().getEntity().equals(entity)){
-                return FactionEvent.getInstance().getEventOn().getDtcEvent();
-            }
+            try {
+                DTCEvent dtcEvent = FactionEvent.getInstance().getEventOn().getDtcEvent();
+                if (dtcEvent == null) return null;
+                Entity stored = dtcEvent.getEntity();
+                if (stored != null) {
+                    // compare UUIDs pour plus de robustesse
+                    try {
+                        if (stored.getUniqueId().equals(entity.getUniqueId())) {
+                            return dtcEvent;
+                        }
+                    } catch (Exception ignored) {}
+                    // fallback : comparaison par proximité (si l'entité a été re-créée)
+                    try {
+                        Location l1 = stored.getLocation();
+                        Location l2 = entity.getLocation();
+                        if (l1 != null && l2 != null && l1.getWorld() != null && l1.getWorld().equals(l2.getWorld())) {
+                            double dist = l1.distance(l2);
+                            if (dist <= 2.0D) {
+                                return dtcEvent;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                } else {
+                    // stored null : fallback en comparant la position connue du DTC
+                    try {
+                        Location dtcLoc = dtcEvent.getDtc().getLocation();
+                        Location l2 = entity.getLocation();
+                        if (dtcLoc != null && l2 != null && dtcLoc.getWorld() != null && dtcLoc.getWorld().equals(l2.getWorld())) {
+                            double dist = dtcLoc.distance(l2);
+                            if (dist <= 2.0D) return dtcEvent;
+                        }
+                    } catch (Exception ignored) {}
+                }
+            } catch (Exception ignored) {}
         }
         return null;
     }

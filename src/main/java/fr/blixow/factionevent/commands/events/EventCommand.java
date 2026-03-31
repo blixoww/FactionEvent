@@ -2,11 +2,9 @@ package fr.blixow.factionevent.commands.events;
 
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.EventManager;
-import fr.blixow.factionevent.manager.FileManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -18,30 +16,24 @@ public class EventCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         try {
-            if(sender instanceof Player){
-                Player player = (Player)sender;
-                if(!FactionEvent.getInstance().getEventScoreboardOff().containsKey(player)){
+            if (sender instanceof Player) {
+                Player player = (Player) sender;
+                if (!FactionEvent.getInstance().getEventScoreboardOff().containsKey(player)) {
                     EventManager eventManager = EventManager.loadFromFile(player);
                     FactionEvent.getInstance().getEventScoreboardOff().put(player, eventManager);
                 }
-                if(args.length == 0){
+                if (args.length == 0) {
                     EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
-                    String scoreboard = eventManager.isScoreboard() ? "§aActivé" : "§cDésactivé";
                     String title = eventManager.isTitle() ? "§aActivé" : "§cDésactivé";
                     String actionbar = eventManager.isActionbar() ? "§aActivé" : "§cDésactivé";
                     player.sendMessage("§7§m----§r§7[ §cEVENT §7]§m----");
                     player.sendMessage("");
-                    player.sendMessage("§8» §7Scoreboard: " + scoreboard);
                     player.sendMessage("§8» §7Title: " + title);
                     player.sendMessage("§8» §7Actionbar: " + actionbar);
                     player.sendMessage("");
-                } else if(args.length == 1){
+                } else if (args.length == 1) {
                     EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(player);
-                    switch(args[0]){
-                        case "scoreboard":
-                            eventManager.switchScoreboard(player);
-                            eventManager.saveFile();
-                            break;
+                    switch (args[0]) {
                         case "title":
                             eventManager.switchTitle(player);
                             eventManager.saveFile();
@@ -52,13 +44,13 @@ public class EventCommand implements TabExecutor {
                             break;
                     }
                 } else {
-                    player.sendMessage("§7Commande: §f/" + label.toLowerCase() + " <scoreboard/title/actionbar>");
+                    player.sendMessage("§7Commande: §f/" + label.toLowerCase() + " <title/actionbar>");
                 }
                 return true;
             }
             sender.sendMessage("Vous devez être un joueur.");
             return true;
-        } catch (Exception exception){
+        } catch (Exception exception) {
             exception.printStackTrace();
             return true;
         }
@@ -77,11 +69,17 @@ public class EventCommand implements TabExecutor {
      */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        List<String> list = Arrays.asList("scoreboard", "title", "actionbar");
+        List<String> list = Arrays.asList("title", "actionbar");
         List<String> stringList = new ArrayList<>();
-        if(args.length == 1){
-            for(String l : list){ if(l.toLowerCase().startsWith(args[0].toLowerCase())){ stringList.add(l); } }
-            if(stringList.isEmpty()){ stringList = list; }
+        if (args.length == 1) {
+            for (String l : list) {
+                if (l.toLowerCase().startsWith(args[0].toLowerCase())) {
+                    stringList.add(l);
+                }
+            }
+            if (stringList.isEmpty()) {
+                stringList = list;
+            }
         }
         return stringList;
     }

@@ -51,8 +51,8 @@ planning:
   time_syntaxe: "§cErreur : §7Format de date invalide. Exemple : §eJeudi 16-00"
   num_sem_req: "§cErreur : §7Le numéro de semaine est requis."
   no_event: "§7Aucun événement n'est planifié."
-  not_exist: "§cErreur : §7L'événement §c{event} §7n'existe pas."
-  remove: "§7L'événement §c{event} §7a été retiré du planning."
+  not_exist: "§cErreur : §7L'événement n'existe pas dans le planning."
+  remove: "§7L'événement a été retiré du planning §8(§c{time}§8)§7."
 
 totem:
   prefix: "§8[§cTotem§8]§7 "
@@ -77,6 +77,8 @@ totem:
   took_control_title: "§aContrôle pris"
   took_control_subtitle: "§7Votre faction contrôle le Totem"
   win: "§8§m-----------------------------------------------------\n§r §8< §6§lVICTOIRE TOTEM §8> §8§m-----------------------------------------------------\n§c{player} §8(§c{faction}§8) §7a détruit le dernier bloc du Totem §c{totem} §7!\n§7La faction §c{faction} §7remporte la victoire !\n§8§m-----------------------------------------------------"
+  win_timeout: "§8§m-----------------------------------------------------\n§r §8< §6§lTOTEM TERMINÉ §8> §8§m-----------------------------------------------------\n§7Le temps est écoulé ! La faction §c{faction} §7a détruit le plus de blocs\n§7et remporte le Totem §c{totem} §7!\n§8§m-----------------------------------------------------"
+  no_winner: "§8§m-----------------------------------------------------\n§r §8< §6§lTOTEM TERMINÉ §8> §8§m-----------------------------------------------------\n§7Le Totem §c{totem} §7s'est terminé sans vainqueur.\n§8§m-----------------------------------------------------"
   blocks_left: "§7Blocs restants : §c{blocks}§7/§c{maxblocks}"
   setup: "§7Le Totem §c{totem} §7a été planifié pour le §c{time}§7."
   adding_to_queue: "§7Un événement est déjà en cours. Le Totem §c{totem} §7sera lancé automatiquement ensuite."
@@ -88,6 +90,10 @@ dtc:
   usage: "§cUsage : §7/dtc <nom> <action> §8| §7Actions : §fcreate/pos/start/stop/info"
   created: "§7Le DTC §c{dtc} §7a été créé avec succès."
   started: "§8§m-----------------------------------------------------\n§r §8< §6§lDTC §8> §8§m-----------------------------------------------------\n§7Le DTC §c{dtc} §7vient de commencer !\n§7Détruisez le cœur ennemi pour remporter la victoire !\n§8§m-----------------------------------------------------"
+  # Title affiché globalement quand un DTC démarre
+  title:
+    title: "§aNexus en cours"
+    subtitle: "§7Préparez-vous au combat"
   canceled: "§7Le DTC §c{dtc} §7a été annulé."
   ended: "§7Le DTC §c{dtc} §7est terminé sans vainqueur."
   already_exist: "§cErreur : §7Le DTC §c{dtc} §7existe déjà."
@@ -150,7 +156,7 @@ lms:
   starting_in_1mins: "§8§m-----------------------------------------------------\n§r §8< §6§lLMS - DERNIERE MINUTE §8> §8§m-----------------------------------------------------\n§7Le §cLast Man Standing §c{lms} §7commence dans §c1 minute §7!\n§7Êtes-vous prêt à combattre ?\n§8§m-----------------------------------------------------"
   winner: "§8§m-----------------------------------------------------\n§r §8< §6§lVICTOIRE LMS §8> §8§m-----------------------------------------------------\n§c{player} §8(§c{faction}§8) §7remporte le §cLast Man Standing §c{lms} §7!\n§8§m-----------------------------------------------------"
   scoreboard:
-    title: "§8[§cLMS§8]"
+    title: "§8§m      §r §8[ §cLMS §8] §m      "
     lines:
       - ""
       - "§c» §eJoueur"
