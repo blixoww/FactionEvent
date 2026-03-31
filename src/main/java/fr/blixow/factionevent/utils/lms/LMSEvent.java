@@ -6,6 +6,7 @@ import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -52,7 +53,7 @@ public class LMSEvent {
             player.sendMessage(prefix + new StrManager(msg.getString("lms.eliminated", "§cVous avez été éliminé du LMS §e{lms}§c !")).reLMS(lms.getName()).toString());
         }
         if (participants.isEmpty()) {
-            Bukkit.broadcastMessage(prefix + "§cLe LMS s'est terminé sans vainqueur.");
+            Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("lms.no_winner", "§cLe LMS {lms} s'est terminé sans vainqueur.")).reLMS(lms.getName()).toString());
             endEvent(); lms.resetPhase(); return;
         }
         if (participants.size() == 1) {
@@ -110,13 +111,26 @@ public class LMSEvent {
         RankingManager.updateRanking(false);
     }
 
-    /**
-     * updateScoreboard — sans scoreboard, ne fait rien (LMS n'a pas d'action bar périodique pertinente).
-     */
     public void updateScoreboard() {
-        // Pas de scoreboard, pas d'action bar périodique pour le LMS
+        if (!eventActive) return;
+        int remaining = participants.size();
+        if (remaining == 0) return;
+        String actionBar = prefix + "§7Joueurs restants : §e" + remaining;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            try {
+                EventManager eventManager = FactionEvent.getInstance().getEventScoreboardOff().get(online);
+                if (eventManager == null) {
+                    eventManager = EventManager.loadFromFile(online);
+                    FactionEvent.getInstance().getEventScoreboardOff().put(online, eventManager);
+                }
+                if (eventManager.isActionbar()) {
+                    Messages.sendActionBar(online, actionBar);
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
-    public boolean checkTimer() { return eventActive; }
+    /** LMS se termine via les morts/déconnexions, jamais par timeout. */
+    public boolean checkTimer() { return false; }
     public LMS getLMS() { return lms; }
 }

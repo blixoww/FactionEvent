@@ -73,7 +73,7 @@ public class EventOn {
     }
 
     public boolean canStartAnEvent() {
-        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null;
+        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null && guessEvent == null;
     }
 
     public void start(KOTH koth, Player... players) {

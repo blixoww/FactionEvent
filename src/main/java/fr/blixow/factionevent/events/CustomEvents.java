@@ -43,9 +43,15 @@ public class CustomEvents implements Listener {
 
     @EventHandler
     public void onMoveKoth(PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        if (FactionEvent.getInstance().getEventOn().getKothEvent() != null) {
-            KOTHEvent kothEvent = FactionEvent.getInstance().getEventOn().getKothEvent();
+        // Ignorer les simples rotations (tête) pour réduire le nombre d'appels
+        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
+                && event.getFrom().getBlockY() == event.getTo().getBlockY()
+                && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+            return;
+        }
+        KOTHEvent kothEvent = FactionEvent.getInstance().getEventOn().getKothEvent();
+        if (kothEvent != null) {
+            Player player = event.getPlayer();
             if (KOTHManager.isInKOTH(player, kothEvent.getKoth())) {
                 kothEvent.addPlayer(player);
             } else {
@@ -195,7 +201,8 @@ public class CustomEvents implements Listener {
         String format = event.getFormat();
 
         if (!faction.isWilderness()) {
-            Map<Faction, Integer> rankings = FactionEvent.getInstance().getFactionRankings();
+            // Snapshot de la map pour éviter ConcurrentModificationException depuis le thread async
+            Map<Faction, Integer> rankings = new java.util.LinkedHashMap<>(FactionEvent.getInstance().getFactionRankings());
             int factionRank = 1;
             for (Faction faction1 : rankings.keySet()) {
                 if (faction1.equals(faction)) {

@@ -220,6 +220,7 @@ public class LMS {
     }
 
     private void resetEvent() {
+        FactionEvent.getInstance().getEventOn().setLMSEvent(null);
         resetPhase();
     }
 

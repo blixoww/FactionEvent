@@ -141,7 +141,7 @@ public class KOTHEvent {
             try { if(config.contains("koth.win_points")){ points = config.getInt("koth.win_points"); if(points < 1){ points = 1; } } } catch (Exception ignored){}
             RankingManager.addKothWins(faction);
             RankingManager.addPoints(faction, points);
-            FactionMessageTitle.sendFactionTitle(faction, 20, 40, 20, "§aKOTH remporté", "+" + 10 + " points au classement");
+            FactionMessageTitle.sendFactionTitle(faction, 20, 40, 20, "§aKOTH remporté", "+" + points + " points au classement");
         }
         this.won = true;
         RankingManager.updateRanking(true);
