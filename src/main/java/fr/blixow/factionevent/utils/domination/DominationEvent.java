@@ -21,6 +21,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Collections;
+
 import java.util.*;
 
 public class DominationEvent {
@@ -477,12 +479,16 @@ public class DominationEvent {
             int zonesOwned = zoneCount.getOrDefault(faction.getId(), 0);
 
             if (faction.equals(dominantFaction)) {
+                // Faction dominante : Ralentissement + Faiblesse
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, ticks, 0, true), true);
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, ticks, 0, true), true);
                 player.sendMessage(prefix + "§cVotre faction domine trop ! §7Les ennemis se renforcent §8(" + snowballDuration + "s§8)§7.");
             } else if (zonesOwned == 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 0, true), true);
+                // Factions sans zone : Résistance + Régénération + Force II (comeback bonus)
+                player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, ticks, 0, true), true);
                 player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, ticks, 0, true), true);
-                player.sendMessage(prefix + "§aBoost comeback ! §7Vitesse + Régénération §8(" + snowballDuration + "s§8)§7.");
+                player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, ticks, 1, true), true);
+                player.sendMessage(prefix + "§aBoost comeback ! §7Résistance + Régénération + Force II §8(" + snowballDuration + "s§8)§7.");
             }
         }
     }
@@ -503,6 +509,7 @@ public class DominationEvent {
                 + "§r §8< §6§lDOMINATION TERMINÉE §8> §8§m-----------------------------------------------------\n"
                 + "§7Le temps est écoulé sans vainqueur.\n"
                 + "§8§m-----------------------------------------------------");
+            RankingManager.updateRanking(true);
             return;
         }
 
@@ -627,8 +634,34 @@ public class DominationEvent {
         if (items.isEmpty()) return placed;
 
         for (DominationZone zone : domination.getActiveZones()) {
-            Location loc = findFlatCenter(zone);
-            if (loc == null) continue;
+            Location loc;
+            if (zone.getChestLocation() != null) {
+                // Position définie manuellement via /domination setchest
+                loc = zone.getChestLocation().clone();
+                // Si le bloc à cette position est de l'air, descendre jusqu'au premier sol
+                World world = loc.getWorld();
+                if (world != null && loc.getBlock().getType() == Material.AIR) {
+                    int x = loc.getBlockX(), z = loc.getBlockZ();
+                    boolean found = false;
+                    for (int y = loc.getBlockY(); y >= 1; y--) {
+                        Block floor = world.getBlockAt(x, y, z);
+                        Block above = world.getBlockAt(x, y + 1, z);
+                        if (floor.getType().isSolid() && above.getType() == Material.AIR) {
+                            loc = new Location(world, x, y + 1, z);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        Bukkit.getLogger().warning("[Domination] Impossible de trouver un sol valide pour le chest de la zone " + zone.getName() + " (chest manuel).");
+                        continue;
+                    }
+                }
+            } else {
+                // Fallback : centre XZ entre pos1/pos2, Y médian de la zone, puis descente
+                loc = findZoneCenter(zone);
+                if (loc == null) continue;
+            }
             try {
                 loc.getBlock().setType(Material.CHEST);
                 Chest chest = (Chest) loc.getBlock().getState();
@@ -642,33 +675,33 @@ public class DominationEvent {
     }
 
     /**
-     * Finds an unoccupied flat ground near the center of the zone.
-     * Scans downward from zone midpoint, avoiding occupied blocks.
+     * Trouve la position du coffre automatique :
+     * - Centre XZ entre pos1 et pos2
+     * - Scan DEPUIS le Y de base (min Y original entre pos1/pos2, avant /expand) VERS LE HAUT
+     *   jusqu'au premier bloc solide suivi d'au moins 1 bloc d'air au-dessus.
+     * - Explore un petit rayon si le centre exact est bloqué.
      */
-    private Location findFlatCenter(DominationZone zone) {
+    private Location findZoneCenter(DominationZone zone) {
         if (zone.getPos1() == null || zone.getPos2() == null) return null;
         World world = zone.getPos1().getWorld();
         if (world == null) return null;
 
         int cx = (zone.getPos1().getBlockX() + zone.getPos2().getBlockX()) / 2;
         int cz = (zone.getPos1().getBlockZ() + zone.getPos2().getBlockZ()) / 2;
-        int maxY = Math.max(zone.getPos1().getBlockY(), zone.getPos2().getBlockY());
 
-        // Scan depuis le haut de la zone (+ marge) jusqu'au sol du monde
-        int scanFrom = Math.min(maxY + 10, world.getMaxHeight() - 3);
+        // Utiliser le Y original (avant /expand) comme base du scan
+        int baseY = zone.getBaseY();
+        int maxScan = Math.min(baseY + 50, world.getMaxHeight() - 2);
 
-        // Try center then expand in small radius
-        int[][] offsets = {{0,0},{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,-1},{1,-1},{-1,1}};
+        int[][] offsets = {{0,0},{1,0},{-1,0},{0,1},{0,-1},{2,0},{-2,0},{0,2},{0,-2}};
         for (int[] off : offsets) {
             int x = cx + off[0];
             int z = cz + off[1];
-            for (int y = scanFrom; y >= 1; y--) {
+            // Scan de bas en haut depuis baseY
+            for (int y = baseY; y <= maxScan; y++) {
                 Block floor  = world.getBlockAt(x, y, z);
                 Block above1 = world.getBlockAt(x, y + 1, z);
-                Block above2 = world.getBlockAt(x, y + 2, z);
-                if (floor.getType().isSolid()
-                        && above1.getType() == Material.AIR
-                        && above2.getType() == Material.AIR) {
+                if (floor.getType().isSolid() && above1.getType() == Material.AIR) {
                     return new Location(world, x, y + 1, z);
                 }
             }
@@ -678,83 +711,93 @@ public class DominationEvent {
 
     private void fillChest(Inventory inv, List<String> items, int slotsToFill) {
         if (items.isEmpty()) return;
-        Random rng = new Random();
-        Set<Integer> usedSlots = new HashSet<>();
-        int filled = 0;
-        int maxAttempts = slotsToFill * 5;
-        int attempts = 0;
         boolean debug = FileManager.getConfig().getBoolean("domination.rewards.loot_chest.debug", false);
-        while (filled < slotsToFill && attempts < maxAttempts) {
-            attempts++;
-            int slot = rng.nextInt(27);
-            if (usedSlots.contains(slot)) continue;
-            usedSlots.add(slot);
-            String itemStr = items.get(rng.nextInt(items.size()));
-            try {
-                // Format: MATERIAL[:amount[:ENCHANT1=level,ENCHANT2=level]]
-                String[] parts = itemStr.split(":", 3);
-                Material mat = Material.valueOf(parts[0].toUpperCase().trim());
-                int amount = 1;
-                if (parts.length > 1 && parts[1] != null && !parts[1].trim().isEmpty()) {
-                    try { amount = Integer.parseInt(parts[1].trim()); } catch (NumberFormatException ignored) {}
-                }
 
-                ItemStack stack = new ItemStack(mat, Math.max(1, amount));
-                if (debug) Bukkit.getLogger().info("[DominationLoot] placing item='" + itemStr + "' -> material=" + mat + " amount=" + amount);
+        // Copie + mélange aléatoire RÉEL avec une nouvelle instance de Random à chaque appel
+        List<String> pool = new ArrayList<>(items);
+        Random rng = new Random(System.nanoTime()); // seed différente à chaque coffre
+        Collections.shuffle(pool, rng);
 
-                // Gestion des enchantements si fournis
-                if (parts.length > 2 && parts[2] != null && !parts[2].trim().isEmpty()) {
-                    String enchPart = parts[2].trim();
-                    // Autorise plusieurs séparateurs entre enchantements: ',' ';' ou ':'
-                    String[] enchPairs = enchPart.split("[,;:]");
-                    for (String pair : enchPairs) {
-                        if (pair == null || pair.trim().isEmpty()) continue;
-                        String p = pair.trim();
-                        String[] kv;
-                        if (p.contains("=")) kv = p.split("=", 2);
-                        else if (p.contains(":")) kv = p.split(":", 2);
-                        else kv = new String[]{p, "1"};
+        Set<String> usedMaterials = new HashSet<>(); // anti-doublon par nom de matériau (clé = matName)
+        List<ItemStack> toPlace   = new ArrayList<>();
 
-                        String enchName = kv[0].toUpperCase().trim();
-                        int level = 1;
-                        try { level = Integer.parseInt(kv[1].trim()); } catch (Exception ignored) {}
+        for (String itemStr : pool) {
+            if (toPlace.size() >= slotsToFill) break;
+            if (itemStr == null || itemStr.trim().isEmpty()) continue;
 
-                        if (debug) Bukkit.getLogger().info("[DominationLoot] parsing enchant '" + p + "' -> name='" + enchName + "' level=" + level);
+            // Format: MATERIAL[:amount[:ENCHANT1=level,ENCHANT2=level,...]]
+            // On sépare uniquement sur les 2 premiers ':' pour ne pas casser les enchants
+            String[] parts = itemStr.trim().split(":", 3);
+            String matName = parts[0].toUpperCase().trim();
 
-                        try {
-                            Enchantment ench = resolveEnchantment(enchName);
-                            if (ench != null) {
-                                if (debug) Bukkit.getLogger().info("[DominationLoot] resolved enchant '" + enchName + "' -> " + ench);
-                                // Appliquer via ItemMeta pour s'assurer que l'enchantement est visible
-                                try {
-                                    ItemMeta meta = stack.getItemMeta();
-                                    if (meta != null) {
-                                        meta.addEnchant(ench, Math.max(1, level), true);
-                                        stack.setItemMeta(meta);
-                                        if (debug) Bukkit.getLogger().info("[DominationLoot] applied via meta: " + ench + " lvl=" + level);
-                                    } else {
-                                        stack.addUnsafeEnchantment(ench, Math.max(1, level));
-                                        if (debug) Bukkit.getLogger().info("[DominationLoot] applied via unsafe: " + ench + " lvl=" + level);
-                                    }
-                                } catch (Throwable t) {
-                                    // Fallback
-                                    try { stack.addUnsafeEnchantment(ench, Math.max(1, level)); if (debug) Bukkit.getLogger().info("[DominationLoot] fallback unsafe applied: " + ench + " lvl=" + level); } catch (Throwable ignored) {}
-                                }
+            // Anti-doublon : on skip si ce matériau est déjà choisi pour ce coffre
+            if (usedMaterials.contains(matName)) {
+                if (debug) Bukkit.getLogger().info("[DominationLoot] skip doublon matériau: " + matName);
+                continue;
+            }
+
+            Material mat = null;
+            try { mat = Material.valueOf(matName); } catch (IllegalArgumentException ignored) {}
+            if (mat == null) {
+                // Item custom (RUBY, COBALT_SWORD...) : on l'inclut quand même si le serveur gère
+                // un Material custom via son nom — dernière tentative via getMaterial
+                try { mat = Material.getMaterial(matName); } catch (Exception ignored) {}
+            }
+            if (mat == null) {
+                if (debug) Bukkit.getLogger().info("[DominationLoot] Material inconnu (ignoré): " + matName);
+                // On marque quand même pour éviter les doublons de clé
+                usedMaterials.add(matName);
+                continue;
+            }
+
+            int amount = 1;
+            if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+                try { amount = Integer.parseInt(parts[1].trim()); } catch (NumberFormatException ignored) {}
+            }
+
+            ItemStack stack = new ItemStack(mat, Math.max(1, amount));
+            if (debug) Bukkit.getLogger().info("[DominationLoot] item: " + matName + " x" + amount);
+
+            // Enchantements (3ème partie, séparateur ',' ou ';')
+            if (parts.length > 2 && !parts[2].trim().isEmpty()) {
+                for (String pair : parts[2].trim().split("[,;]")) {
+                    if (pair == null || pair.trim().isEmpty()) continue;
+                    String[] kv = pair.trim().contains("=") ? pair.trim().split("=", 2) : new String[]{pair.trim(), "1"};
+                    String enchName = kv[0].toUpperCase().trim();
+                    int level = 1;
+                    try { level = Integer.parseInt(kv[1].trim()); } catch (Exception ignored) {}
+                    try {
+                        Enchantment ench = resolveEnchantment(enchName);
+                        if (ench != null) {
+                            ItemMeta meta = stack.getItemMeta();
+                            if (meta != null) {
+                                meta.addEnchant(ench, Math.max(1, level), true);
+                                stack.setItemMeta(meta);
+                                if (debug) Bukkit.getLogger().info("[DominationLoot] enchant: " + enchName + " lvl=" + level);
                             } else {
-                                if (debug) Bukkit.getLogger().info("[DominationLoot] could not resolve enchant '" + enchName + "'");
+                                stack.addUnsafeEnchantment(ench, Math.max(1, level));
                             }
-                        } catch (Exception ex) {
-                            if (debug) ex.printStackTrace();
+                        } else if (debug) {
+                            Bukkit.getLogger().info("[DominationLoot] enchant non résolu: " + enchName);
                         }
+                    } catch (Exception ex) {
+                        if (debug) ex.printStackTrace();
                     }
                 }
-
-                inv.setItem(slot, stack);
-                filled++;
-            } catch (Exception ex) {
-                if (debug) ex.printStackTrace();
             }
+
+            usedMaterials.add(matName);
+            toPlace.add(stack);
         }
+
+        // Slots aléatoires distincts dans les 27 cases du coffre
+        List<Integer> slots = new ArrayList<>();
+        for (int i = 0; i < 27; i++) slots.add(i);
+        Collections.shuffle(slots, rng);
+        for (int i = 0; i < toPlace.size() && i < slots.size(); i++) {
+            inv.setItem(slots.get(i), toPlace.get(i));
+        }
+        if (debug) Bukkit.getLogger().info("[DominationLoot] coffre rempli: " + toPlace.size() + "/" + slotsToFill + " items.");
     }
 
     // Map d'alias pour correspondre des noms courants (SHARPNESS, PROTECTION...) aux noms Bukkit

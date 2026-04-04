@@ -305,6 +305,13 @@ public class EventOn {
                 + "§7⚔ La Domination commence ! Capturez les zones !\n"
                 + "§7Zones actives : §c" + domination.getActiveZones().size() + "\n"
                 + "§8§m-----------------------------------------------------");
+            // Remplacer le placeholder {score_to_win} si présent dans le message par la valeur actuelle de config
+            try {
+                int scoreToWinCfg = FileManager.getConfig().getInt("domination.score_to_win", 150);
+                if (startedMsg != null && startedMsg.contains("{score_to_win}")) {
+                    startedMsg = startedMsg.replace("{score_to_win}", String.valueOf(scoreToWinCfg));
+                }
+            } catch (Exception ignored) {}
             Bukkit.broadcastMessage(addProportionalLines(startedMsg));
 
             FactionMessageTitle.sendPlayersTitle(20, 40, 20, "§c§l⚔ DOMINATION", "§7Capturez les zones !");

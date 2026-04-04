@@ -70,6 +70,12 @@ domination:
   # Secondes de contestation récente pour qu'une zone soit considérée HOT (×2 points)
   zone_hot_seconds: 30
 
+  expand:
+    # Valeur d'expansion par défaut quand aucune valeur n'est spécifiée dans /domination expand
+    default_value: 20
+    # Valeurs prédéfinies proposées en tab-complete
+    presets: [20, 50, 100, 150]
+
   rewards:
     # Points faction accordés au 2ème
     second_points: 5

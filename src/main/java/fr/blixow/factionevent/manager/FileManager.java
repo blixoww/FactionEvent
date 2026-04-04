@@ -230,8 +230,30 @@ public class FileManager {
     }
 
     private static void saveWithUtf8(FileConfiguration config, File file) throws IOException {
+        // Récupère le YAML généré par Bukkit
+        String yaml = config.saveToString();
+
+        // Si le fichier existe déjà, extraire toutes les lignes commentées (après trim) et les préfixer
+        StringBuilder commentPrefix = new StringBuilder();
+        if (file.exists()) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String t = line.trim();
+                    if (t.startsWith("#")) {
+                        commentPrefix.append(line).append(System.lineSeparator());
+                    }
+                }
+            } catch (IOException ignored) {
+                // Si lecture impossible, on continue et on écrase quand même
+            }
+        }
+
         try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
-            writer.write(config.saveToString());
+            if (commentPrefix.length() > 0) {
+                writer.write(commentPrefix.toString());
+            }
+            writer.write(yaml);
         }
     }
 

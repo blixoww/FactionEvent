@@ -32,7 +32,20 @@ public class DominationManager {
 
                         Location loc1 = new Location(Bukkit.getWorld(world), x1, y1, z1);
                         Location loc2 = new Location(Bukkit.getWorld(world), x2, y2, z2);
-                        list.add(new DominationZone(name, loc1, loc2, enabled));
+                        DominationZone dz = new DominationZone(name, loc1, loc2, enabled);
+                        // charger chest si présent
+                        if (fc.contains(name + ".chest.world")) {
+                            String cworld = fc.getString(name + ".chest.world", world);
+                            int cx = fc.getInt(name + ".chest.x");
+                            int cy = fc.getInt(name + ".chest.y");
+                            int cz = fc.getInt(name + ".chest.z");
+                            dz.setChestLocation(new Location(Bukkit.getWorld(cworld), cx, cy, cz));
+                        }
+                        // charger baseY si présent
+                        if (fc.contains(name + ".baseY")) {
+                            dz.setBaseY(fc.getInt(name + ".baseY"));
+                        }
+                        list.add(dz);
                         Bukkit.getConsoleSender().sendMessage("[Domination] Zone chargée : " + name);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -67,6 +80,17 @@ public class DominationManager {
                 fc.set(n + ".pos2.z", zone.getPos2().getBlockZ());
             }
             fc.set(n + ".enabled", zone.isEnabled());
+            // baseY (Y original avant expand)
+            fc.set(n + ".baseY", zone.getBaseY());
+            // chest
+            if (zone.getChestLocation() != null) {
+                fc.set(n + ".chest.world", zone.getChestLocation().getWorld().getName());
+                fc.set(n + ".chest.x", zone.getChestLocation().getBlockX());
+                fc.set(n + ".chest.y", zone.getChestLocation().getBlockY());
+                fc.set(n + ".chest.z", zone.getChestLocation().getBlockZ());
+            } else {
+                fc.set(n + ".chest", null);
+            }
             fc.save(file);
             // Reload in memory
             FactionEvent.getInstance().setDominationFileConfiguration(fc);
