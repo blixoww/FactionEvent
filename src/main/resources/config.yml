@@ -39,3 +39,61 @@ lms:
   # Temps maximum de l'événement
   win_points: 20
 
+domination:
+  # Fréquence de vérification du timer (en secondes)
+  check_time: 2
+  # Durée maximale de l'événement (en secondes) — 1800 = 30 minutes
+  max_duration: 1800
+  # Score maximal avant victoire automatique (0 = désactivé, victoire par temps)
+  score_to_win: 150
+  # Points reçus par la faction gagnante (doit être le plus élevé de tous les events)
+  win_points: 30
+  # Progression de capture de base par seconde (%)
+  capture_base: 5
+  # Progression supplémentaire par joueur d'avantage (%)
+  capture_per_extra: 2
+  # Décroissance de la progression par seconde quand la zone est vide ou contestée (%)
+  capture_decay: 3
+  # Bonus de capture instantané accordé par un kill dans une zone (%)
+  kill_capture_bonus: 10
+  # Secondes sans mouvement avant qu'un joueur soit considéré AFK
+  afk_seconds: 30
+  # Secondes de domination totale (toutes les zones) avant que l'anti-snowball se déclenche
+  snowball_trigger: 60
+  # Intervalle en secondes entre deux applications des effets anti-snowball
+  # (doit être > snowball_duration pour éviter le chaînage)
+  snowball_interval: 60
+  # Durée en secondes des effets de malus/bonus anti-snowball
+  snowball_duration: 25
+  # Secondes sans contestation avant qu'une zone passe en mode STAGNANT (×0.5 points)
+  zone_stagnant_seconds: 120
+  # Secondes de contestation récente pour qu'une zone soit considérée HOT (×2 points)
+  zone_hot_seconds: 30
+
+  rewards:
+    # Points faction accordés au 2ème
+    second_points: 5
+    # Points faction accordés au 3ème
+    third_points: 2
+    # Argent accordé aux joueurs de la faction gagnante
+    winner_money: 5000
+    # Argent accordé aux joueurs de la 2ème faction
+    second_money: 2000
+    # Argent accordé aux joueurs de la 3ème faction
+    third_money: 1000
+    # Commande console pour téléporter un joueur au spawn (%player% = nom du joueur)
+    spawn_command: "spawn %player%"
+    loot_chest:
+      # Durée en secondes avant que les coffres disparaissent
+      duration: 60
+      # Nombre d'items placés aléatoirement dans chaque coffre
+      items_per_chest: 5
+      # Liste des items possibles (format: MATERIAL:quantité)
+      items:
+        - "DIAMOND:1"
+        - "GOLD_INGOT:3"
+        - "IRON_INGOT:5"
+        - "COOKED_BEEF:8"
+        - "ARROW:16"
+        - "EXPERIENCE_BOTTLE:3"
+

@@ -3,6 +3,8 @@ package fr.blixow.factionevent.utils.event;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
+import fr.blixow.factionevent.utils.domination.Domination;
+import fr.blixow.factionevent.utils.domination.DominationEvent;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.guess.Guess;
@@ -27,6 +29,7 @@ public class EventOn {
     private DTCEvent dtcEvent;
     private LMSEvent lmsEvent;
     private GuessEvent guessEvent;
+    private DominationEvent dominationEvent;
     private ArrayList<Object> queue;
     private final FileConfiguration msg;
 
@@ -37,6 +40,7 @@ public class EventOn {
         this.dtcEvent = null;
         this.lmsEvent = null;
         this.guessEvent = null;
+        this.dominationEvent = null;
         this.queue = new ArrayList<>();
         new BukkitRunnable() {
             @Override
@@ -60,6 +64,9 @@ public class EventOn {
                             } else if (o instanceof Guess) {
                                 Guess guess = (Guess) o;
                                 guess.start();
+                            } else if (o instanceof Domination) {
+                                Domination domination = (Domination) o;
+                                domination.start();
                             }
                             queue.remove(0);
                         }
@@ -73,7 +80,7 @@ public class EventOn {
     }
 
     public boolean canStartAnEvent() {
-        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null && guessEvent == null;
+        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null && guessEvent == null && dominationEvent == null;
     }
 
     public void start(KOTH koth, Player... players) {
@@ -280,6 +287,53 @@ public class EventOn {
         }
     }
 
+    public void start(Domination domination, Player... players) {
+        if (this.canStartAnEvent()) {
+            this.dominationEvent = new DominationEvent(domination);
+            FileConfiguration config = FileManager.getConfig();
+            int check_time = 2;
+            try {
+                if (config.contains("domination.check_time")) {
+                    check_time = Math.max(1, config.getInt("domination.check_time"));
+                }
+            } catch (Exception ignored) {}
+            final int finalCheckTime = check_time;
+
+            String startedMsg = msg.getString("domination.started",
+                "§8§m-----------------------------------------------------\n"
+                + "§r §8< §6§lDOMINATION §8> §8§m-----------------------------------------------------\n"
+                + "§7⚔ La Domination commence ! Capturez les zones !\n"
+                + "§7Zones actives : §c" + domination.getActiveZones().size() + "\n"
+                + "§8§m-----------------------------------------------------");
+            Bukkit.broadcastMessage(addProportionalLines(startedMsg));
+
+            FactionMessageTitle.sendPlayersTitle(20, 40, 20, "§c§l⚔ DOMINATION", "§7Capturez les zones !");
+
+            // Runnable 1 sec : capture + action bar
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (dominationEvent == null) { cancel(); return; }
+                    dominationEvent.updateScoreboard();
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L);
+
+            // Runnable timer check
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (dominationEvent == null) { cancel(); return; }
+                    if (dominationEvent.checkTimer()) { cancel(); }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
+            return;
+        }
+        String queueMessage = msg.getString("domination.prefix", "§8[§cDOMINATION§8]§7 ")
+            + msg.getString("domination.adding_to_queue", "§7Un événement est déjà en cours. La Domination sera lancée automatiquement ensuite.");
+        FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
+        queue.add(domination);
+    }
+
     public void stopCurrentEvent() {
         if (!canStartAnEvent()) {
             if (kothEvent != null) {
@@ -296,6 +350,9 @@ public class EventOn {
             }
             if (guessEvent != null) {
                 guessEvent.getGuess().stop();
+            }
+            if (dominationEvent != null) {
+                new Domination(dominationEvent.getDomination().getActiveZones()).stop();
             }
         }
     }
@@ -355,6 +412,14 @@ public class EventOn {
 
     public void setQueue(ArrayList<Object> queue) {
         this.queue = queue;
+    }
+
+    public DominationEvent getDominationEvent() {
+        return dominationEvent;
+    }
+
+    public void setDominationEvent(DominationEvent dominationEvent) {
+        this.dominationEvent = dominationEvent;
     }
 
     private String addProportionalLines(String message) {

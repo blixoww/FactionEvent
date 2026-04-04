@@ -2,6 +2,7 @@ package fr.blixow.factionevent;
 
 import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.commands.classement.ClassementCommand;
+import fr.blixow.factionevent.commands.domination.DominationCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;
 import fr.blixow.factionevent.commands.dtc.DTCListCommand;
 import fr.blixow.factionevent.commands.events.EventCommand;
@@ -24,6 +25,8 @@ import fr.blixow.factionevent.events.InventoryEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.PlanningScheduler;
 import fr.blixow.factionevent.utils.ScheduledEvent;
+import fr.blixow.factionevent.utils.domination.DominationManager;
+import fr.blixow.factionevent.utils.domination.DominationZone;
 import fr.blixow.factionevent.utils.dtc.DTC;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.event.EventOn;
@@ -35,11 +38,13 @@ import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.LocalDateTime;
@@ -48,6 +53,7 @@ import java.util.*;
 
 public final class FactionEvent extends JavaPlugin {
     private static FactionEvent instance;
+    private static Economy economy;
     // Planning
     private List<ScheduledEvent> planningEvents;
     // KOTH
@@ -62,6 +68,12 @@ public final class FactionEvent extends JavaPlugin {
 
     // LMS
     private ArrayList<LMS> listLMS;
+
+    // Domination
+    private ArrayList<DominationZone> listDominationZones;
+    private FileConfiguration dominationFileConfiguration;
+    // Coffres de loot Domination → faction gagnante autorisée à les ouvrir
+    private HashMap<org.bukkit.Location, Faction> dominationLootChests = new HashMap<>();
 
     // EventOn instance manager
     private EventOn eventOn;
@@ -88,6 +100,7 @@ public final class FactionEvent extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        setupEconomy();
         FileManager.createNeededFiles();
         FileManager.loadNeededFiles();
         instanceListMap();
@@ -99,6 +112,24 @@ public final class FactionEvent extends JavaPlugin {
         startRandomGuessScheduler();
         actionsForOnlinePlayers();
         RankingManager.runTaskUpdateRankings();
+    }
+
+    private void setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[FactionEvent] Vault non trouvé — récompenses en argent désactivées.");
+            return;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[FactionEvent] Aucun plugin d'économie compatible Vault — récompenses en argent désactivées.");
+            return;
+        }
+        economy = rsp.getProvider();
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[FactionEvent] Vault Economy chargé : " + economy.getName());
+    }
+
+    public static Economy getEconomy() {
+        return economy;
     }
 
     private void actionsForOnlinePlayers() {
@@ -139,6 +170,9 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("guess").setTabCompleter(new GuessCommand());
         getCommand("answer").setExecutor(new AnswerCommand());
 
+        // Domination
+        getCommand("domination").setExecutor(new DominationCommand());
+        getCommand("domination").setTabCompleter(new DominationCommand());
         // Event
         getCommand("event").setExecutor(new EventCommand());
         getCommand("event").setTabCompleter(new EventCommand());
@@ -162,6 +196,7 @@ public final class FactionEvent extends JavaPlugin {
         listTotem = new ArrayList<>();
         listDTC = new ArrayList<>();
         listLMS = new ArrayList<>();
+        listDominationZones = new ArrayList<>();
         playerTotemEditorHashMap = new HashMap<>();
         eventManagerMap = new HashMap<>();
         factionRankings = new LinkedHashMap<>();
@@ -175,6 +210,7 @@ public final class FactionEvent extends JavaPlugin {
         DTCManager.loadDTCfromFile();
         LMSManager.loadLMSfromFile();
         GuessManager.loadWordsFromConfig();
+        DominationManager.loadZones();
         planningEvents = loadPlanning();
     }
 
@@ -357,6 +393,26 @@ public final class FactionEvent extends JavaPlugin {
 
     public ArrayList<LMS> getListLMS() {
         return listLMS;
+    }
+
+    public ArrayList<DominationZone> getListDominationZones() {
+        return listDominationZones;
+    }
+
+    public void setListDominationZones(ArrayList<DominationZone> listDominationZones) {
+        this.listDominationZones = listDominationZones;
+    }
+
+    public FileConfiguration getDominationFileConfiguration() {
+        return dominationFileConfiguration;
+    }
+
+    public void setDominationFileConfiguration(FileConfiguration dominationFileConfiguration) {
+        this.dominationFileConfiguration = dominationFileConfiguration;
+    }
+
+    public HashMap<org.bukkit.Location, Faction> getDominationLootChests() {
+        return dominationLootChests;
     }
 
     public EventOn getEventOn() {

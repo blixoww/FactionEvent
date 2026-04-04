@@ -12,6 +12,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -77,18 +78,41 @@ public class ClassementCommand implements TabExecutor {
             } else if(args.length == 1){
                 if(args[0].startsWith("-")){
                     if(player.hasPermission("factionevent.admin.classement")){
-                        switch (args[0]){
+                        String flag = args[0].toLowerCase();
+                        switch (flag){
                             case "-update":
                             case "-reload":
                             case "-refresh":
                                 RankingManager.updateRanking(true);
+                                player.sendMessage("§aClassement mis à jour.");
+                                break;
+                            case "-reset":
+                                // usage: /classement -reset <factionTag>
+                                if (args.length < 2) {
+                                    player.sendMessage("§cUsage: /classement -reset <factionTag>");
+                                    break;
+                                }
+                                Faction toReset = Factions.getInstance().getByTag(args[1]);
+                                if (toReset == null) {
+                                    player.sendMessage("§7La faction §c" + args[1] + " §7n'existe pas");
+                                } else {
+                                    RankingManager.resetFactionRanking(toReset);
+                                    RankingManager.updateRanking(true);
+                                    player.sendMessage("§aLe classement de la faction §e" + toReset.getTag() + " §aa été réinitialisé.");
+                                }
+                                break;
+                            case "-resetall":
+                            case "-reset-all":
+                                RankingManager.resetAllRankings();
+                                RankingManager.updateRanking(true);
+                                Bukkit.broadcastMessage("§8[§cClassement§8] §7Le classement global a été réinitialisé par §e" + player.getName());
                                 break;
                             default:
                                 player.sendMessage("§cCommande: §7/classement [faction]");
                                 break;
                         }
                     } else {
-                        player.sendMessage("§7La faction §c" + args[0] + " §7n'existe pas");
+                        player.sendMessage("§cVous n'avez pas la permission d'exécuter cette commande.");
                     }
                     return true;
                 }
@@ -97,7 +121,7 @@ public class ClassementCommand implements TabExecutor {
                 if(factions == null){
                     player.sendMessage("§7La faction §c" + args[0] + " §7n'existe pas");
                 } else {
-                    int points = 0, koth = 0, totem = 0, dtc = 0, lms = 0;
+                    int points = 0, koth = 0, totem = 0, dtc = 0, lms = 0, domination = 0;
                     try {
                         String[] factionInformations = RankingManager.getFactionsInformations(fc, factions.getId()).split("-");
                         points = Integer.parseInt(factionInformations[0]);
@@ -105,6 +129,7 @@ public class ClassementCommand implements TabExecutor {
                         totem = Integer.parseInt(factionInformations[2]);
                         dtc = Integer.parseInt(factionInformations[3]);
                         lms = Integer.parseInt(factionInformations[4]);
+                        if (factionInformations.length >= 6) domination = Integer.parseInt(factionInformations[5]);
                         if(msg.contains("faction_classement.title") && msg.contains("faction_classement.footer") && msg.contains("faction_classement.lines")){
                             String title = new StrManager(msg.getString("faction_classement.title")).reFaction(factions.getTag()).toString();
                             String footer = new StrManager(msg.getString("faction_classement.footer")).reFaction(factions.getTag()).toString();
@@ -118,6 +143,7 @@ public class ClassementCommand implements TabExecutor {
                                         .reCustom("{nb_totem}", String.valueOf(totem))
                                         .reCustom("{nb_dtc}", String.valueOf(dtc))
                                         .reCustom("{nb_lms}", String.valueOf(lms))
+                                        .reCustom("{nb_domination}", String.valueOf(domination))
                                         .toString();
                                 player.sendMessage(line_custom);
                             }
@@ -131,6 +157,7 @@ public class ClassementCommand implements TabExecutor {
                             player.sendMessage("§8» §cTotem gagnés : §7" + totem);
                             player.sendMessage("§8» §cDTC gagnés : §7" + dtc);
                             player.sendMessage("§8» §cLMS gagnés : §7" + lms);
+                            player.sendMessage("§8» §cDomination gagnées : §7" + domination);
                             player.sendMessage("");
                             player.sendMessage("§8§m-----§r§8[§e" + factions.getTag() + "§8]§m-----");
                         }

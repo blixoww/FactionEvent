@@ -148,6 +148,32 @@ public class RankingManager {
         }
     }
 
+    public static int getDominationWins(Faction faction) {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            String path = faction.getId() + ".domination";
+            if (fc.contains(path)) {
+                return Integer.parseInt(fc.getString(path));
+            }
+            return 0;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return 0;
+        }
+    }
+
+    public static void addDominationWins(Faction faction) {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            String path = faction.getId() + ".domination";
+            int wins = getDominationWins(faction) + 1;
+            fc.set(path, wins);
+            fc.save(FileManager.getDataFile("classement.yml"));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
     public static void logsMessage(String message) {
         try {
             FileConfiguration logs = FileManager.getLogsFC();
@@ -171,7 +197,7 @@ public class RankingManager {
     public static String getFactionsInformations(FileConfiguration fc, String id) {
         try {
             if (fc.contains(id)) {
-                String points = "0", koth = "0", totem = "0", dtc = "0", meteorite = "0";
+                String points = "0", koth = "0", totem = "0", dtc = "0", lms = "0", domination = "0";
                 if (fc.contains(id + ".points")) {
                     points = String.valueOf(fc.getInt(id + ".points"));
                 }
@@ -185,14 +211,17 @@ public class RankingManager {
                     dtc = String.valueOf(fc.getInt(id + ".dtc"));
                 }
                 if (fc.contains(id + ".lms")) {
-                    meteorite = String.valueOf(fc.getInt(id + ".lms"));
+                    lms = String.valueOf(fc.getInt(id + ".lms"));
                 }
-                return points + "-" + koth + "-" + totem + "-" + dtc + "-" + meteorite;
+                if (fc.contains(id + ".domination")) {
+                    domination = String.valueOf(fc.getInt(id + ".domination"));
+                }
+                return points + "-" + koth + "-" + totem + "-" + dtc + "-" + lms + "-" + domination;
             }
         } catch (Exception exception) {
             exception.printStackTrace();
         }
-        return "0-0-0-0-0";
+        return "0-0-0-0-0-0";
     }
 
     public static void updateRanking(boolean broadcast) {
@@ -203,7 +232,7 @@ public class RankingManager {
                 String[] factionInformations = getFactionsInformations(fileConfiguration, faction.getId()).split("-");
                 int points = 0;
                 try {
-                    if (factionInformations.length == 5) {
+                    if (factionInformations.length >= 5) {
                         points = Integer.parseInt(factionInformations[0]);
                         factionRankings.put(faction, points);
                     }
@@ -271,4 +300,50 @@ public class RankingManager {
         }.runTaskTimerAsynchronously(FactionEvent.getInstance(), 0L, 20L);
     }
 
+    public static void resetFactionRanking(Faction faction) {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            String id = faction.getId();
+            fc.set(id + ".points", 0);
+            fc.set(id + ".koth", 0);
+            fc.set(id + ".totem", 0);
+            fc.set(id + ".dtc", 0);
+            fc.set(id + ".lms", 0);
+            fc.set(id + ".domination", 0);
+            fc.save(FileManager.getDataFile("classement.yml"));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    public static void resetAllRankings() {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            for (Faction faction : Factions.getInstance().getAllFactions()) {
+                if (faction.isWilderness() || faction.isSafeZone() || faction.isWarZone()) continue;
+                String id = faction.getId();
+                fc.set(id + ".points", 0);
+                fc.set(id + ".koth", 0);
+                fc.set(id + ".totem", 0);
+                fc.set(id + ".dtc", 0);
+                fc.set(id + ".lms", 0);
+                fc.set(id + ".domination", 0);
+            }
+            // Also, in case there are leftover entries not matching current factions, clear them
+            // Iterate keys at root
+            for (String key : new ArrayList<>(fc.getKeys(false))) {
+                // if key is not a faction id (no dot children), skip; but to be safe ensure points exist
+                if (!fc.contains(key + ".points") && !fc.contains(key + ".koth")) continue;
+                fc.set(key + ".points", 0);
+                fc.set(key + ".koth", 0);
+                fc.set(key + ".totem", 0);
+                fc.set(key + ".dtc", 0);
+                fc.set(key + ".lms", 0);
+                fc.set(key + ".domination", 0);
+            }
+            fc.save(FileManager.getDataFile("classement.yml"));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
 }

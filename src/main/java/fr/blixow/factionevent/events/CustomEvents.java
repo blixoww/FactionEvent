@@ -7,6 +7,7 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.EventManager;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
+import fr.blixow.factionevent.utils.domination.DominationEvent;
 import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
 import fr.blixow.factionevent.utils.guess.GuessEvent;
@@ -15,9 +16,9 @@ import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -32,8 +33,12 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
+import org.bukkit.event.entity.EntityCombustByEntityEvent;
+import org.bukkit.event.entity.EntityCombustByBlockEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.InventoryHolder;
 
 import java.util.Map;
 
@@ -71,6 +76,9 @@ public class CustomEvents implements Listener {
         }
         if (FactionEvent.getInstance().getEventOn().getLMSEvent() != null) {
             FactionEvent.getInstance().getEventOn().getLMSEvent().handlePlayerQuit(player);
+        }
+        if (FactionEvent.getInstance().getEventOn().getDominationEvent() != null) {
+            FactionEvent.getInstance().getEventOn().getDominationEvent().removePlayer(player);
         }
         FactionEvent.getInstance().getEventScoreboardOff().remove(player);
     }
@@ -175,21 +183,30 @@ public class CustomEvents implements Listener {
     }
 
     /**
-     * Empêche que les EnderCrystal du DTC prennent feu (ex: flèches flame)
+     * Empêche que les EnderCrystal du DTC prennent feu (tous les cas d'inflammation)
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityCombust(EntityCombustEvent event) {
+        cancelCombustIfDTC(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityCombustByEntity(EntityCombustByEntityEvent event) {
+        cancelCombustIfDTC(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityCombustByBlock(EntityCombustByBlockEvent event) {
+        cancelCombustIfDTC(event);
+    }
+
+    private void cancelCombustIfDTC(EntityCombustEvent event) {
         Entity entity = event.getEntity();
         if (!entity.getType().equals(EntityType.ENDER_CRYSTAL)) return;
         DTCEvent dtcEvent = DTCManager.getDTCEventByEntity(entity);
         if (dtcEvent != null) {
             event.setCancelled(true);
-            // Planifier une tâche pour s'assurer que le feu est éteint après le traitement de l'événement.
-            Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), () -> {
-                if (entity.isValid()) {
-                    entity.setFireTicks(0);
-                }
-            }, 1L);
+            entity.setFireTicks(-1);
         }
     }
 
@@ -216,6 +233,22 @@ public class CustomEvents implements Listener {
         }
     }
 
+    // DOMINATION
+
+    @EventHandler
+    public void onMoveDomination(PlayerMoveEvent event) {
+        // Ignorer les simples rotations
+        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
+                && event.getFrom().getBlockY() == event.getTo().getBlockY()
+                && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+            return;
+        }
+        DominationEvent dominationEvent = FactionEvent.getInstance().getEventOn().getDominationEvent();
+        if (dominationEvent != null) {
+            dominationEvent.updatePlayerMovement(event.getPlayer());
+        }
+    }
+
     //LMS
 
     @EventHandler
@@ -224,6 +257,12 @@ public class CustomEvents implements Listener {
         LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
         if (lmsEvent != null && lmsEvent.isParticipant(player)) {
             lmsEvent.handlePlayerDeath(player);
+        }
+        // Domination kill bonus
+        DominationEvent dominationEvent = FactionEvent.getInstance().getEventOn().getDominationEvent();
+        if (dominationEvent != null) {
+            Player killer = player.getKiller();
+            dominationEvent.handleKill(killer, player);
         }
     }
 
@@ -266,6 +305,38 @@ public class CustomEvents implements Listener {
     }
 
     // GUESS
+
+    /**
+     * Empêche l'ouverture des coffres de loot Domination par des joueurs
+     * n'appartenant pas à la faction gagnante.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryOpen(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player)) return;
+        Player player = (Player) event.getPlayer();
+
+        // Récupère le holder de l'inventaire et vérifie que c'est bien un coffre
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (holder == null) return;
+        if (!(holder instanceof org.bukkit.block.Chest)) return;
+
+        Chest chest = (org.bukkit.block.Chest) holder;
+        Location blockLoc = chest.getLocation();
+        if (blockLoc == null || blockLoc.getWorld() == null) return;
+
+        // Normalise la location (coordonnées de bloc)
+        Location key = new Location(blockLoc.getWorld(), blockLoc.getBlockX(), blockLoc.getBlockY(), blockLoc.getBlockZ());
+
+        Faction allowedFaction = FactionEvent.getInstance().getDominationLootChests().get(key);
+        if (allowedFaction == null) return; // Ce coffre n'est pas un coffre de Domination
+
+        FPlayer fp = FPlayers.getInstance().getByPlayer(player);
+        if (fp == null || !fp.getFaction().equals(allowedFaction)) {
+            event.setCancelled(true);
+            player.sendMessage("§8[§cDOMINATION§8]§c Ce coffre appartient à la faction §7"
+                + allowedFaction.getTag() + "§c !");
+        }
+    }
 
     @EventHandler
     public void onPlayerGuess(PlayerCommandPreprocessEvent event) {

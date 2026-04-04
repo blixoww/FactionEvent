@@ -150,6 +150,10 @@ public class FileManager {
         return FactionEvent.getInstance().getClassementFileConfiguration();
     }
 
+    public static FileConfiguration getDominationDataFC() {
+        return FactionEvent.getInstance().getDominationFileConfiguration();
+    }
+
     public static FileConfiguration getLogsFC() {
         return FactionEvent.getInstance().getLogsFileConfiguration();
     }
@@ -170,6 +174,7 @@ public class FileManager {
         FileManager.createDataFile("planning.yml", false);
         FileManager.createDataFile("eventManager.yml");
         FileManager.createDataFile("classement.yml");
+        FileManager.createDataFile("domination.yml");
     }
 
 
@@ -186,6 +191,7 @@ public class FileManager {
             instance.setPlanningFileConfiguration(loadUtf8(getDataFile("planning.yml")));
             instance.setEventManagerFileConfiguration(loadUtf8(getDataFile("eventManager.yml")));
             instance.setClassementFileConfiguration(loadUtf8(getDataFile("classement.yml")));
+            instance.setDominationFileConfiguration(loadUtf8(getDataFile("domination.yml")));
             LocalDateTime localDateTime = LocalDateTime.now();
             int day = localDateTime.getDayOfMonth(), months = localDateTime.getMonthValue(), year = localDateTime.getYear();
             String dayly_logs = "logs/logs-" + day + "-" + months + "-" + year + ".yml";
@@ -217,6 +223,7 @@ public class FileManager {
             saveWithUtf8(instance.getPlanningFileConfiguration(), getDataFile("planning.yml"));
             saveWithUtf8(instance.getEventManagerFileConfiguration(), getDataFile("eventManager.yml"));
             saveWithUtf8(instance.getClassementFileConfiguration(), getDataFile("classement.yml"));
+            saveWithUtf8(instance.getDominationFileConfiguration(), getDataFile("domination.yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }

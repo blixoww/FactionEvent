@@ -41,13 +41,13 @@ public class DTCEvent {
                 if (this.entity == null) {
                     FactionEvent.getInstance().getLogger().warning("[DTC] impossible de spawn l'EnderCrystal pour le DTC " + dtc.getName());
                 } else {
-                    // Empêche l'affichage du feu dès la création
-                    this.entity.setFireTicks(0);
+                    // Rend l'EnderCrystal immunisé au feu dès la création
+                    this.entity.setFireTicks(-1);
                     new BukkitRunnable() {
                         @Override
                         public void run() {
                             if (entity != null && entity.isValid()) {
-                                entity.setFireTicks(0);
+                                entity.setFireTicks(-1);
                             }
                         }
                     }.runTaskLater(FactionEvent.getInstance(), 5L);
@@ -70,8 +70,8 @@ public class DTCEvent {
         // feedback visuel/sonore amélioré
         try {
             if (entity != null && entity.isValid()) {
-                // Empêche le feu à chaque hit
-                entity.setFireTicks(0);
+                // Garantit l'immunité au feu à chaque hit
+                entity.setFireTicks(-1);
                 Location base = entity.getLocation().clone();
                 base.add(0, 1, 0);
 
@@ -108,7 +108,7 @@ public class DTCEvent {
         } catch (Exception e) { return; }
 
         if (entity != null && entity.isValid()) {
-            entity.setFireTicks(0);
+            entity.setFireTicks(-1);
         }
 
         if (vie <= 0) return;

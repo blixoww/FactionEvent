@@ -143,4 +143,16 @@ public class StrManager {
         return this;
     }
 
+    public StrManager reZone(String zoneName) {
+        if (zoneName != null) {
+            this.message = this.message.replace("{zone}", zoneName);
+        }
+        return this;
+    }
+
+    public StrManager reScore(int score) {
+        this.message = this.message.replace("{score}", String.valueOf(score));
+        return this;
+    }
+
 }
