@@ -1,5 +1,6 @@
 package fr.blixow.factionevent.utils.guess;
 
+import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import org.bukkit.configuration.file.FileConfiguration;
 import java.io.File;
@@ -74,11 +75,13 @@ public class GuessManager {
     }
 
     public static void saveWordsToConfig(List<String> words) {
-        File file = FileManager.getFile("data/guess.yml");
+        // Mettre à jour la config en cache dans l'instance
         FileConfiguration fc = FileManager.getGuessDataFC();
         fc.set("guess.words", words);
+        // Sauvegarder sur disque via FileManager (qui gère l'encodage UTF-8 et les commentaires)
+        File file = FileManager.getDataFile("guess.yml");
         try {
-            fc.save(file);
+            FileManager.saveConfigToFile(fc, file);
         } catch (IOException e) {
             e.printStackTrace();
         }

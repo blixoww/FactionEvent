@@ -334,12 +334,9 @@ public final class FactionEvent extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Reloading new files");
-        FileManager.loadNeededFiles();
-        Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Saving new files");
-        GuessManager.saveWordsToConfig(new ArrayList<>());
+        Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Saving files");
         FileManager.saveFiles();
-        eventOn.cancelEvent();
+        if (eventOn != null) eventOn.cancelEvent();
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Désactivation du plugin");
     }
 

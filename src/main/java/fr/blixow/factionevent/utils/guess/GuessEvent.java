@@ -16,6 +16,7 @@ public class GuessEvent {
     private long startTime;
     private int currentWordIndex = 0;
     private boolean finished = false;
+    private boolean hintGiven = false; // indice déjà envoyé pour le mot en cours
     private final long duration = 120 * 1000; // 2 minutes par mot
     private final FileConfiguration msg = FileManager.getMessageFileConfiguration();
     private final String prefix = msg.getString("guess.prefix", "§8[§eGuess§8] §7");
@@ -53,6 +54,7 @@ public class GuessEvent {
     public void nextWord() {
         currentWordIndex++;
         won = false;
+        hintGiven = false; // réinitialiser l'indice pour le mot suivant
         if (currentWordIndex < guess.getWords().size()) {
             showCurrentWord();
             resetTimer();
@@ -72,11 +74,14 @@ public class GuessEvent {
         String currentScrambledWord = guess.getScrambledWords().get(currentWordIndex);
         int wordNumber = currentWordIndex + 1;
         int totalWords = guess.getWords().size();
+        // Affiche maintenant également la commande pour répondre (/answer)
         Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("guess.word_message", "§7Mot §e{word} §7({current}/{total})"))
                 .reWord(currentScrambledWord)
                 .reCustom("{current}", String.valueOf(wordNumber))
                 .reCustom("{total}", String.valueOf(totalWords))
                 .toString());
+        String answerHint = msg.getString("guess.answer_hint", "§7Répondez avec §e/answer <mot>");
+        Bukkit.broadcastMessage(prefix + answerHint);
     }
 
     private void resetTimer() {
@@ -85,8 +90,15 @@ public class GuessEvent {
 
     public boolean checkTimer() {
         if (finished || won) return false;
-        long currentTime = System.currentTimeMillis();
-        if ((currentTime - startTime) >= duration) {
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        // Envoyer l'indice à la moitié du temps si personne n'a trouvé
+        if (!hintGiven && elapsed >= duration / 2) {
+            hintGiven = true;
+            showHint();
+        }
+
+        if (elapsed >= duration) {
             String correctWord = guess.getWords().get(currentWordIndex);
             String timeUpMsg = new StrManager(msg.getString("guess.time_up", "§cTemps écoulé ! Le mot était : §e{word}"))
                     .reWord(correctWord).toString();
@@ -95,6 +107,35 @@ public class GuessEvent {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Envoie un indice global : les 2 premières lettres du mot correct dans l'ordre,
+     * le reste masqué par des tirets.
+     */
+    private void showHint() {
+        String correctWord = guess.getWords().get(currentWordIndex);
+        int len = correctWord.length();
+
+        // Construire l'indice : 2 premières lettres + tirets pour le reste
+        StringBuilder hint = new StringBuilder();
+        int revealCount = Math.min(2, len);
+        for (int i = 0; i < len; i++) {
+            if (i < revealCount) {
+                hint.append("§e").append(correctWord.charAt(i)).append("§7");
+            } else {
+                hint.append("_");
+            }
+            if (i < len - 1) hint.append(" ");
+        }
+
+        String hintMsg = new StrManager(
+                msg.getString("guess.hint",
+                    "§6💡 Indice : §7le mot commence par §e{hint} §7({length} lettres)"))
+                .reCustom("{hint}", hint.toString())
+                .reCustom("{length}", String.valueOf(len))
+                .toString();
+        Bukkit.broadcastMessage(prefix + hintMsg);
     }
 
     public void setCurrentWordIndex(int i) {

@@ -32,6 +32,7 @@ public class ClassementCommand implements TabExecutor {
             FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
             Faction faction = fPlayer.getFaction();
             if(args.length == 0){
+                // ... affichage classement global ...
                 if(msg.contains("classement.title") && msg.contains("classement.lines")){
                     String title = msg.getString("classement.title");
                     List<String> stringList = msg.getStringList("classement.lines");
@@ -46,10 +47,7 @@ public class ClassementCommand implements TabExecutor {
                         text.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("§7Clique pour afficher plus d'infos\n§7sur la faction §c" + faction1.getTag()).create()));
                         text.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/classement " + faction1.getTag()));
                         player.spigot().sendMessage(text);
-                        //player.sendMessage(line);
-                        if(indice == nb_lines){
-                            break;
-                        }
+                        if(indice == nb_lines){ break; }
                         indice++;
                     }
                 } else {
@@ -57,65 +55,55 @@ public class ClassementCommand implements TabExecutor {
                     for(Faction faction1 : FactionEvent.getInstance().getFactionRankings().keySet()){
                         int points = FactionEvent.getInstance().getFactionRankings().get(faction1);
                         switch(indice){
-                            case 1:
-                                player.sendMessage("§c" + indice + ") §7" + faction1.getTag() + " §8- §7" + points);
-                                break;
-                            case 2:
-                                player.sendMessage("§6" + indice + ") §7" + faction1.getTag() + " §8- §7" + points);
-                                break;
-                            case 3:
-                                player.sendMessage("§e" + indice + ") §7" + faction1.getTag() + " §8- §7" + points);
-                                break;
-                            default:
-                                player.sendMessage("§8" + indice + ") §7" + faction1.getTag() + " §8- §7" + points);
-                                break;
+                            case 1: player.sendMessage("§c" + indice + ") §7" + faction1.getTag() + " §8- §7" + points); break;
+                            case 2: player.sendMessage("§6" + indice + ") §7" + faction1.getTag() + " §8- §7" + points); break;
+                            case 3: player.sendMessage("§e" + indice + ") §7" + faction1.getTag() + " §8- §7" + points); break;
+                            default: player.sendMessage("§8" + indice + ") §7" + faction1.getTag() + " §8- §7" + points); break;
                         }
-
                         indice++;
                         if(indice == 10){ break; }
                     }
                 }
-            } else if(args.length == 1){
-                if(args[0].startsWith("-")){
-                    if(player.hasPermission("factionevent.admin.classement")){
-                        String flag = args[0].toLowerCase();
-                        switch (flag){
-                            case "-update":
-                            case "-reload":
-                            case "-refresh":
-                                RankingManager.updateRanking(true);
-                                player.sendMessage("§aClassement mis à jour.");
-                                break;
-                            case "-reset":
-                                // usage: /classement -reset <factionTag>
-                                if (args.length < 2) {
-                                    player.sendMessage("§cUsage: /classement -reset <factionTag>");
-                                    break;
-                                }
-                                Faction toReset = Factions.getInstance().getByTag(args[1]);
-                                if (toReset == null) {
-                                    player.sendMessage("§7La faction §c" + args[1] + " §7n'existe pas");
-                                } else {
-                                    RankingManager.resetFactionRanking(toReset);
-                                    RankingManager.updateRanking(true);
-                                    player.sendMessage("§aLe classement de la faction §e" + toReset.getTag() + " §aa été réinitialisé.");
-                                }
-                                break;
-                            case "-resetall":
-                            case "-reset-all":
-                                RankingManager.resetAllRankings();
-                                RankingManager.updateRanking(true);
-                                Bukkit.broadcastMessage("§8[§cClassement§8] §7Le classement global a été réinitialisé par §e" + player.getName());
-                                break;
-                            default:
-                                player.sendMessage("§cCommande: §7/classement [faction]");
-                                break;
-                        }
-                    } else {
-                        player.sendMessage("§cVous n'avez pas la permission d'exécuter cette commande.");
-                    }
+            } else if(args.length >= 1 && args[0].startsWith("-")){
+                // Commandes admin (flags)
+                if(!player.hasPermission("factionevent.admin.classement")){
+                    player.sendMessage("§cVous n'avez pas la permission d'exécuter cette commande.");
                     return true;
                 }
+                String flag = args[0].toLowerCase();
+                switch (flag){
+                    case "-update":
+                    case "-reload":
+                    case "-refresh":
+                        RankingManager.updateRanking(true);
+                        player.sendMessage("§aClassement mis à jour.");
+                        break;
+                    case "-reset":
+                        // usage: /classement -reset <factionTag>
+                        if (args.length < 2) {
+                            player.sendMessage("§cUsage: /classement -reset <factionTag>");
+                            break;
+                        }
+                        Faction toReset = Factions.getInstance().getByTag(args[1]);
+                        if (toReset == null) {
+                            player.sendMessage("§7La faction §c" + args[1] + " §7n'existe pas");
+                        } else {
+                            RankingManager.resetFactionRanking(toReset);
+                            RankingManager.updateRanking(true);
+                            player.sendMessage("§aLe classement de la faction §e" + toReset.getTag() + " §aa été réinitialisé.");
+                        }
+                        break;
+                    case "-resetall":
+                    case "-reset-all":
+                        RankingManager.resetAllRankings();
+                        RankingManager.updateRanking(true);
+                        Bukkit.broadcastMessage("§8[§cClassement§8] §7Le classement global a été réinitialisé par §e" + player.getName());
+                        break;
+                    default:
+                        player.sendMessage("§cCommande: §7/classement [-update|-reset <faction>|-resetall] [faction]");
+                        break;
+                }
+            } else if(args.length == 1){
                 FileConfiguration fc = FileManager.getClassementFC();
                 Faction factions = Factions.getInstance().getByTag(args[0]);
                 if(factions == null){
@@ -180,11 +168,26 @@ public class ClassementCommand implements TabExecutor {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> stringList = new ArrayList<>();
         if(args.length == 1){
+            // Factions
             for(Faction faction : Factions.getInstance().getAllFactions()){
-                if(faction.getTag().toLowerCase().startsWith(args[0].toLowerCase()) && !faction.isWarZone() && !faction.isSafeZone() && !faction.isWilderness()){ stringList.add(faction.getTag()); }
+                if(faction.getTag().toLowerCase().startsWith(args[0].toLowerCase()) && !faction.isWarZone() && !faction.isSafeZone() && !faction.isWilderness()){
+                    stringList.add(faction.getTag());
+                }
+            }
+            // Flags admin
+            if(sender.hasPermission("factionevent.admin.classement")){
+                for(String flag : new String[]{"-update", "-reset", "-resetall"}){
+                    if(flag.startsWith(args[0].toLowerCase())) stringList.add(flag);
+                }
+            }
+        } else if(args.length == 2 && args[0].equalsIgnoreCase("-reset")){
+            // Suggestion de faction pour -reset
+            for(Faction faction : Factions.getInstance().getAllFactions()){
+                if(faction.getTag().toLowerCase().startsWith(args[1].toLowerCase()) && !faction.isWarZone() && !faction.isSafeZone() && !faction.isWilderness()){
+                    stringList.add(faction.getTag());
+                }
             }
         }
-        //if(stringList.isEmpty()){ for(Player player : Bukkit.getOnlinePlayers()){ stringList.add(player.getName()); } }
         return stringList;
     }
 }

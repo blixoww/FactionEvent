@@ -186,6 +186,7 @@ guess:
   answer_usage: "§cUsage : §7/answer <mot>"
   no_words: "§cErreur : §7Aucun mot disponible pour ce Guess."
   adding_to_queue: "§7Un événement est déjà en cours. Le Guess sera lancé automatiquement ensuite."
+  hint: "§6Indice : §7le mot commence par §e{hint} §7({length} lettres)"
 
 kothlist:
   title: "§8§m      §r §8[ §cKOTH §8] §m      "

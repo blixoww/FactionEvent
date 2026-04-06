@@ -9,6 +9,11 @@ import org.bukkit.plugin.Plugin;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class FileManager {
 
@@ -229,31 +234,83 @@ public class FileManager {
         }
     }
 
-    private static void saveWithUtf8(FileConfiguration config, File file) throws IOException {
-        // Récupère le YAML généré par Bukkit
-        String yaml = config.saveToString();
+    /**
+     * Sauvegarde une FileConfiguration vers un fichier en UTF-8, en conservant les commentaires
+     * du fichier existant à leur position d'origine.
+     * Méthode publique pour pouvoir être appelée depuis d'autres classes (ex: GuessManager).
+     */
+    public static void saveConfigToFile(FileConfiguration config, File file) throws IOException {
+        saveWithUtf8(config, file);
+    }
 
-        // Si le fichier existe déjà, extraire toutes les lignes commentées (après trim) et les préfixer
-        StringBuilder commentPrefix = new StringBuilder();
-        if (file.exists()) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String t = line.trim();
-                    if (t.startsWith("#")) {
-                        commentPrefix.append(line).append(System.lineSeparator());
-                    }
-                }
-            } catch (IOException ignored) {
-                // Si lecture impossible, on continue et on écrase quand même
+    private static void saveWithUtf8(FileConfiguration config, File file) throws IOException {
+        String newYaml = config.saveToString();
+
+        if (!file.exists()) {
+            try (Writer w = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+                w.write(newYaml);
             }
+            return;
         }
 
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
-            if (commentPrefix.length() > 0) {
-                writer.write(commentPrefix.toString());
+        // Lecture du fichier existant ligne par ligne
+        List<String> existingLines = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+            String l;
+            while ((l = br.readLine()) != null) existingLines.add(l);
+        }
+
+        String[] newLines = newYaml.split("\n", -1);
+
+        // Associe chaque ligne de données existante (non-commentaire, non-vide)
+        // à la liste des commentaires qui la précèdent
+        LinkedHashMap<String, List<String>> commentsBefore = new LinkedHashMap<>();
+        List<String> pending = new ArrayList<>();
+        List<String> trailing = new ArrayList<>();
+
+        for (String line : existingLines) {
+            String t = line.trim();
+            if (t.startsWith("#") || t.isEmpty()) {
+                pending.add(line);
+            } else {
+                commentsBefore.put(line, new ArrayList<>(pending));
+                pending.clear();
             }
-            writer.write(yaml);
+        }
+        trailing.addAll(pending); // commentaires en fin de fichier
+
+        // Reconstruit le fichier en insérant les commentaires avant chaque ligne correspondante du nouveau YAML
+        StringBuilder out = new StringBuilder();
+        Set<String> usedKeys = new java.util.HashSet<>();
+
+        for (String newLine : newLines) {
+            String nt = newLine.trim();
+            if (!nt.isEmpty()) {
+                // Calcul d'indentation
+                int newIndent = newLine.length() - newLine.replaceFirst("^\\s*", "").length();
+                String newKey = nt.split(":")[0].trim();
+
+                for (Map.Entry<String, List<String>> entry : commentsBefore.entrySet()) {
+                    if (usedKeys.contains(entry.getKey())) continue;
+                    String existLine = entry.getKey();
+                    String et = existLine.trim();
+                    int existIndent = existLine.length() - existLine.replaceFirst("^\\s*", "").length();
+                    String existKey = et.split(":")[0].trim();
+                    if (newKey.equals(existKey) && newIndent == existIndent) {
+                        for (String c : entry.getValue()) out.append(c).append("\n");
+                        usedKeys.add(entry.getKey());
+                        break;
+                    }
+                }
+            }
+            out.append(newLine).append("\n");
+        }
+
+        // Commentaires de fin
+        for (String c : trailing) out.append(c).append("\n");
+
+        try (Writer w = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+            w.write(out.toString());
         }
     }
 

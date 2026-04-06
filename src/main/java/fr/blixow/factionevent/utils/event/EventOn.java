@@ -291,6 +291,8 @@ public class EventOn {
         if (this.canStartAnEvent()) {
             this.dominationEvent = new DominationEvent(domination);
             FileConfiguration config = FileManager.getConfig();
+            // Lire msg fraîchement pour garantir que {score_to_win} est bien disponible
+            FileConfiguration freshMsg = FileManager.getMessageFileConfiguration();
             int check_time = 2;
             try {
                 if (config.contains("domination.check_time")) {
@@ -299,17 +301,19 @@ public class EventOn {
             } catch (Exception ignored) {}
             final int finalCheckTime = check_time;
 
-            String startedMsg = msg.getString("domination.started",
+            String startedMsg = freshMsg.getString("domination.started",
                 "§8§m-----------------------------------------------------\n"
                 + "§r §8< §6§lDOMINATION §8> §8§m-----------------------------------------------------\n"
                 + "§7⚔ La Domination commence ! Capturez les zones !\n"
                 + "§7Zones actives : §c" + domination.getActiveZones().size() + "\n"
                 + "§8§m-----------------------------------------------------");
-            // Remplacer le placeholder {score_to_win} si présent dans le message par la valeur actuelle de config
+            // Remplacer les placeholders
             try {
-                int scoreToWinCfg = FileManager.getConfig().getInt("domination.score_to_win", 150);
-                if (startedMsg != null && startedMsg.contains("{score_to_win}")) {
-                    startedMsg = startedMsg.replace("{score_to_win}", String.valueOf(scoreToWinCfg));
+                int scoreToWinCfg = config.getInt("domination.score_to_win", 150);
+                if (startedMsg != null) {
+                    startedMsg = startedMsg
+                        .replace("{score_to_win}", String.valueOf(scoreToWinCfg))
+                        .replace("{zones}", String.valueOf(domination.getActiveZones().size()));
                 }
             } catch (Exception ignored) {}
             Bukkit.broadcastMessage(addProportionalLines(startedMsg));
