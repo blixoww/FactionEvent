@@ -262,6 +262,7 @@ public class FallingChestManager {
 
         if (faction != null && !faction.isWilderness()) {
             RankingManager.addPoints(faction, points);
+            RankingManager.updateRanking(true);
             String opened = new StrManager(msg("opened_faction"))
                     .rePlayer(player)
                     .reCustom("{faction}", faction.getTag())
@@ -329,6 +330,10 @@ public class FallingChestManager {
         disappearScheduled = false;
         chestLocation = null;
         cancelTimeoutTask();
+        // Mettre à jour le classement après la fin de l'événement
+        try {
+            RankingManager.updateRanking(true);
+        } catch (Exception ignored) {}
         if (doScheduleNext) scheduleNext();
     }
 
