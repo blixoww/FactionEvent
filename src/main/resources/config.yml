@@ -87,16 +87,27 @@ domination:
     loot_chest:
       # Durée en secondes avant que les coffres disparaissent
       duration: 60
-      # Nombre d'items placés aléatoirement dans chaque coffre
+      # Nombre minimum d'items différents placés dans chaque coffre
+      items_min: 3
+      # Nombre maximum d'items différents placés dans chaque coffre
+      items_max: 6
+      # items_per_chest est conservé pour rétrocompatibilité (ignoré si items_min/items_max sont définis)
       items_per_chest: 5
-      # Liste des items possibles (format: MATERIAL:quantité)
+      # Liste des items possibles
+      # Format : MATERIAL:quantité[,ENCHANTMENT:NOM,LEVEL:valeur,...][,WEIGHT:poids]
+      # WEIGHT est optionnel (défaut 10) — plus élevé = plus fréquent
       items:
-        - "DIAMOND:1"
-        - "GOLD_INGOT:3"
-        - "IRON_INGOT:5"
-        - "COOKED_BEEF:8"
-        - "ARROW:16"
-        - "EXPERIENCE_BOTTLE:3"
+        - "COBALT_AXE:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:4"
+        - "COBALT_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:4,ENCHANTMENT:FIRE_ASPECT,LEVEL:2,WEIGHT:4"
+        - "RUBY_HELMET:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+        - "RUBY_CHESTPLATE:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+        - "RUBY_LEGGINGS:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+        - "RUBY_BOOTS:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+        - "RUBY:4,WEIGHT:8"
+        - "COBALT_INGOT:1,WEIGHT:7"
+        - "OBSIDIAN:64,WEIGHT:10"
+        - "RUBY_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:3"
+        - "EMERALD_BLOCK:3,WEIGHT:8"
 
 falling_chest:
   # Monde où le coffre peut apparaître
@@ -121,11 +132,22 @@ falling_chest:
     y_max: 120
     # Y minimal pour chercher le sol
     y_min: 5
-  # Loot du coffre (format: MATERIAL:quantité)
+  # Nombre minimum d'items différents placés dans le coffre
+  items_min: 3
+  # Nombre maximum d'items différents placés dans le coffre
+  items_max: 6
+  # Loot du coffre
+  # Format : MATERIAL:quantité[,ENCHANTMENT:NOM,LEVEL:valeur,...][,WEIGHT:poids]
+  # WEIGHT est optionnel (défaut 10) — plus élevé = plus fréquent
   items:
-    - "DIAMOND:1"
-    - "GOLD_INGOT:3"
-    - "IRON_INGOT:5"
-    - "COOKED_BEEF:8"
-    - "ARROW:16"
-    - "EXPERIENCE_BOTTLE:3"
+    - "COBALT_AXE:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:4"
+    - "COBALT_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:4,ENCHANTMENT:FIRE_ASPECT,LEVEL:2,WEIGHT:4"
+    - "RUBY_HELMET:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+    - "RUBY_CHESTPLATE:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+    - "RUBY_LEGGINGS:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+    - "RUBY_BOOTS:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+    - "RUBY:4,WEIGHT:8"
+    - "COBALT_INGOT:1,WEIGHT:7"
+    - "OBSIDIAN:64,WEIGHT:10"
+    - "RUBY_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:3"
+    - "EMERALD_BLOCK:3,WEIGHT:8"

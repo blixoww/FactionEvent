@@ -7,21 +7,16 @@ import com.massivecraft.factions.Factions;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.LootItemParser;
 import fr.blixow.factionevent.utils.Messages;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-
-import java.util.Collections;
 
 import java.util.*;
 
@@ -630,8 +625,13 @@ public class DominationEvent {
     private List<Location> spawnLootChests(FileConfiguration config) {
         List<Location> placed = new ArrayList<>();
         List<String> items = config.getStringList("domination.rewards.loot_chest.items");
-        int slotsToFill = config.getInt("domination.rewards.loot_chest.items_per_chest", 3);
+        // items_per_chest maintenu pour rétrocompatiblité, mais items_min/items_max priment
+        int legacyPerChest = config.getInt("domination.rewards.loot_chest.items_per_chest", 3);
+        int itemsMin = config.getInt("domination.rewards.loot_chest.items_min", legacyPerChest);
+        int itemsMax = config.getInt("domination.rewards.loot_chest.items_max", legacyPerChest);
         if (items.isEmpty()) return placed;
+
+        List<LootItemParser.LootEntry> pool = LootItemParser.parse(items);
 
         for (DominationZone zone : domination.getActiveZones()) {
             Location loc;
@@ -665,7 +665,8 @@ public class DominationEvent {
             try {
                 loc.getBlock().setType(Material.CHEST);
                 Chest chest = (Chest) loc.getBlock().getState();
-                fillChest(chest.getInventory(), items, slotsToFill);
+                LootItemParser.fillInventory(chest.getInventory(), pool, itemsMin, itemsMax,
+                        new Random(System.nanoTime()));
                 placed.add(loc);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -706,164 +707,6 @@ public class DominationEvent {
                 }
             }
         }
-        return null;
-    }
-
-    private void fillChest(Inventory inv, List<String> items, int slotsToFill) {
-        if (items.isEmpty()) return;
-        boolean debug = FileManager.getConfig().getBoolean("domination.rewards.loot_chest.debug", false);
-
-        // Copie + mélange aléatoire RÉEL avec une nouvelle instance de Random à chaque appel
-        List<String> pool = new ArrayList<>(items);
-        Random rng = new Random(System.nanoTime()); // seed différente à chaque coffre
-        Collections.shuffle(pool, rng);
-
-        Set<String> usedMaterials = new HashSet<>(); // anti-doublon par nom de matériau (clé = matName)
-        List<ItemStack> toPlace   = new ArrayList<>();
-
-        for (String itemStr : pool) {
-            if (toPlace.size() >= slotsToFill) break;
-            if (itemStr == null || itemStr.trim().isEmpty()) continue;
-
-            // Format: MATERIAL[:amount[:ENCHANT1=level,ENCHANT2=level,...]]
-            // On sépare uniquement sur les 2 premiers ':' pour ne pas casser les enchants
-            String[] parts = itemStr.trim().split(":", 3);
-            String matName = parts[0].toUpperCase().trim();
-
-            // Anti-doublon : on skip si ce matériau est déjà choisi pour ce coffre
-            if (usedMaterials.contains(matName)) {
-                if (debug) Bukkit.getLogger().info("[DominationLoot] skip doublon matériau: " + matName);
-                continue;
-            }
-
-            Material mat = null;
-            try { mat = Material.valueOf(matName); } catch (IllegalArgumentException ignored) {}
-            if (mat == null) {
-                // Item custom (RUBY, COBALT_SWORD...) : on l'inclut quand même si le serveur gère
-                // un Material custom via son nom — dernière tentative via getMaterial
-                try { mat = Material.getMaterial(matName); } catch (Exception ignored) {}
-            }
-            if (mat == null) {
-                if (debug) Bukkit.getLogger().info("[DominationLoot] Material inconnu (ignoré): " + matName);
-                // On marque quand même pour éviter les doublons de clé
-                usedMaterials.add(matName);
-                continue;
-            }
-
-            int amount = 1;
-            if (parts.length > 1 && !parts[1].trim().isEmpty()) {
-                try { amount = Integer.parseInt(parts[1].trim()); } catch (NumberFormatException ignored) {}
-            }
-
-            ItemStack stack = new ItemStack(mat, Math.max(1, amount));
-            if (debug) Bukkit.getLogger().info("[DominationLoot] item: " + matName + " x" + amount);
-
-            // Enchantements (3ème partie, séparateur ',' ou ';')
-            if (parts.length > 2 && !parts[2].trim().isEmpty()) {
-                for (String pair : parts[2].trim().split("[,;]")) {
-                    if (pair == null || pair.trim().isEmpty()) continue;
-                    String[] kv = pair.trim().contains("=") ? pair.trim().split("=", 2) : new String[]{pair.trim(), "1"};
-                    String enchName = kv[0].toUpperCase().trim();
-                    int level = 1;
-                    try { level = Integer.parseInt(kv[1].trim()); } catch (Exception ignored) {}
-                    try {
-                        Enchantment ench = resolveEnchantment(enchName);
-                        if (ench != null) {
-                            ItemMeta meta = stack.getItemMeta();
-                            if (meta != null) {
-                                meta.addEnchant(ench, Math.max(1, level), true);
-                                stack.setItemMeta(meta);
-                                if (debug) Bukkit.getLogger().info("[DominationLoot] enchant: " + enchName + " lvl=" + level);
-                            } else {
-                                stack.addUnsafeEnchantment(ench, Math.max(1, level));
-                            }
-                        } else if (debug) {
-                            Bukkit.getLogger().info("[DominationLoot] enchant non résolu: " + enchName);
-                        }
-                    } catch (Exception ex) {
-                        if (debug) ex.printStackTrace();
-                    }
-                }
-            }
-
-            usedMaterials.add(matName);
-            toPlace.add(stack);
-        }
-
-        // Slots aléatoires distincts dans les 27 cases du coffre
-        List<Integer> slots = new ArrayList<>();
-        for (int i = 0; i < 27; i++) slots.add(i);
-        Collections.shuffle(slots, rng);
-        for (int i = 0; i < toPlace.size() && i < slots.size(); i++) {
-            inv.setItem(slots.get(i), toPlace.get(i));
-        }
-        if (debug) Bukkit.getLogger().info("[DominationLoot] coffre rempli: " + toPlace.size() + "/" + slotsToFill + " items.");
-    }
-
-    // Map d'alias pour correspondre des noms courants (SHARPNESS, PROTECTION...) aux noms Bukkit
-    private static final Map<String, String> ENCHANT_ALIAS = new HashMap<>();
-    static {
-        ENCHANT_ALIAS.put("SHARPNESS", "DAMAGE_ALL");
-        ENCHANT_ALIAS.put("SMITE", "DAMAGE_UNDEAD");
-        ENCHANT_ALIAS.put("BANE_OF_ARTHROPODS", "DAMAGE_ARTHROPODS");
-        ENCHANT_ALIAS.put("PROTECTION", "PROTECTION_ENVIRONMENTAL");
-        ENCHANT_ALIAS.put("FIRE_PROTECTION", "PROTECTION_FIRE");
-        ENCHANT_ALIAS.put("PROJECTILE_PROTECTION", "PROTECTION_PROJECTILE");
-        ENCHANT_ALIAS.put("BLAST_PROTECTION", "PROTECTION_EXPLOSIONS");
-        ENCHANT_ALIAS.put("FEATHER_FALLING", "PROTECTION_FALL");
-        ENCHANT_ALIAS.put("UNBREAKING", "DURABILITY");
-        ENCHANT_ALIAS.put("POWER", "ARROW_DAMAGE");
-        ENCHANT_ALIAS.put("PUNCH", "ARROW_KNOCKBACK");
-        ENCHANT_ALIAS.put("FLAME", "ARROW_FIRE");
-        ENCHANT_ALIAS.put("INFINITY", "ARROW_INFINITE");
-        ENCHANT_ALIAS.put("LOOTING", "LOOT_BONUS_MOBS");
-        ENCHANT_ALIAS.put("FORTUNE", "LOOT_BONUS_BLOCKS");
-        ENCHANT_ALIAS.put("EFFICIENCY", "DIG_SPEED");
-        ENCHANT_ALIAS.put("FIRE_ASPECT", "FIRE_ASPECT");
-        ENCHANT_ALIAS.put("PROTECTION_ENVIRONMENTAL", "PROTECTION_ENVIRONMENTAL");
-        ENCHANT_ALIAS.put("THORNS", "THORNS");
-    }
-
-    // Tentative de résolution d'un enchantement à partir d'un nom tolérant (SHARPNESS, sharpness, DAMAGE_ALL...)
-    private Enchantment resolveEnchantment(String name) {
-        if (name == null || name.isEmpty()) return null;
-        String n = name.trim();
-        // Try direct match (some servers expect uppercase names like DAMAGE_ALL)
-        try {
-            Enchantment e = Enchantment.getByName(n);
-            if (e != null) return e;
-        } catch (Throwable ignored) {}
-
-        // Try alias map (common names)
-        try {
-            String key = n.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
-            if (ENCHANT_ALIAS.containsKey(key)) {
-                String mapped = ENCHANT_ALIAS.get(key);
-                try {
-                    Enchantment e2 = Enchantment.getByName(mapped);
-                    if (e2 != null) return e2;
-                } catch (Throwable ignored) {}
-            }
-        } catch (Throwable ignored) {}
-
-        // Normalize and try to match against available enchantments
-        String alt = n.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
-        try {
-            for (org.bukkit.enchantments.Enchantment ench : org.bukkit.enchantments.Enchantment.values()) {
-                try {
-                    String cand = ench.toString();
-                    if (cand != null && cand.replaceAll("[^A-Za-z0-9]", "").equalsIgnoreCase(alt)) return ench;
-                } catch (Throwable ignored) {}
-                try {
-                    java.lang.reflect.Method m = ench.getClass().getMethod("getName");
-                    Object obj = m.invoke(ench);
-                    if (obj instanceof String) {
-                        String cand2 = ((String) obj).replaceAll("[^A-Za-z0-9]", "").toUpperCase();
-                        if (cand2.equalsIgnoreCase(alt)) return ench;
-                    }
-                } catch (Throwable ignored) {}
-            }
-        } catch (Throwable ignored) {}
         return null;
     }
 

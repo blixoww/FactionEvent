@@ -7,6 +7,7 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.RankingManager;
 import fr.blixow.factionevent.manager.StrManager;
+import fr.blixow.factionevent.utils.LootItemParser;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -228,32 +229,24 @@ public class FallingChestManager {
         }, lifetime * 20L);
     }
 
+    /**
+     * Remplit l'inventaire du coffre tombant via {@link LootItemParser}.
+     *
+     * Format config (par entrée) :
+     *   "MATERIAL:quantité[,ENCHANTMENT:NOM,LEVEL:valeur,...][,WEIGHT:poids]"
+     *
+     * Paramètres config :
+     *   falling_chest.items_min  — nombre minimum d'items (défaut : 3)
+     *   falling_chest.items_max  — nombre maximum d'items (défaut : 6)
+     */
     private static void fillInventory(Inventory inventory) {
         FileConfiguration config = FileManager.getConfig();
         List<String> entries = config.getStringList("falling_chest.items");
+        int itemsMin = config.getInt("falling_chest.items_min", 3);
+        int itemsMax = config.getInt("falling_chest.items_max", 6);
 
-        List<ItemStack> loot = new ArrayList<>();
-        for (String entry : entries) {
-            String[] parts = entry.split(":");
-            if (parts.length < 2) continue;
-            try {
-                Material mat = Material.getMaterial(parts[0].toUpperCase());
-                int amount = Integer.parseInt(parts[1]);
-                if (mat != null && mat != Material.AIR && amount > 0) {
-                    loot.add(new ItemStack(mat, amount));
-                }
-            } catch (NumberFormatException ignored) {}
-        }
-
-        Collections.shuffle(loot);
-
-        List<Integer> slots = new ArrayList<>();
-        for (int i = 0; i < inventory.getSize(); i++) slots.add(i);
-        Collections.shuffle(slots, new Random());
-
-        for (int i = 0; i < Math.min(loot.size(), slots.size()); i++) {
-            inventory.setItem(slots.get(i), loot.get(i));
-        }
+        List<LootItemParser.LootEntry> pool = LootItemParser.parse(entries);
+        LootItemParser.fillInventory(inventory, pool, itemsMin, itemsMax, new Random());
     }
 
     // Appelé par le listener quand un joueur ouvre le coffre
