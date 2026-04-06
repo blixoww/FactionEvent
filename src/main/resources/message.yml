@@ -263,5 +263,38 @@ domination:
   starting_in_5mins: "§8§m-----------------------------------------------------\n§r §8< §e§lDOMINATION - DEBUT IMMINENT §8> §8§m-----------------------------------------------------\n§7La §cDomination §7commence dans §c5 minutes §7!\n§7Préparez-vous à capturer les zones !\n§8§m-----------------------------------------------------"
   starting_in_1mins: "§8§m-----------------------------------------------------\n§r §8< §6§lDOMINATION - DERNIERE MINUTE §8> §8§m-----------------------------------------------------\n§7La §cDomination §7commence dans §c1 minute §7!\n§7Positionnez-vous près des zones !\n§8§m-----------------------------------------------------"
 
+falling_chest:
+  prefix: "§8[§6Coffre§8]§7 "
+  bar: "§8§m-----------------------------------------------------"
+  spawn_title: "§r §8< §6§lCoffre Tombant §8>"
+  usage: "§cUsage : §7/fallingchest <next|spawn|stop|status>"
+  # Spawn & broadcast
+  spawn: "§7Un coffre mystérieux est tombé du ciel ! §eX:{x} Y:{y} Z:{z}"
+  spawn_lifetime: "§7Il disparaîtra dans §c{minutes} minutes §7s'il n'est pas récupéré !"
+  spawn_forced: "§7Spawn forcé du coffre tombant en cours..."
+  timeout: "§7Le coffre n'a pas été récupéré à temps et a disparu."
+  # Ouverture
+  opened: "§e{player} §7a ouvert le coffre !"
+  opened_faction: "§e{player} §7a ouvert le coffre pour la faction §c{faction} §7(§a+{points} pts§7) !"
+  looted: "§e{player} §7a tout récupéré — le coffre va disparaître !"
+  # Protection
+  no_break: "§cVous ne pouvez pas casser ce coffre."
+  # /fallingchest next
+  next_active: "§aUn coffre est actuellement actif §7— §eX:{x} Y:{y} Z:{z}§7."
+  next_in: "§7Prochain coffre dans §e{minutes}m {seconds}s§7."
+  next_soon: "§7Un coffre va §ebientôt apparaître§7."
+  next_none: "§cAucun coffre planifié pour le moment."
+  spawning: "§eUn coffre est actuellement en train de tomber..."
+  # Admin
+  already_active: "§cUn coffre est déjà actif."
+  already_spawning: "§cUn coffre est déjà en train de tomber."
+  not_active: "§cAucun coffre actif à supprimer."
+  removed: "§7Coffre supprimé."
+  # /fallingchest status
+  status_active: "§aActif §7— §eX:{x} Y:{y} Z:{z} §7(monde : §e{world}§7)"
+  status_spawning: "§eEn train de tomber..."
+  status_inactive: "§cInactif §7— prochain dans §e{minutes}m {seconds}s§7."
+  status_none: "§cInactif §7— aucun coffre planifié."
+
 chat_format:
   faction_rank_prefix: "§7[§6%faction_rank%§7]"

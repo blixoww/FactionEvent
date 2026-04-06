@@ -55,6 +55,10 @@ commands:
   answer:
     usage: /answer
     description: Répondre à un guess
+  fallingchest:
+    usage: /fallingchest
+    description: Gestion du coffre tombant
+    aliases: [fc, coffrefc]
   domination:
     usage: /domination
     description: Gestion de la Domination (zones, start, stop)

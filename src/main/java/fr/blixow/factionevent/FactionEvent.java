@@ -19,9 +19,12 @@ import fr.blixow.factionevent.commands.planning.PlanningRemoveCommand;
 import fr.blixow.factionevent.commands.totem.TotemCommand;
 import fr.blixow.factionevent.commands.totem.TotemListCommand;
 import fr.blixow.factionevent.enumeration.DayEnum;
+import fr.blixow.factionevent.commands.fallingchest.FallingChestCommand;
 import fr.blixow.factionevent.events.CustomEvents;
+import fr.blixow.factionevent.events.FallingChestListener;
 import fr.blixow.factionevent.events.ManagerFactionEvent;
 import fr.blixow.factionevent.events.InventoryEvent;
+import fr.blixow.factionevent.utils.fallingchest.FallingChestManager;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.PlanningScheduler;
 import fr.blixow.factionevent.utils.ScheduledEvent;
@@ -110,6 +113,7 @@ public final class FactionEvent extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Activation du plugin FactionEvent");
         startSchedulerForPlanning();
         startRandomGuessScheduler();
+        FallingChestManager.startScheduler();
         actionsForOnlinePlayers();
         RankingManager.runTaskUpdateRankings();
     }
@@ -170,6 +174,9 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("guess").setTabCompleter(new GuessCommand());
         getCommand("answer").setExecutor(new AnswerCommand());
 
+        // Falling chest
+        getCommand("fallingchest").setExecutor(new FallingChestCommand());
+        getCommand("fallingchest").setTabCompleter(new FallingChestCommand());
         // Domination
         getCommand("domination").setExecutor(new DominationCommand());
         getCommand("domination").setTabCompleter(new DominationCommand());
@@ -189,6 +196,8 @@ public final class FactionEvent extends JavaPlugin {
         pluginManager.registerEvents(new ManagerFactionEvent(), this);
         // Inventory actions
         pluginManager.registerEvents(new InventoryEvent(), this);
+        // Falling chest
+        pluginManager.registerEvents(new FallingChestListener(), this);
     }
 
     private void instanceListMap() {
@@ -335,6 +344,7 @@ public final class FactionEvent extends JavaPlugin {
     @Override
     public void onDisable() {
         Bukkit.getConsoleSender().sendMessage("§cDEBUG: §7Saving files");
+        FallingChestManager.onDisable();
         FileManager.saveFiles();
         if (eventOn != null) eventOn.cancelEvent();
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Désactivation du plugin");

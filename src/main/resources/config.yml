@@ -98,3 +98,34 @@ domination:
         - "ARROW:16"
         - "EXPERIENCE_BOTTLE:3"
 
+falling_chest:
+  # Monde où le coffre peut apparaître
+  world: "world"
+  # Délai minimum avant réapparition d'un nouveau coffre (en secondes) — 3600 = 1 heure
+  respawn_delay_min: 3600
+  # Délai maximum avant réapparition d'un nouveau coffre (en secondes) — 7200 = 2 heures
+  respawn_delay_max: 7200
+  # Durée de vie du coffre s'il n'est pas ouvert (en secondes) — 900 = 15 minutes
+  lifetime: 900
+  # Délai avant disparition du coffre après que tout son contenu a été récupéré (en secondes)
+  disappear_delay: 5
+  # Points faction accordés au premier joueur qui ouvre le coffre
+  win_points: 5
+  # Zone de spawn du coffre (coordonnées min/max)
+  range:
+    x_min: -500
+    x_max: 500
+    z_min: -500
+    z_max: 500
+    # Y maximal pour chercher le sol (scan du haut vers le bas)
+    y_max: 120
+    # Y minimal pour chercher le sol
+    y_min: 5
+  # Loot du coffre (format: MATERIAL:quantité)
+  items:
+    - "DIAMOND:1"
+    - "GOLD_INGOT:3"
+    - "IRON_INGOT:5"
+    - "COOKED_BEEF:8"
+    - "ARROW:16"
+    - "EXPERIENCE_BOTTLE:3"
