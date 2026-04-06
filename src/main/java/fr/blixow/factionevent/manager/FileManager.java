@@ -218,7 +218,6 @@ public class FileManager {
 
     public static void saveFiles() {
         try {
-            saveWithUtf8(instance.getFileConfig(), getFile("config.yml"));
             saveWithUtf8(instance.getMessageFileConfiguration(), getFile("message.yml"));
             saveWithUtf8(instance.getKothFileConfiguration(), getDataFile("koth.yml"));
             saveWithUtf8(instance.getTotemFileConfiguration(), getDataFile("totem.yml"));
