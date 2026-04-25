@@ -14,6 +14,8 @@ import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
+import fr.blixow.factionevent.utils.purge.Purge;
+import fr.blixow.factionevent.utils.purge.PurgeEvent;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
@@ -30,6 +32,7 @@ public class EventOn {
     private LMSEvent lmsEvent;
     private GuessEvent guessEvent;
     private DominationEvent dominationEvent;
+    private PurgeEvent purgeEvent;
     private ArrayList<Object> queue;
     private final FileConfiguration msg;
 
@@ -41,6 +44,7 @@ public class EventOn {
         this.lmsEvent = null;
         this.guessEvent = null;
         this.dominationEvent = null;
+        this.purgeEvent = null;
         this.queue = new ArrayList<>();
         new BukkitRunnable() {
             @Override
@@ -67,6 +71,9 @@ public class EventOn {
                             } else if (o instanceof Domination) {
                                 Domination domination = (Domination) o;
                                 domination.start();
+                            } else if (o instanceof Purge) {
+                                Purge purge = (Purge) o;
+                                purge.start();
                             }
                             queue.remove(0);
                         }
@@ -80,7 +87,7 @@ public class EventOn {
     }
 
     public boolean canStartAnEvent() {
-        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null && guessEvent == null && dominationEvent == null;
+        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null && guessEvent == null && dominationEvent == null && purgeEvent == null;
     }
 
     public void start(KOTH koth, Player... players) {
@@ -345,6 +352,65 @@ public class EventOn {
         queue.add(domination);
     }
 
+    public void start(Purge purge, Player... players) {
+        if (this.canStartAnEvent()) {
+            this.purgeEvent = new PurgeEvent();
+            FileConfiguration freshMsg = FileManager.getMessageFileConfiguration();
+            FileConfiguration config = FileManager.getConfig();
+            int check_time = 2;
+            try {
+                if (config.contains("purge.check_time")) {
+                    check_time = Math.max(1, config.getInt("purge.check_time"));
+                }
+            } catch (Exception ignored) {}
+            final int finalCheckTime = check_time;
+
+            int duration = config.getInt("purge.max_duration", 1800);
+            String startedMsg = freshMsg.getString("purge.started",
+                "§8§m-----------------------------------------------------\n"
+                + "§r §8< §4§lPURGE §8> §8§m-----------------------------------------------------\n"
+                + "§7La Purge commence ! Toutes les portes sont ouvertes !\n"
+                + "§7Chaque kill rapporte de l'argent et des items §8(§7/purgereward§8)\n"
+                + "§7Durée : §c{duration} §8| §7Top 5 récompensé en fin d'event\n"
+                + "§8§m-----------------------------------------------------");
+            try {
+                int minutes = duration / 60;
+                String dur = (minutes > 0 ? minutes + "m" : duration + "s");
+                if (startedMsg != null) {
+                    startedMsg = startedMsg
+                        .replace("{duration}", dur)
+                        .replace("{seconds}", String.valueOf(duration));
+                }
+            } catch (Exception ignored) {}
+            Bukkit.broadcastMessage(addProportionalLines(startedMsg));
+
+            FactionMessageTitle.sendPlayersTitle(20, 40, 20,
+                "§4§lPURGE", "§7Toutes les portes sont ouvertes !");
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (purgeEvent == null) { cancel(); return; }
+                    purgeEvent.updateScoreboard();
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L);
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (purgeEvent == null) { cancel(); return; }
+                    if (purgeEvent.checkTimer()) { cancel(); }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
+            return;
+        }
+        String queueMessage = msg.getString("purge.prefix", "§8[§4PURGE§8]§7 ")
+            + msg.getString("purge.adding_to_queue",
+                "§7Un événement est déjà en cours. La Purge sera lancée automatiquement ensuite.");
+        FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
+        queue.add(purge);
+    }
+
     public void stopCurrentEvent() {
         if (!canStartAnEvent()) {
             if (kothEvent != null) {
@@ -364,6 +430,9 @@ public class EventOn {
             }
             if (dominationEvent != null) {
                 new Domination(dominationEvent.getDomination().getActiveZones()).stop();
+            }
+            if (purgeEvent != null) {
+                new Purge().stop();
             }
         }
     }
@@ -431,6 +500,14 @@ public class EventOn {
 
     public void setDominationEvent(DominationEvent dominationEvent) {
         this.dominationEvent = dominationEvent;
+    }
+
+    public PurgeEvent getPurgeEvent() {
+        return purgeEvent;
+    }
+
+    public void setPurgeEvent(PurgeEvent purgeEvent) {
+        this.purgeEvent = purgeEvent;
     }
 
     private String addProportionalLines(String message) {

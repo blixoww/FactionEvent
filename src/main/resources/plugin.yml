@@ -62,3 +62,10 @@ commands:
   domination:
     usage: /domination
     description: Gestion de la Domination (zones, start, stop)
+  purge:
+    usage: /purge <start|stop|top>
+    description: Gestion de la Purge (override portes, kills récompensés)
+  purgereward:
+    usage: /purgereward
+    description: Récupère les items gagnés pendant la Purge
+    aliases: [pgr, purgerewards]

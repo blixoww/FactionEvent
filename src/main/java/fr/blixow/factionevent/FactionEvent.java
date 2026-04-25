@@ -13,6 +13,8 @@ import fr.blixow.factionevent.commands.koth.KothListCommand;
 import fr.blixow.factionevent.commands.lms.LMSCommand;
 import fr.blixow.factionevent.commands.lms.LMSListCommand;
 import fr.blixow.factionevent.commands.lms.LMSRCommand;
+import fr.blixow.factionevent.commands.purge.PurgeCommand;
+import fr.blixow.factionevent.commands.purge.PurgeRewardCommand;
 import fr.blixow.factionevent.commands.planning.PlanningAddCommand;
 import fr.blixow.factionevent.commands.planning.PlanningCommand;
 import fr.blixow.factionevent.commands.planning.PlanningRemoveCommand;
@@ -38,6 +40,7 @@ import fr.blixow.factionevent.utils.koth.KOTH;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSManager;
+import fr.blixow.factionevent.utils.purge.PurgeManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
@@ -99,6 +102,7 @@ public final class FactionEvent extends JavaPlugin {
     private FileConfiguration eventManagerFileConfiguration;
     private FileConfiguration classementFileConfiguration;
     private FileConfiguration logsFileConfiguration;
+    private FileConfiguration purgeRewardsFileConfiguration;
 
     @Override
     public void onEnable() {
@@ -180,6 +184,10 @@ public final class FactionEvent extends JavaPlugin {
         // Domination
         getCommand("domination").setExecutor(new DominationCommand());
         getCommand("domination").setTabCompleter(new DominationCommand());
+        // Purge
+        getCommand("purge").setExecutor(new PurgeCommand());
+        getCommand("purge").setTabCompleter(new PurgeCommand());
+        getCommand("purgereward").setExecutor(new PurgeRewardCommand());
         // Event
         getCommand("event").setExecutor(new EventCommand());
         getCommand("event").setTabCompleter(new EventCommand());
@@ -220,6 +228,7 @@ public final class FactionEvent extends JavaPlugin {
         LMSManager.loadLMSfromFile();
         GuessManager.loadWordsFromConfig();
         DominationManager.loadZones();
+        PurgeManager.loadRewards();
         planningEvents = loadPlanning();
     }
 
@@ -471,6 +480,14 @@ public final class FactionEvent extends JavaPlugin {
 
     public FileConfiguration getLogsFileConfiguration() {
         return logsFileConfiguration;
+    }
+
+    public FileConfiguration getPurgeRewardsFileConfiguration() {
+        return purgeRewardsFileConfiguration;
+    }
+
+    public void setPurgeRewardsFileConfiguration(FileConfiguration purgeRewardsFileConfiguration) {
+        this.purgeRewardsFileConfiguration = purgeRewardsFileConfiguration;
     }
 
     public void setConfig(FileConfiguration config) {

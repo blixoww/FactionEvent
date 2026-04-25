@@ -109,6 +109,78 @@ domination:
         - "RUBY_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:3"
         - "EMERALD_BLOCK:3,WEIGHT:8"
 
+purge:
+  # Fréquence de vérification du timer (en secondes)
+  check_time: 2
+  # Durée de la Purge (en secondes) — 1800 = 30 minutes
+  max_duration: 1800
+  # Récompense versée à chaque kill effectué pendant la Purge
+  kill_reward:
+    # Argent versé instantanément via Vault
+    money: 100
+    # Nombre minimum d'items tirés à chaque kill (0 = aucun item garanti)
+    items_min: 0
+    # Nombre maximum d'items tirés à chaque kill
+    items_max: 1
+    # Pool d'items pour les récompenses de kill (stockées via /purgereward)
+    # Format : MATERIAL:quantité[,ENCHANTMENT:NOM,LEVEL:valeur,...][,WEIGHT:poids]
+    items:
+      - "GOLDEN_APPLE:1,WEIGHT:8"
+      - "DIAMOND:1,WEIGHT:5"
+      - "EXP_BOTTLE:5,WEIGHT:6"
+      - "OBSIDIAN:8,WEIGHT:4"
+      - "RUBY:1,WEIGHT:3"
+  # Récompenses de classement final, distribuées à la fin de l'event
+  # Argent immédiat via Vault, items en attente via /purgereward
+  top_rewards:
+    "1":
+      money: 5000
+      items_min: 4
+      items_max: 6
+      items:
+        - "COBALT_AXE:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:4"
+        - "COBALT_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:5,ENCHANTMENT:FIRE_ASPECT,LEVEL:2,WEIGHT:4"
+        - "RUBY_HELMET:1,ENCHANTMENT:PROTECTION,LEVEL:4,WEIGHT:5"
+        - "RUBY_CHESTPLATE:1,ENCHANTMENT:PROTECTION,LEVEL:4,WEIGHT:5"
+        - "RUBY_LEGGINGS:1,ENCHANTMENT:PROTECTION,LEVEL:4,WEIGHT:5"
+        - "RUBY_BOOTS:1,ENCHANTMENT:PROTECTION,LEVEL:4,WEIGHT:5"
+        - "GOLDEN_APPLE:8,WEIGHT:8"
+        - "RUBY:8,WEIGHT:6"
+    "2":
+      money: 2500
+      items_min: 3
+      items_max: 4
+      items:
+        - "COBALT_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:4,WEIGHT:4"
+        - "RUBY_CHESTPLATE:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+        - "GOLDEN_APPLE:5,WEIGHT:8"
+        - "RUBY:4,WEIGHT:6"
+        - "OBSIDIAN:32,WEIGHT:8"
+    "3":
+      money: 1000
+      items_min: 2
+      items_max: 3
+      items:
+        - "GOLDEN_APPLE:3,WEIGHT:8"
+        - "RUBY:2,WEIGHT:6"
+        - "OBSIDIAN:16,WEIGHT:8"
+        - "EXP_BOTTLE:32,WEIGHT:7"
+    "4":
+      money: 500
+      items_min: 1
+      items_max: 2
+      items:
+        - "GOLDEN_APPLE:2,WEIGHT:8"
+        - "OBSIDIAN:8,WEIGHT:8"
+        - "EXP_BOTTLE:16,WEIGHT:7"
+    "5":
+      money: 250
+      items_min: 1
+      items_max: 1
+      items:
+        - "GOLDEN_APPLE:1,WEIGHT:8"
+        - "EXP_BOTTLE:8,WEIGHT:7"
+
 falling_chest:
   # Monde où le coffre peut apparaître
   world: "world"
@@ -151,3 +223,4 @@ falling_chest:
     - "OBSIDIAN:64,WEIGHT:10"
     - "RUBY_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:3"
     - "EMERALD_BLOCK:3,WEIGHT:8"
+

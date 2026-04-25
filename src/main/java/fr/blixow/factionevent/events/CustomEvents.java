@@ -15,10 +15,16 @@ import fr.blixow.factionevent.utils.koth.KOTHEvent;
 import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
+import fr.blixow.factionevent.utils.purge.PurgeEvent;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -263,6 +269,65 @@ public class CustomEvents implements Listener {
         if (dominationEvent != null) {
             Player killer = player.getKiller();
             dominationEvent.handleKill(killer, player);
+        }
+        // Purge kill reward
+        PurgeEvent purgeEvent = FactionEvent.getInstance().getEventOn().getPurgeEvent();
+        if (purgeEvent != null) {
+            Player killer = player.getKiller();
+            purgeEvent.handleKill(killer, player);
+        }
+    }
+
+    // PURGE — override des protections Factions sur les portes, trappes et portillons
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInteractDoorPurge(PlayerInteractEvent event) {
+        if (FactionEvent.getInstance().getEventOn().getPurgeEvent() == null) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        Block block = event.getClickedBlock();
+        if (block == null) return;
+
+        // Détection générique par nom de Material — compatible vanilla ET moddé (MCP, etc.)
+        String name = block.getType().name().toUpperCase();
+        boolean isTrapdoor  = name.contains("TRAPDOOR") || name.contains("TRAP_DOOR");
+        boolean isDoor       = name.contains("DOOR") && !isTrapdoor;
+        boolean isFenceGate  = name.contains("FENCE_GATE");
+        boolean isButton     = name.contains("BUTTON");
+        boolean isIron       = name.contains("IRON");
+
+        if (!isDoor && !isTrapdoor && !isFenceGate && !isButton) return;
+
+        // Les boutons fonctionnent toujours (redstone), même si Factions a annulé l'interaction
+        if (isButton) {
+            if (event.isCancelled()) event.setCancelled(false);
+            return;
+        }
+
+        // Portes / trappes / portillons en fer : pas d'ouverture directe par clic
+        if (isIron) return;
+
+        // Si Factions n'a pas annulé l'interaction, vanilla gère déjà l'ouverture
+        if (!event.isCancelled()) return;
+
+        // — Manipulation legacy via getData() / setData() —
+        if (isDoor) {
+            // Porte double-bloc : trouver le bloc du bas
+            Block bottom = block;
+            if ((block.getData() & 0x8) != 0) {
+                bottom = block.getRelative(BlockFace.DOWN);
+            }
+            if (bottom.getType() == block.getType()) {
+                byte data = bottom.getData();
+                bottom.setData((byte) (data ^ 0x4), true);
+                block.getWorld().playEffect(block.getLocation(), Effect.DOOR_TOGGLE, 0);
+                event.setCancelled(true);
+            }
+        } else {
+            // Trapdoor ou portillon (bloc simple)
+            byte data = block.getData();
+            block.setData((byte) (data ^ 0x4), true);
+            block.getWorld().playEffect(block.getLocation(), Effect.DOOR_TOGGLE, 0);
+            event.setCancelled(true);
         }
     }
 
