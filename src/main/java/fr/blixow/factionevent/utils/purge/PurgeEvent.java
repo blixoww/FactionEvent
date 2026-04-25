@@ -1,9 +1,13 @@
 package fr.blixow.factionevent.utils.purge;
 
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.DateManager;
 import fr.blixow.factionevent.manager.EventManager;
 import fr.blixow.factionevent.manager.FileManager;
+import fr.blixow.factionevent.manager.RankingManager;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
 import fr.blixow.factionevent.utils.LootItemParser;
 import fr.blixow.factionevent.utils.Messages;
@@ -31,6 +35,7 @@ public class PurgeEvent {
     private boolean ended;
 
     private final Map<UUID, Integer> kills;
+    private final Map<UUID, Set<UUID>> uniqueKills; // tueur → victimes déjà tuées (anti-farming)
     private final Map<UUID, String> playerNames;
 
     private final FileConfiguration msg;
@@ -44,6 +49,7 @@ public class PurgeEvent {
     public PurgeEvent() {
         this.startTime = System.currentTimeMillis();
         this.kills = new HashMap<>();
+        this.uniqueKills = new HashMap<>();
         this.playerNames = new HashMap<>();
         this.ended = false;
 
@@ -68,9 +74,21 @@ public class PurgeEvent {
         if (killer == null || victim == null) return;
         if (killer.getUniqueId().equals(victim.getUniqueId())) return;
 
-        UUID uuid = killer.getUniqueId();
-        int newCount = kills.merge(uuid, 1, Integer::sum);
-        playerNames.put(uuid, killer.getName());
+        UUID killerId = killer.getUniqueId();
+        UUID victimId = victim.getUniqueId();
+
+        // Anti-farming : vérifier si ce joueur a déjà été tué par ce tueur
+        Set<UUID> alreadyKilled = uniqueKills.computeIfAbsent(killerId, k -> new HashSet<>());
+        if (alreadyKilled.contains(victimId)) {
+            killer.sendMessage(prefix + msg.getString("purge.already_killed",
+                "§cVous avez déjà tué §e{target} §cdans cette Purge ! Kill non comptabilisé.")
+                .replace("{target}", victim.getName()));
+            return;
+        }
+        alreadyKilled.add(victimId);
+
+        int newCount = kills.merge(killerId, 1, Integer::sum);
+        playerNames.put(killerId, killer.getName());
 
         Economy eco = FactionEvent.getEconomy();
         if (eco != null && killMoney > 0) {
@@ -79,7 +97,7 @@ public class PurgeEvent {
 
         List<ItemStack> drops = pickItems(killItemPool, killItemsMin, killItemsMax);
         for (ItemStack item : drops) {
-            PurgeManager.addItemReward(uuid, item);
+            PurgeManager.addItemReward(killerId, item);
         }
 
         String killMsg = msg.getString("purge.kill_message",
@@ -205,6 +223,40 @@ public class PurgeEvent {
                     "§6§l" + rank + "ème",
                     "§7+§e" + (int) money + "$ §8| §7+§e" + drops.size() + " items");
             }
+        }
+
+        // Points classement faction — top 5 uniquement, additionnés par faction
+        distributeFactionPoints(top, cfg);
+    }
+
+    private void distributeFactionPoints(List<Map.Entry<UUID, Integer>> top, FileConfiguration cfg) {
+        int[] defaultPoints = {50, 35, 25, 15, 10};
+
+        // Calcul des points par faction (addition si plusieurs joueurs d'une même faction dans le top 5)
+        Map<Faction, Integer> factionPointsMap = new LinkedHashMap<>();
+        Map<Faction, List<String>> factionPlayersMap = new LinkedHashMap<>();
+
+        for (int i = 0; i < top.size(); i++) {
+            UUID uuid = top.get(i).getKey();
+            int pts = cfg.getInt("purge.faction_top_points." + (i + 1), defaultPoints[i]);
+
+            FPlayer fp = FPlayers.getInstance().getByOfflinePlayer(Bukkit.getOfflinePlayer(uuid));
+            if (fp == null) continue;
+            Faction faction = fp.getFaction();
+            if (faction == null || faction.isWilderness()) continue;
+
+            factionPointsMap.merge(faction, pts, Integer::sum);
+            factionPlayersMap.computeIfAbsent(faction, k -> new ArrayList<>())
+                             .add(playerNames.getOrDefault(uuid, "?") + " §8(#" + (i + 1) + ")");
+        }
+
+        for (Map.Entry<Faction, Integer> entry : factionPointsMap.entrySet()) {
+            Faction faction = entry.getKey();
+            int pts = entry.getValue();
+            RankingManager.addPoints(faction, pts);
+            String players = String.join("§8, §7", factionPlayersMap.get(faction));
+            Bukkit.broadcastMessage(prefix + "§7La faction §c" + faction.getTag()
+                + " §7reçoit §a+" + pts + " pts classement §8(§7" + players + "§8)");
         }
     }
 

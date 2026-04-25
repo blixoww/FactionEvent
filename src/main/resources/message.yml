@@ -273,6 +273,7 @@ purge:
   adding_to_queue: "§7Un événement est déjà en cours. La Purge sera lancée automatiquement ensuite."
   kill_message: "§a+§e{money}$ §7pour avoir tué §c{target} §8(§e{kills} kills§8)"
   kill_items: "§a+§e{count} item(s) §7→ /purgereward"
+  already_killed: "§cVous avez déjà tué §e{target} §cdans cette Purge ! Kill non comptabilisé."
   no_rewards: "§cVous n'avez aucune récompense en attente."
   rewards_claimed: "§aVous avez récupéré §e{count} §arécompense(s) !"
   rewards_partial: "§aRécupéré §e{got} §aitem(s). §7Reste §e{left} §7en attente §8(§7inventaire plein§8)."

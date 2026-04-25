@@ -114,6 +114,13 @@ purge:
   check_time: 2
   # Durée de la Purge (en secondes) — 1800 = 30 minutes
   max_duration: 1800
+  # Points de classement faction accordés au top 5 en fin de Purge (additionnés par faction)
+  faction_top_points:
+    1: 10
+    2: 8
+    3: 6
+    4: 4
+    5: 2
   # Récompense versée à chaque kill effectué pendant la Purge
   kill_reward:
     # Argent versé instantanément via Vault
