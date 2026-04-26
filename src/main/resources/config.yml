@@ -132,11 +132,11 @@ purge:
     # Pool d'items pour les récompenses de kill (stockées via /purgereward)
     # Format : MATERIAL:quantité[,ENCHANTMENT:NOM,LEVEL:valeur,...][,WEIGHT:poids]
     items:
-      - "GOLDEN_APPLE:1,WEIGHT:8"
-      - "DIAMOND:1,WEIGHT:5"
-      - "EXP_BOTTLE:5,WEIGHT:6"
-      - "OBSIDIAN:8,WEIGHT:4"
+      - "GOLDEN_APPLE:3,WEIGHT:5"
+      - "STEEL_INGOT:2,WEIGHT:5"
       - "RUBY:1,WEIGHT:3"
+      - "EMERALD:3,WEIGHT:4"
+      - "RANDOM_ORE:1,WEIGHT:3"
   # Récompenses de classement final, distribuées à la fin de l'event
   # Argent immédiat via Vault, items en attente via /purgereward
   top_rewards:
