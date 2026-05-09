@@ -13,6 +13,7 @@ import fr.blixow.factionevent.commands.koth.KothListCommand;
 import fr.blixow.factionevent.commands.lms.LMSCommand;
 import fr.blixow.factionevent.commands.lms.LMSListCommand;
 import fr.blixow.factionevent.commands.lms.LMSRCommand;
+import fr.blixow.factionevent.commands.lms.LMSRewardCommand;
 import fr.blixow.factionevent.commands.purge.PurgeCommand;
 import fr.blixow.factionevent.commands.purge.PurgeRewardCommand;
 import fr.blixow.factionevent.commands.planning.PlanningAddCommand;
@@ -41,6 +42,7 @@ import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.purge.PurgeManager;
+import fr.blixow.factionevent.utils.lms.LMSRewardManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 import fr.blixow.factionevent.utils.totem.TotemManager;
@@ -103,6 +105,7 @@ public final class FactionEvent extends JavaPlugin {
     private FileConfiguration classementFileConfiguration;
     private FileConfiguration logsFileConfiguration;
     private FileConfiguration purgeRewardsFileConfiguration;
+    private FileConfiguration lmsRewardsFileConfiguration;
 
     @Override
     public void onEnable() {
@@ -172,6 +175,7 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("lmsr").setExecutor(new LMSRCommand());
         getCommand("lmsr").setTabCompleter(new LMSRCommand());
         getCommand("lmslist").setExecutor(new LMSListCommand());
+        getCommand("lmsreward").setExecutor(new LMSRewardCommand());
 
         // Guess
         getCommand("guess").setExecutor(new GuessCommand());
@@ -229,6 +233,7 @@ public final class FactionEvent extends JavaPlugin {
         GuessManager.loadWordsFromConfig();
         DominationManager.loadZones();
         PurgeManager.loadRewards();
+        LMSRewardManager.loadRewards();
         planningEvents = loadPlanning();
     }
 
@@ -488,6 +493,14 @@ public final class FactionEvent extends JavaPlugin {
 
     public void setPurgeRewardsFileConfiguration(FileConfiguration purgeRewardsFileConfiguration) {
         this.purgeRewardsFileConfiguration = purgeRewardsFileConfiguration;
+    }
+
+    public FileConfiguration getLMSRewardsFileConfiguration() {
+        return lmsRewardsFileConfiguration;
+    }
+
+    public void setLMSRewardsFileConfiguration(FileConfiguration lmsRewardsFileConfiguration) {
+        this.lmsRewardsFileConfiguration = lmsRewardsFileConfiguration;
     }
 
     public void setConfig(FileConfiguration config) {

@@ -31,8 +31,56 @@ lms:
   check_time: 10
   # Temps minimum de création d'une faction pour participer à l'événement (en secondes)
   min_faction_time: 86400
-  # Temps maximum de l'événement
+  # Points reçus par la faction gagnante
   win_points: 20
+  # Durée d'inscription en secondes (2 minutes)
+  registration_time: 120
+  # Durée de préparation avant le début du combat (secondes)
+  prep_time: 30
+  # Durée de la période de grâce au début du combat (secondes) — aucun dégât pendant ce temps
+  grace_period: 60
+  # Commande console à exécuter pour donner le kit pvp (%player% = nom du joueur)
+  kit_command: "kit pvp %player%"
+  # Commande console à exécuter pour téléporter au spawn (%player% = nom du joueur)
+  spawn_command: "spawn %player%"
+  # Récompenses pour le(s) vainqueur(s) de l'event
+  win_reward:
+    # Argent versé immédiatement via Vault
+    money: 5000
+    # Nombre minimum d'items (→ /lmsreward)
+    items_min: 2
+    # Nombre maximum d'items
+    items_max: 4
+    # Format : MATERIAL:quantité[,ENCHANTMENT:NOM,LEVEL:valeur,...][,WEIGHT:poids]
+    items:
+      - "GOLDEN_APPLE:5,WEIGHT:8"
+      - "RUBY:3,WEIGHT:6"
+      - "RUBY_CHESTPLATE:1,ENCHANTMENT:PROTECTION,LEVEL:4,WEIGHT:4"
+      - "COBALT_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:5,WEIGHT:3"
+  # Récompenses pour le top 3 des meilleurs killers
+  kill_top_rewards:
+    "1":
+      money: 2000
+      items_min: 2
+      items_max: 3
+      items:
+        - "GOLDEN_APPLE:3,WEIGHT:8"
+        - "RUBY:2,WEIGHT:6"
+        - "EMERALD:4,WEIGHT:7"
+    "2":
+      money: 1000
+      items_min: 1
+      items_max: 2
+      items:
+        - "GOLDEN_APPLE:2,WEIGHT:8"
+        - "RUBY:1,WEIGHT:6"
+    "3":
+      money: 500
+      items_min: 1
+      items_max: 1
+      items:
+        - "GOLDEN_APPLE:1,WEIGHT:8"
+        - "EMERALD:2,WEIGHT:7"
 
 domination:
   # Fréquence de vérification du timer (en secondes)

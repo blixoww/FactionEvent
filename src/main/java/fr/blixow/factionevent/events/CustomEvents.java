@@ -17,6 +17,9 @@ import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
 import fr.blixow.factionevent.utils.purge.PurgeEvent;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
+
+import java.util.HashMap;
+import java.util.UUID;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -49,6 +52,12 @@ import org.bukkit.inventory.InventoryHolder;
 import java.util.Map;
 
 public class CustomEvents implements Listener {
+
+    /**
+     * Sauvegarde de la power FPlayer avant traitement de la mort (anti power-loss pendant LMS).
+     * UUID → power sauvegardée
+     */
+    private final HashMap<UUID, Double> lmsSavedPower = new HashMap<>();
 
     // KOTH
 
@@ -87,6 +96,7 @@ public class CustomEvents implements Listener {
             FactionEvent.getInstance().getEventOn().getDominationEvent().removePlayer(player);
         }
         FactionEvent.getInstance().getEventScoreboardOff().remove(player);
+        lmsSavedPower.remove(player.getUniqueId());
     }
 
     @EventHandler
@@ -257,12 +267,29 @@ public class CustomEvents implements Listener {
 
     //LMS
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLMSDeathSavePower(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
+        if (lmsEvent == null || !lmsEvent.isParticipant(player)) return;
+        // Sauvegarder la power avant que Factions ne la réduise
+        try {
+            FPlayer fp = FPlayers.getInstance().getByPlayer(player);
+            if (fp != null) lmsSavedPower.put(player.getUniqueId(), fp.getPower());
+        } catch (Exception ignored) {}
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
         if (lmsEvent != null && lmsEvent.isParticipant(player)) {
-            lmsEvent.handlePlayerDeath(player);
+            // Empêcher le drop des items du kit
+            event.getDrops().clear();
+            event.setDroppedExp(0);
+            // Déléguer la mort à LMSEvent
+            Player killer = player.getKiller();
+            lmsEvent.handlePlayerDeath(player, killer);
         }
         // Domination kill bonus
         DominationEvent dominationEvent = FactionEvent.getInstance().getEventOn().getDominationEvent();
@@ -276,6 +303,41 @@ public class CustomEvents implements Listener {
             Player killer = player.getKiller();
             purgeEvent.handleKill(killer, player);
         }
+    }
+
+    @EventHandler
+    public void onLMSRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+
+        // Restaurer la power si sauvegardée (anti power-loss LMS)
+        if (lmsSavedPower.containsKey(player.getUniqueId())) {
+            final double savedPower = lmsSavedPower.remove(player.getUniqueId());
+                org.bukkit.Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), () -> {
+                try {
+                    FPlayer fp = FPlayers.getInstance().getByPlayer(player);
+                    if (fp != null) fp.alterPower(savedPower - fp.getPower());
+                } catch (Exception ignored) {}
+            }, 2L);
+        }
+
+        // Restaurer l'inventaire si le joueur était dans un LMS
+        LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
+        if (lmsEvent != null && lmsEvent.isPendingRestore(player.getUniqueId())) {
+            lmsEvent.handlePlayerRespawn(player);
+        }
+    }
+
+    /** Bloque toutes les commandes pour les participants LMS actifs. */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLMSCommand(PlayerCommandPreprocessEvent event) {
+        LMSEvent lmsEvent = FactionEvent.getInstance().getEventOn().getLMSEvent();
+        if (lmsEvent == null || !lmsEvent.isEventActive()) return;
+        Player player = event.getPlayer();
+        if (!lmsEvent.isParticipant(player)) return;
+        event.setCancelled(true);
+        player.sendMessage(FileManager.getMessageFileConfiguration().getString("lms.prefix",
+            "§8[§cLMS§8]§7 ") + FileManager.getMessageFileConfiguration().getString("lms.commands_blocked",
+            "§cLes commandes sont bloquées pendant le LMS !"));
     }
 
     // PURGE — override des protections Factions sur les portes, trappes et portillons
@@ -347,25 +409,19 @@ public class CustomEvents implements Listener {
         Player target = (Player) event.getEntity();
         Player attacker = (Player) event.getDamager();
 
-        // Vérifie si les deux joueurs sont dans les participants inscrits
-        if (!lmsEvent.isParticipant(target) || !lmsEvent.isParticipant(attacker)) return;
-
-        if (lms.isPreparation()) {
-            // Annule les dégâts pendant la phase de préparation
-            event.setCancelled(true);
-        } else if (lms.isStarted()) {
-            // Autorise les combats entre alliés et trêve dans le LMS
-            FPlayer fAttacker = FPlayers.getInstance().getByPlayer(attacker);
-            FPlayer fTarget = FPlayers.getInstance().getByPlayer(target);
-            Faction factionAttacker = fAttacker.getFaction();
-            Faction factionTarget = fTarget.getFaction();
-
-            if (factionAttacker != null && factionTarget != null) {
-                if (factionAttacker.getRelationTo(factionTarget).isAlly() ||
-                        factionAttacker.getRelationTo(factionTarget).isTruce()) {
-                    event.setCancelled(false);
-                }
+        // Pendant la phase de grâce : aucun dégât entre participants
+        if (lms.isPreparation() || lmsEvent.isGracePeriodActive()) {
+            if (lmsEvent.isParticipant(target) || lmsEvent.isParticipant(attacker)) {
+                event.setCancelled(true);
+                return;
             }
+        }
+
+        if (lms.isStarted() && !lmsEvent.isGracePeriodActive()) {
+            // Seuls les participants peuvent se frapper entre eux
+            if (!lmsEvent.isParticipant(target) || !lmsEvent.isParticipant(attacker)) return;
+            // On autorise les dégâts même entre alliés / trêves — ignorer les relations
+            event.setCancelled(false);
         }
     }
 

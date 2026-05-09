@@ -49,6 +49,10 @@ commands:
   lmsr:
     usage: /lmsr
     description: Rejoindre un lms
+  lmsreward:
+    usage: /lmsreward
+    description: Récupère les items gagnés pendant un LMS
+    aliases: [lmsr2, lmsrewards]
   guess:
     usage: /guess
     description: Gestion des guess

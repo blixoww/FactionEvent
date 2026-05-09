@@ -225,8 +225,7 @@ public class EventOn {
     public void start(LMS lms, Player... players) {
         if (this.canStartAnEvent()) {
             this.lmsEvent = new LMSEvent(lms);
-            String message = new StrManager(msg.getString("lms.started")).reLMS(lms.getName()).toString();
-            Bukkit.broadcastMessage(addProportionalLines(message));
+            // Le LMS gère ses propres broadcasts (registration_started, lms.started, etc.)
             int check_time = 10;
             try {
                 FileConfiguration configuration = FileManager.getConfig();

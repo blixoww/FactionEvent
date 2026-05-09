@@ -163,6 +163,10 @@ public class FileManager {
         return FactionEvent.getInstance().getPurgeRewardsFileConfiguration();
     }
 
+    public static FileConfiguration getLMSRewardsDataFC() {
+        return FactionEvent.getInstance().getLMSRewardsFileConfiguration();
+    }
+
     public static FileConfiguration getLogsFC() {
         return FactionEvent.getInstance().getLogsFileConfiguration();
     }
@@ -185,6 +189,7 @@ public class FileManager {
         FileManager.createDataFile("classement.yml");
         FileManager.createDataFile("domination.yml");
         FileManager.createDataFile("purgeRewards.yml");
+        FileManager.createDataFile("lmsRewards.yml");
     }
 
 
@@ -203,6 +208,7 @@ public class FileManager {
             instance.setClassementFileConfiguration(loadUtf8(getDataFile("classement.yml")));
             instance.setDominationFileConfiguration(loadUtf8(getDataFile("domination.yml")));
             instance.setPurgeRewardsFileConfiguration(loadUtf8(getDataFile("purgeRewards.yml")));
+            instance.setLMSRewardsFileConfiguration(loadUtf8(getDataFile("lmsRewards.yml")));
             LocalDateTime localDateTime = LocalDateTime.now();
             int day = localDateTime.getDayOfMonth(), months = localDateTime.getMonthValue(), year = localDateTime.getYear();
             String dayly_logs = "logs/logs-" + day + "-" + months + "-" + year + ".yml";
@@ -235,6 +241,7 @@ public class FileManager {
             saveWithUtf8(instance.getClassementFileConfiguration(), getDataFile("classement.yml"));
             saveWithUtf8(instance.getDominationFileConfiguration(), getDataFile("domination.yml"));
             saveWithUtf8(instance.getPurgeRewardsFileConfiguration(), getDataFile("purgeRewards.yml"));
+            saveWithUtf8(instance.getLMSRewardsFileConfiguration(), getDataFile("lmsRewards.yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
