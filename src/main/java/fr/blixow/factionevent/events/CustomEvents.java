@@ -287,8 +287,17 @@ public class CustomEvents implements Listener {
             // Empêcher le drop des items du kit
             event.getDrops().clear();
             event.setDroppedExp(0);
-            // Déléguer la mort à LMSEvent
+            // Ne pas comptabiliser comme une vraie mort dans les stats Minecraft
+            try {
+                player.decrementStatistic(org.bukkit.Statistic.DEATHS);
+            } catch (Exception ignored) {}
             Player killer = player.getKiller();
+            if (killer != null) {
+                try {
+                    killer.decrementStatistic(org.bukkit.Statistic.PLAYER_KILLS);
+                } catch (Exception ignored) {}
+            }
+            // Déléguer la mort à LMSEvent
             lmsEvent.handlePlayerDeath(player, killer);
         }
         // Domination kill bonus
