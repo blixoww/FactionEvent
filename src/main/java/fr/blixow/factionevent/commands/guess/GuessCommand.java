@@ -23,7 +23,7 @@ public class GuessCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Vous devez être un joueur.");
+            sender.sendMessage("§cVous devez être un joueur.");
             return true;
         }
 
@@ -55,7 +55,7 @@ public class GuessCommand implements TabExecutor {
 
             // Les actions administratives requièrent la permission
             if (!player.hasPermission("factionevent.admin.guess")) {
-                player.sendMessage(prefix + FileManager.getMessageFileConfiguration().getString("no-permissions"));
+                player.sendMessage(msg.getString("prefix") + msg.getString("no-permissions"));
                 return true;
             }
 

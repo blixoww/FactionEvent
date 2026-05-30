@@ -96,6 +96,10 @@ public class EventOn {
             String kothName = koth.getName() == null ? "KOTH NULL" : koth.getName();
             String message = new StrManager(msg.getString("koth.started")).reKoth(kothName).toString();
             Bukkit.broadcastMessage(addProportionalLines(message));
+
+            // Title global au démarrage (comme la Domination)
+            FactionMessageTitle.sendPlayersTitle(20, 40, 20, "§c§l♛ KOTH", "§7Prenez le contrôle de la zone !");
+
             FileConfiguration configuration = FileManager.getConfig();
             int check_time = 2;
             try {
@@ -183,6 +187,10 @@ public class EventOn {
             FileConfiguration msg = FileManager.getMessageFileConfiguration();
             String str = new StrManager(msg.getString("totem.started")).reTotem(totem.getName()).toString();
             Bukkit.broadcastMessage(addProportionalLines(str));
+
+            // Title global au démarrage (comme la Domination)
+            FactionMessageTitle.sendPlayersTitle(20, 40, 20, "§c§l⛏ TOTEM", "§7Détruisez la tour adverse !");
+
             totemEvent.start();
             FileConfiguration configuration = FileManager.getConfig();
             int check_time = 10;
@@ -269,6 +277,10 @@ public class EventOn {
 
             String message = new StrManager(msg.getString("guess.started", "§aUn Guess démarre !")).toString();
             Bukkit.broadcastMessage(addProportionalLines(message));
+
+            // Title global au démarrage (comme la Domination)
+            FactionMessageTitle.sendPlayersTitle(20, 40, 20, "§c§l❓ GUESS", "§7Trouvez le mot le plus vite possible !");
+
             // Créer le GuessEvent ici — source unique de création
             this.guessEvent = new GuessEvent(guess);
 
@@ -367,7 +379,7 @@ public class EventOn {
             int duration = config.getInt("purge.max_duration", 1800);
             String startedMsg = freshMsg.getString("purge.started",
                 "§8§m-----------------------------------------------------\n"
-                + "§r §8< §4§lPURGE §8> §8§m-----------------------------------------------------\n"
+                + "§r §8< §c§lPURGE §8> §8§m-----------------------------------------------------\n"
                 + "§7La Purge commence ! Toutes les portes sont ouvertes !\n"
                 + "§7Chaque kill rapporte de l'argent et des items §8(§7/purgereward§8)\n"
                 + "§7Durée : §c{duration} §8| §7Top 5 récompensé en fin d'event\n"
@@ -384,7 +396,7 @@ public class EventOn {
             Bukkit.broadcastMessage(addProportionalLines(startedMsg));
 
             FactionMessageTitle.sendPlayersTitle(20, 40, 20,
-                "§4§lPURGE", "§7Toutes les portes sont ouvertes !");
+                "§c§lPURGE", "§7Toutes les portes sont ouvertes !");
 
             new BukkitRunnable() {
                 @Override
@@ -403,7 +415,7 @@ public class EventOn {
             }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
             return;
         }
-        String queueMessage = msg.getString("purge.prefix", "§8[§4PURGE§8]§7 ")
+        String queueMessage = msg.getString("purge.prefix", "§8[§cPURGE§8]§7 ")
             + msg.getString("purge.adding_to_queue",
                 "§7Un événement est déjà en cours. La Purge sera lancée automatiquement ensuite.");
         FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);

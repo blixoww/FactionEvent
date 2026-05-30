@@ -54,7 +54,7 @@ public class PurgeEvent {
         this.ended = false;
 
         this.msg = FileManager.getMessageFileConfiguration();
-        this.prefix = msg.getString("purge.prefix", "§8[§4PURGE§8]§7 ");
+        this.prefix = msg.getString("purge.prefix", "§8[§cPURGE§8]§7 ");
 
         FileConfiguration cfg = FileManager.getConfig();
         this.duration = cfg.getInt("purge.max_duration", 1800);
@@ -140,7 +140,7 @@ public class PurgeEvent {
     private String buildActionBar() {
         long elapsed = (System.currentTimeMillis() - startTime) / 1000;
         String time = DateManager.getFormattedTime((int) Math.max(0, duration - elapsed));
-        StringBuilder sb = new StringBuilder("§8[§4PURGE§8] ");
+        StringBuilder sb = new StringBuilder("§8[§cPURGE§8] ");
         List<Map.Entry<UUID, Integer>> top = sortedTop(5);
         if (top.isEmpty()) {
             sb.append("§7Aucun kill");
@@ -174,18 +174,18 @@ public class PurgeEvent {
         List<Map.Entry<UUID, Integer>> top = sortedTop(5);
 
         Bukkit.broadcastMessage("\n§8§m-----------------------------------------------------\n"
-            + "§r §8< §4§lPURGE TERMINÉE §8> §8§m-----------------------------------------------------\n"
+            + "§r §8< §c§lPURGE TERMINÉE §8> §8§m-----------------------------------------------------\n"
             + buildSummary(top)
             + "§8§m-----------------------------------------------------");
 
         if (!top.isEmpty()) {
             FactionMessageTitle.sendPlayersTitle(20, 60, 20,
-                "§4§lPURGE TERMINÉE",
+                "§c§lPURGE TERMINÉE",
                 "§c" + playerNames.getOrDefault(top.get(0).getKey(), "?")
                     + " §7avec §e" + top.get(0).getValue() + " kills");
         } else {
             FactionMessageTitle.sendPlayersTitle(20, 60, 20,
-                "§4§lPURGE TERMINÉE", "§7Aucun vainqueur");
+                "§c§lPURGE TERMINÉE", "§7Aucun vainqueur");
         }
         for (Player p : Bukkit.getOnlinePlayers()) {
             try { p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1.0f, 1.0f); } catch (Exception ignored) {}

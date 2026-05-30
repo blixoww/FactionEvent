@@ -22,12 +22,12 @@ public class PurgeRewardCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Vous devez être un joueur.");
+            sender.sendMessage("§cVous devez être un joueur.");
             return true;
         }
         Player player = (Player) sender;
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
-        String prefix = msg.getString("purge.prefix", "§8[§4PURGE§8]§7 ");
+        String prefix = msg.getString("purge.prefix", "§8[§cPURGE§8]§7 ");
 
         if (!PurgeManager.hasRewards(player.getUniqueId())) {
             player.sendMessage(prefix + msg.getString("purge.no_rewards",

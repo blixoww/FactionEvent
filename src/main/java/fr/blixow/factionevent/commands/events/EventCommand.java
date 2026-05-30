@@ -48,7 +48,7 @@ public class EventCommand implements TabExecutor {
                 }
                 return true;
             }
-            sender.sendMessage("Vous devez être un joueur.");
+            sender.sendMessage("§cVous devez être un joueur.");
             return true;
         } catch (Exception exception) {
             exception.printStackTrace();

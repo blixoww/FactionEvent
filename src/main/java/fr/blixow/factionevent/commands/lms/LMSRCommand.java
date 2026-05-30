@@ -19,7 +19,7 @@ public class LMSRCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Cette commande peut uniquement être exécutée par un joueur.");
+            sender.sendMessage("§cVous devez être un joueur.");
             return true;
         }
 

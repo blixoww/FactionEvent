@@ -19,12 +19,12 @@ public class PurgeCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Vous devez être un joueur.");
+            sender.sendMessage("§cVous devez être un joueur.");
             return true;
         }
         Player player = (Player) sender;
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
-        String prefix = msg.getString("purge.prefix", "§8[§4PURGE§8]§7 ");
+        String prefix = msg.getString("purge.prefix", "§8[§cPURGE§8]§7 ");
 
         if (!player.hasPermission("factionevent.admin.purge")) {
             player.sendMessage(msg.getString("prefix") + msg.getString("no-permissions"));
@@ -56,7 +56,7 @@ public class PurgeCommand implements TabExecutor {
                 }
                 long elapsed = (System.currentTimeMillis() - ev.getStartTime()) / 1000;
                 int remaining = (int) Math.max(0, ev.getDuration() - elapsed);
-                player.sendMessage("§8§m      §r §8[ §4TOP PURGE §8] §m      ");
+                player.sendMessage("§8§m      §r §8[ §cTOP PURGE §8] §m      ");
                 player.sendMessage("§8» §7Temps restant : §c" + DateManager.getFormattedTime(remaining));
                 List<Map.Entry<UUID, Integer>> top = new ArrayList<>(ev.getKills().entrySet());
                 top.sort((a, b) -> b.getValue() - a.getValue());

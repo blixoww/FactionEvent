@@ -68,7 +68,7 @@ public class PlanningCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Cette commande est uniquement disponible pour les joueurs en ligne.");
+            sender.sendMessage("§cVous devez être un joueur.");
             return true;
         }
 

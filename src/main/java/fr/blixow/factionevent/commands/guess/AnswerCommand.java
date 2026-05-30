@@ -13,13 +13,13 @@ public class AnswerCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Cette commande est réservée aux joueurs.");
+            sender.sendMessage("§cVous devez être un joueur.");
             return true;
         }
 
         Player player = (Player) sender;
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
-        String prefix = msg.getString("guess.prefix", "§8[§eGuess§8] §7");
+        String prefix = msg.getString("guess.prefix", "§8[§cGuess§8]§7 ");
 
         GuessEvent currentEvent = FactionEvent.getInstance().getEventOn().getGuessEvent();
         if (currentEvent == null) {

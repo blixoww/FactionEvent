@@ -27,7 +27,7 @@ public class LMSCommand implements TabExecutor {
         Player player = (Player) sender;
 
         if (!player.hasPermission("factionevent.admin.lms")) {
-            player.sendMessage(prefix + msg.getString("no-permissions"));
+            player.sendMessage(msg.getString("prefix") + msg.getString("no-permissions"));
             return true;
         }
 

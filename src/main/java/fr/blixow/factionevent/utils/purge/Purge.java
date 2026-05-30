@@ -24,7 +24,7 @@ public class Purge {
 
     public void stop(Player... players) {
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
-        String prefix = msg.getString("purge.prefix", "§8[§4PURGE§8]§7 ");
+        String prefix = msg.getString("purge.prefix", "§8[§cPURGE§8]§7 ");
         EventOn eventOn = FactionEvent.getInstance().getEventOn();
         PurgeEvent event = eventOn.getPurgeEvent();
         if (event != null) {

@@ -25,7 +25,7 @@ public class TotemCommand implements TabExecutor {
             FileConfiguration msg = FileManager.getMessageFileConfiguration();
             String tPrefix = msg.getString("totem.prefix");
             if (!player.hasPermission("factionevent.admin.totem")) {
-                player.sendMessage(msg.getString("no-permissions"));
+                player.sendMessage(msg.getString("prefix") + msg.getString("no-permissions"));
                 return true;
             }
             if (args.length == 2) {
@@ -126,7 +126,7 @@ public class TotemCommand implements TabExecutor {
             player.sendMessage(tPrefix + msg.getString("totem.usage"));
             return true;
         }
-        sender.sendMessage("Vous devez être un joueur.");
+        sender.sendMessage("§cVous devez être un joueur.");
         return true;
     }
 

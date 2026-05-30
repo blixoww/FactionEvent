@@ -160,7 +160,7 @@ public class ClassementCommand implements TabExecutor {
             }
             return true;
         }
-        sender.sendMessage("Vous devez être un joueur pour éxécuter cette commande.");
+        sender.sendMessage("§cVous devez être un joueur.");
         return true;
     }
 

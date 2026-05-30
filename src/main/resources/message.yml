@@ -279,9 +279,9 @@ domination:
   starting_in_1mins: "§8§m-----------------------------------------------------\n§r §8< §6§lDOMINATION - DERNIERE MINUTE §8> §8§m-----------------------------------------------------\n§7La §cDomination §7commence dans §c1 minute §7!\n§7Positionnez-vous près des zones !\n§8§m-----------------------------------------------------"
 
 purge:
-  prefix: "§8[§4PURGE§8]§7 "
+  prefix: "§8[§cPURGE§8]§7 "
   usage: "§cUsage : §7/purge <start|stop|top>"
-  started: "§8§m-----------------------------------------------------\n§r §8< §4§lPURGE §8> §8§m-----------------------------------------------------\n§7La Purge commence ! Toutes les portes de claims sont ouvrables !\n§7Chaque kill rapporte de l'argent (instantané) et des items (§e/purgereward§7)\n§7Durée : §c{duration} §8| §7Top 5 récompensé en fin d'event\n§8§m-----------------------------------------------------"
+  started: "§8§m-----------------------------------------------------\n§r §8< §c§lPURGE §8> §8§m-----------------------------------------------------\n§7La Purge commence ! Toutes les portes de claims sont ouvrables !\n§7Chaque kill rapporte de l'argent (instantané) et des items (§e/purgereward§7)\n§7Durée : §c{duration} §8| §7Top 5 récompensé en fin d'event\n§8§m-----------------------------------------------------"
   canceled: "§7La Purge a été annulée."
   not_started: "§cAucune Purge en cours."
   already_started: "§cUne Purge est déjà en cours."

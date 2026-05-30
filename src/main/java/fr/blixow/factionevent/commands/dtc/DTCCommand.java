@@ -25,7 +25,7 @@ public class DTCCommand implements TabExecutor {
             FileConfiguration msg = FileManager.getMessageFileConfiguration();
             String prefix = FileManager.getMessageFileConfiguration().getString("dtc.prefix");
             if (!player.hasPermission("factionevent.admin.dtc")) {
-                player.sendMessage(prefix + FileManager.getMessageFileConfiguration().getString("no-permissions"));
+                player.sendMessage(msg.getString("prefix") + msg.getString("no-permissions"));
                 return true;
             }
             if (args.length == 2) {
@@ -70,7 +70,7 @@ public class DTCCommand implements TabExecutor {
             }
             return true;
         }
-        sender.sendMessage("Vous devez être un joueur");
+        sender.sendMessage("§cVous devez être un joueur.");
         return true;
     }
 
