@@ -42,6 +42,7 @@ public class PurgeEvent {
     private final String prefix;
 
     private final double killMoney;
+    private final boolean moneyEnabled;
     private final List<LootItemParser.LootEntry> killItemPool;
     private final int killItemsMin;
     private final int killItemsMax;
@@ -58,6 +59,7 @@ public class PurgeEvent {
 
         FileConfiguration cfg = FileManager.getConfig();
         this.duration = cfg.getInt("purge.max_duration", 1800);
+        this.moneyEnabled = cfg.getBoolean("purge.money_enabled", true);
         this.killMoney = cfg.getDouble("purge.kill_reward.money", 100.0);
         List<String> rawItems = cfg.getStringList("purge.kill_reward.items");
         this.killItemPool = LootItemParser.parse(rawItems);
@@ -91,7 +93,7 @@ public class PurgeEvent {
         playerNames.put(killerId, killer.getName());
 
         Economy eco = FactionEvent.getEconomy();
-        if (eco != null && killMoney > 0) {
+        if (moneyEnabled && eco != null && killMoney > 0) {
             try { eco.depositPlayer(killer.getName(), killMoney); } catch (Exception ignored) {}
         }
 
@@ -102,7 +104,7 @@ public class PurgeEvent {
 
         String killMsg = msg.getString("purge.kill_message",
             "§a+§e{money}$ §7pour avoir tué §c{target} §8(§e{kills} kills§8)")
-            .replace("{money}", String.valueOf((int) killMoney))
+            .replace("{money}", String.valueOf((int) (moneyEnabled ? killMoney : 0)))
             .replace("{target}", victim.getName())
             .replace("{kills}", String.valueOf(newCount));
         killer.sendMessage(prefix + killMsg);
@@ -206,7 +208,7 @@ public class PurgeEvent {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) name = p.getName();
 
-            if (eco != null && money > 0 && name != null) {
+            if (moneyEnabled && eco != null && money > 0 && name != null) {
                 try { eco.depositPlayer(name, money); } catch (Exception ignored) {}
             }
 
@@ -216,12 +218,13 @@ public class PurgeEvent {
             }
 
             if (p != null) {
-                p.sendMessage(prefix + "§6§l" + rank + "ème place §8» §a+§e"
-                    + (int) money + "$ §8| §a+§e" + drops.size()
-                    + " items §7→ /purgereward");
+                String ord = (rank == 1) ? "1er" : rank + "ème";
+                String moneyPart = (moneyEnabled && money > 0) ? "§a+§e" + (int) money + "$ §8| " : "";
+                p.sendMessage(prefix + "§6§l" + ord + " place §8» " + moneyPart
+                    + "§a+§e" + drops.size() + " items §7→ /purgereward");
                 Messages.sendTitle(p, 10, 40, 10,
-                    "§6§l" + rank + "ème",
-                    "§7+§e" + (int) money + "$ §8| §7+§e" + drops.size() + " items");
+                    "§6§l" + ord,
+                    moneyPart + "§7+§e" + drops.size() + " items");
             }
         }
 

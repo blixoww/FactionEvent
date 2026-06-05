@@ -516,6 +516,7 @@ public class DominationEvent {
         double secMoney   = config.getDouble("domination.rewards.second_money", 2500.0);
         double thirdMoney = config.getDouble("domination.rewards.third_money", 1000.0);
         String spawnCmd   = config.getString("domination.rewards.spawn_command", "spawn {player}");
+        boolean moneyOn   = config.getBoolean("domination.rewards.money_enabled", true);
 
         Faction winner = getFactionById(sorted.get(0).getKey());
         if (winner == null) return;
@@ -538,14 +539,16 @@ public class DominationEvent {
         RankingManager.addDominationWins(winner);
         RankingManager.addPoints(winner, winPoints);
         FactionMessageTitle.sendFactionTitle(winner, 20, 60, 20,
-            "§6§l🏆 VICTOIRE !", "§a+" + winPoints + " pts §8| §a+" + (int) winMoney + "$");
+            "§6§l🏆 VICTOIRE !", "§a+" + winPoints + " pts"
+                + (moneyOn && winMoney > 0 ? " §8| §a+" + (int) winMoney + "$" : ""));
         giveMoneyToFaction(winner, winMoney, winPoints, true);
 
         // ── 2nd place consolation ─────────────────────────────────────────
         if (second != null && !second.isWilderness()) {
             RankingManager.addPoints(second, secondPoints);
             FactionMessageTitle.sendFactionTitle(second, 10, 40, 10,
-                "§e§l2ème place", "§a+" + secondPoints + " pts §8| §e+" + (int) secMoney + "$");
+                "§e§l2ème place", "§a+" + secondPoints + " pts"
+                    + (moneyOn && secMoney > 0 ? " §8| §e+" + (int) secMoney + "$" : ""));
             giveMoneyToFaction(second, secMoney, secondPoints, false);
         }
 
@@ -553,7 +556,8 @@ public class DominationEvent {
         if (third != null && !third.isWilderness()) {
             RankingManager.addPoints(third, thirdPoints);
             FactionMessageTitle.sendFactionTitle(third, 10, 40, 10,
-                "§7§l3ème place", "§a+" + thirdPoints + " pts §8| §e+" + (int) thirdMoney + "$");
+                "§7§l3ème place", "§a+" + thirdPoints + " pts"
+                    + (moneyOn && thirdMoney > 0 ? " §8| §e+" + (int) thirdMoney + "$" : ""));
             giveMoneyToFaction(third, thirdMoney, thirdPoints, false);
         }
 
@@ -606,15 +610,17 @@ public class DominationEvent {
 
     private void giveMoneyToFaction(Faction faction, double amount, int points, boolean isWinner) {
         try {
+            boolean pay = FileManager.getConfig().getBoolean("domination.rewards.money_enabled", true) && amount > 0;
             Economy eco = FactionEvent.getEconomy();
             for (Player p : getOnlineFactionPlayers(faction)) {
-                if (eco != null && amount > 0) {
+                if (pay && eco != null) {
                     eco.depositPlayer(p.getName(), amount);
                 }
                 if (amount > 0) {
+                    String moneyPart = pay ? " §8| §a+" + (int) amount + "$" : "";
                     p.sendMessage(prefix + (isWinner
-                        ? "§6🏆 §aVictoire ! §7+" + points + " pts classement §8| §a+" + (int) amount + "$"
-                        : "§e🥈 Lot de consolation : §a+" + points + " pts §8| §e+" + (int) amount + "$"));
+                        ? "§6🏆 §aVictoire ! §7+" + points + " pts classement" + moneyPart
+                        : "§e🥈 Lot de consolation : §a+" + points + " pts" + moneyPart));
                 }
             }
         } catch (Exception ignored) {}

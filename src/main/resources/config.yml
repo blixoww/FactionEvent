@@ -27,6 +27,8 @@ dtc:
   win_points: 10
 
 lms:
+  # Activer/désactiver les récompenses en argent (Vault). false = aucun argent versé.
+  money_enabled: true
   # Temps en secondes nécessaire pour vérifier le temps pour les lms (en secondes)
   check_time: 10
   # Temps minimum de création d'une faction pour participer à l'événement (en secondes)
@@ -120,6 +122,8 @@ domination:
     presets: [20, 50, 100, 150]
 
   rewards:
+    # Activer/désactiver les récompenses en argent (Vault). false = aucun argent versé.
+    money_enabled: true
     # Points faction accordés au 2ème
     second_points: 5
     # Points faction accordés au 3ème
@@ -158,6 +162,8 @@ domination:
         - "EMERALD_BLOCK:3,WEIGHT:8"
 
 purge:
+  # Activer/désactiver les récompenses en argent (Vault). false = aucun argent versé.
+  money_enabled: true
   # Fréquence de vérification du timer (en secondes)
   check_time: 2
   # Durée de la Purge (en secondes) — 1800 = 30 minutes

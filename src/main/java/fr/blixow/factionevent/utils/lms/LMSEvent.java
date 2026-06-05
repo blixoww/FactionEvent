@@ -290,7 +290,7 @@ public class LMSEvent {
         for (Player winner : winners) {
             if (!winner.isOnline()) continue;
             // Argent
-            if (eco != null && winMoney > 0) {
+            if (config.getBoolean("lms.money_enabled", true) && eco != null && winMoney > 0) {
                 try { eco.depositPlayer(winner.getName(), winMoney); } catch (Exception ignored) {}
             }
             // Items
@@ -298,10 +298,13 @@ public class LMSEvent {
             for (ItemStack item : drops) {
                 LMSRewardManager.addItemReward(winner.getUniqueId(), item);
             }
-            winner.sendMessage(prefix + "§6§lVICTOIRE ! §a+§e" + (int) winMoney
-                + "$ §8| §a+§e" + drops.size() + " items §7→ /lmsreward");
+            boolean moneyOn = config.getBoolean("lms.money_enabled", true) && winMoney > 0;
+            String msgMoney = moneyOn ? "§a+§e" + (int) winMoney + "$ §8| " : "";
+            String titleMoney = moneyOn ? "§7+§e" + (int) winMoney + "$ §8| " : "";
+            winner.sendMessage(prefix + "§6§lVICTOIRE ! " + msgMoney
+                + "§a+§e" + drops.size() + " items §7→ /lmsreward");
             Messages.sendTitle(winner, 20, 60, 20,
-                "§6§l👑 VICTOIRE", "§7+§e" + (int) winMoney + "$ §8| §7+§e" + drops.size() + " items");
+                "§6§l👑 VICTOIRE", titleMoney + "§7+§e" + drops.size() + " items");
             try { winner.playSound(winner.getLocation(), Sound.LEVEL_UP, 1f, 1f); } catch (Exception ignored) {}
         }
 
@@ -347,7 +350,7 @@ public class LMSEvent {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) playerName = p.getName();
 
-            if (eco != null && money > 0 && playerName != null) {
+            if (config.getBoolean("lms.money_enabled", true) && eco != null && money > 0 && playerName != null) {
                 try { eco.depositPlayer(playerName, money); } catch (Exception ignored) {}
             }
 
@@ -357,8 +360,11 @@ public class LMSEvent {
             }
 
             if (p != null) {
-                p.sendMessage(prefix + "§6§l" + r + "ème meilleur killer §8» §a+§e"
-                    + (int) money + "$ §8| §a+§e" + drops.size() + " items §7→ /lmsreward");
+                String ord = (r == 1) ? "1er" : r + "ème";
+                String moneyPart = (config.getBoolean("lms.money_enabled", true) && money > 0)
+                    ? "§a+§e" + (int) money + "$ §8| " : "";
+                p.sendMessage(prefix + "§6§l" + ord + " meilleur killer §8» " + moneyPart
+                    + "§a+§e" + drops.size() + " items §7→ /lmsreward");
             }
         }
     }

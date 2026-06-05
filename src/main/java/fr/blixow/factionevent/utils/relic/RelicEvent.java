@@ -535,12 +535,17 @@ public class RelicEvent {
 
             if (p != null && p.isOnline()) {
                 String moneyPart = (moneyEnabled && money > 0) ? "§a+§e" + (int) money + "$ §8| " : "";
-                p.sendMessage(prefix + "§6§l" + rank + "ème place §8» " + moneyPart
+                p.sendMessage(prefix + "§6§l" + ordinal(rank) + " place §8» " + moneyPart
                     + "§a+§e" + drops.size() + " §aitems §7→ §e/relicreward");
-                Messages.sendTitle(p, 10, 40, 10, "§6§l" + rank + "ème",
+                Messages.sendTitle(p, 10, 40, 10, "§6§l" + ordinal(rank),
                     moneyPart + "§7+§e" + drops.size() + " items");
             }
         }
+    }
+
+    /** Ordinal français : 1 → "1er", sinon "Nème". */
+    private String ordinal(int rank) {
+        return rank == 1 ? "1er" : rank + "ème";
     }
 
     private String buildFinalLeaderboard(List<Map.Entry<UUID, Long>> top) {
