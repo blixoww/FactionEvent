@@ -16,6 +16,7 @@ import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
 import fr.blixow.factionevent.utils.purge.PurgeEvent;
+import fr.blixow.factionevent.utils.relic.RelicEvent;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
 
 import java.util.HashMap;
@@ -45,9 +46,14 @@ import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityCombustByBlockEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
 
@@ -94,6 +100,10 @@ public class CustomEvents implements Listener {
         }
         if (FactionEvent.getInstance().getEventOn().getDominationEvent() != null) {
             FactionEvent.getInstance().getEventOn().getDominationEvent().removePlayer(player);
+        }
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent != null) {
+            relicEvent.removePlayer(player);
         }
         FactionEvent.getInstance().getEventScoreboardOff().remove(player);
         lmsSavedPower.remove(player.getUniqueId());
@@ -312,6 +322,13 @@ public class CustomEvents implements Listener {
             Player killer = player.getKiller();
             purgeEvent.handleKill(killer, player);
         }
+        // Relic — le porteur meurt : la relique tombe à l'endroit de la mort
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent != null && relicEvent.isCarrier(player)) {
+            // Retire la relique des drops : RelicEvent en fait réapparaître une au sol (anti-doublon)
+            event.getDrops().removeIf(relicEvent::isRelic);
+            relicEvent.handleCarrierDeath(player);
+        }
     }
 
     @EventHandler
@@ -492,5 +509,134 @@ public class CustomEvents implements Listener {
             }
             event.setCancelled(true);
         }
+    }
+
+    // RELIC — Course à la Relique
+
+    /** Chaque coup réellement porté au porteur a une probabilité de faire tomber la relique. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onRelicHit(EntityDamageByEntityEvent event) {
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent == null || relicEvent.isEnded()) return;
+        if (!(event.getEntity() instanceof Player)) return;
+        Player victim = (Player) event.getEntity();
+        if (!relicEvent.isCarrier(victim)) return;
+
+        Player attacker = null;
+        Entity damager = event.getDamager();
+        if (damager instanceof Player) {
+            attacker = (Player) damager;
+        } else if (damager instanceof Projectile && ((Projectile) damager).getShooter() instanceof Player) {
+            attacker = (Player) ((Projectile) damager).getShooter();
+        }
+        if (attacker == null || attacker.equals(victim)) return;
+
+        relicEvent.handleHit(victim, attacker);
+    }
+
+    /**
+     * Le ramassage de la relique se fait en traversant les particules (géré par proximité dans
+     * RelicEvent, l'item au sol ayant un délai de ramassage infini). Ce handler est purement
+     * défensif : il empêche qu'une éventuelle entité-relique soit aspirée dans un inventaire.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onRelicPickup(PlayerPickupItemEvent event) {
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent == null || relicEvent.isEnded()) return;
+        if (event.getItem().hasMetadata("fe_relic") || relicEvent.isRelic(event.getItem().getItemStack())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /** Bloque les commandes de téléportation tant qu'on porte la Relique. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onRelicTeleportCommand(PlayerCommandPreprocessEvent event) {
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent == null || relicEvent.isEnded()) return;
+        if (!relicEvent.isCarrier(event.getPlayer())) return;
+
+        // Message envoyé sans le slash, en minuscules, espaces normalisés
+        String raw = event.getMessage().toLowerCase().trim();
+        if (raw.startsWith("/")) raw = raw.substring(1);
+        raw = raw.replaceAll("\\s+", " ");
+
+        java.util.List<String> blocked = FileManager.getConfig().getStringList("relic.blocked_commands");
+        if (blocked == null || blocked.isEmpty()) {
+            blocked = java.util.Arrays.asList("spawn", "f home", "home", "back", "rtp", "warp", "tpa");
+        }
+        for (String entry : blocked) {
+            if (entry == null || entry.trim().isEmpty()) continue;
+            String b = entry.toLowerCase().trim().replaceAll("\\s+", " ");
+            if (b.startsWith("/")) b = b.substring(1);
+            // Match commande exacte ou commande + arguments (ex. "f home" matche "f home base")
+            if (raw.equals(b) || raw.startsWith(b + " ")) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(FileManager.getMessageFileConfiguration().getString("relic.prefix", "§8[§dRELIQUE§8]§7 ")
+                    + FileManager.getMessageFileConfiguration().getString("relic.tp_blocked",
+                    "§cImpossible de vous téléporter tant que vous portez la Relique !"));
+                return;
+            }
+        }
+    }
+
+    /** Le porteur ne peut pas déposer volontairement la relique (touche Q). */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onRelicDrop(PlayerDropItemEvent event) {
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent == null || relicEvent.isEnded()) return;
+        if (!relicEvent.isRelic(event.getItemDrop().getItemStack())) return;
+        event.setCancelled(true);
+        Player player = event.getPlayer();
+        player.sendMessage(FileManager.getMessageFileConfiguration().getString("relic.prefix", "§8[§dRELIQUE§8]§7 ")
+            + FileManager.getMessageFileConfiguration().getString("relic.cannot_drop",
+            "§cVous ne pouvez pas déposer la Relique : gardez-la ou faites-vous toucher !"));
+    }
+
+    /** La relique ne peut être déposée dans aucun conteneur (coffre, enderchest, etc.). */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onRelicInventoryClick(InventoryClickEvent event) {
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent == null || relicEvent.isEnded()) return;
+        if (!isContainerOpen(event.getView().getTopInventory())) return;
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        ItemStack hotbarSwap = (event.getHotbarButton() >= 0)
+            ? ((Player) event.getWhoClicked()).getInventory().getItem(event.getHotbarButton()) : null;
+        if (relicEvent.isRelic(event.getCurrentItem())
+                || relicEvent.isRelic(event.getCursor())
+                || relicEvent.isRelic(hotbarSwap)) {
+            event.setCancelled(true);
+            warnRelicStore((Player) event.getWhoClicked());
+        }
+    }
+
+    /** Empêche le drag-and-drop de la relique vers un conteneur. */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onRelicInventoryDrag(InventoryDragEvent event) {
+        RelicEvent relicEvent = FactionEvent.getInstance().getEventOn().getRelicEvent();
+        if (relicEvent == null || relicEvent.isEnded()) return;
+        if (!isContainerOpen(event.getView().getTopInventory())) return;
+        if (!relicEvent.isRelic(event.getOldCursor())) return;
+        int topSize = event.getView().getTopInventory().getSize();
+        for (int rawSlot : event.getRawSlots()) {
+            if (rawSlot < topSize) { // un slot du conteneur est ciblé
+                event.setCancelled(true);
+                if (event.getWhoClicked() instanceof Player) warnRelicStore((Player) event.getWhoClicked());
+                return;
+            }
+        }
+    }
+
+    private boolean isContainerOpen(Inventory top) {
+        if (top == null) return false;
+        InventoryType type = top.getType();
+        // CRAFTING = inventaire du joueur (grille 2x2), PLAYER = inventaire pur : aucun conteneur ouvert
+        return type != InventoryType.CRAFTING && type != InventoryType.PLAYER;
+    }
+
+    private void warnRelicStore(Player player) {
+        player.sendMessage(FileManager.getMessageFileConfiguration().getString("relic.prefix", "§8[§dRELIQUE§8]§7 ")
+            + FileManager.getMessageFileConfiguration().getString("relic.cannot_store",
+            "§cLa Relique ne peut pas être rangée dans un conteneur pendant l'event !"));
     }
 }

@@ -236,6 +236,76 @@ purge:
         - "GOLDEN_APPLE:1,WEIGHT:8"
         - "EXP_BOTTLE:8,WEIGHT:7"
 
+relic:
+  # Fréquence de vérification du timer (en secondes)
+  check_time: 2
+  # Durée de l'événement (en secondes) — 900 = 15 minutes
+  max_duration: 900
+  # Points de classement gagnés par seconde par la faction du porteur
+  points_per_second: 1
+  # Probabilité (en %) qu'un coup porté au porteur fasse tomber la Relique
+  drop_chance: 15
+  # Délai (en secondes) avant qu'une Relique tombée au sol puisse être reprise (traversée)
+  pickup_delay: 3
+  # Distance (en blocs) pour ramasser la Relique en traversant les particules
+  pickup_radius: 2.0
+  # Intervalle (en secondes) entre deux ré-annonces du porteur + ses coordonnées dans le chat
+  announce_interval: 20
+  # Bonus de points de classement accordé à la faction du vainqueur en fin d'event
+  win_points: 25
+  # Item utilisé comme Relique (Format : MATERIAL:quantité) — modifiable à volonté
+  relic_item: "NETHER_STAR:1"
+  # Nom affiché de la Relique
+  relic_name: "§d§l✦ Relique d'Event ✦"
+
+  # Commandes bloquées tant qu'un joueur porte la Relique (sans le slash).
+  # Le blocage cesse dès que la Relique est perdue. Ajoutez-en autant que voulu.
+  blocked_commands:
+    - "spawn"
+    - "f home"
+    - "home"
+    - "back"
+    - "rtp"
+    - "warp"
+    - "tpa"
+
+  rewards:
+    # Commande console pour téléporter le vainqueur au spawn (%player% = nom du joueur)
+    spawn_command: "spawn %player%"
+    # Activer/désactiver les récompenses en argent (Vault). false = aucun argent versé.
+    money_enabled: true
+    # Récompenses des 3 meilleurs porteurs (temps cumulé). Décroissant : le 1er gagne plus.
+    # Argent versé immédiatement (si money_enabled), items en attente via /relicreward.
+    # Format items : MATERIAL:quantité[,ENCHANTMENT:NOM,LEVEL:valeur,...][,WEIGHT:poids]
+    ranks:
+      "1":
+        money: 5000
+        items_min: 3
+        items_max: 5
+        items:
+          - "COBALT_SWORD:1,ENCHANTMENT:SHARPNESS,LEVEL:5,ENCHANTMENT:FIRE_ASPECT,LEVEL:2,WEIGHT:4"
+          - "RUBY_CHESTPLATE:1,ENCHANTMENT:PROTECTION,LEVEL:4,WEIGHT:5"
+          - "GOLDEN_APPLE:8,WEIGHT:8"
+          - "RUBY:8,WEIGHT:6"
+          - "OBSIDIAN:32,WEIGHT:8"
+      "2":
+        money: 2500
+        items_min: 2
+        items_max: 3
+        items:
+          - "RUBY_HELMET:1,ENCHANTMENT:PROTECTION,LEVEL:3,WEIGHT:5"
+          - "GOLDEN_APPLE:5,WEIGHT:8"
+          - "RUBY:4,WEIGHT:6"
+          - "OBSIDIAN:16,WEIGHT:8"
+      "3":
+        money: 1000
+        items_min: 1
+        items_max: 2
+        items:
+          - "GOLDEN_APPLE:3,WEIGHT:8"
+          - "RUBY:2,WEIGHT:6"
+          - "EXP_BOTTLE:16,WEIGHT:7"
+
 falling_chest:
   # Monde où le coffre peut apparaître
   world: "world"

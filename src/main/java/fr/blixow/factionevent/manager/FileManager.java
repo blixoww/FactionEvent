@@ -159,6 +159,14 @@ public class FileManager {
         return FactionEvent.getInstance().getDominationFileConfiguration();
     }
 
+    public static FileConfiguration getRelicDataFC() {
+        return FactionEvent.getInstance().getRelicFileConfiguration();
+    }
+
+    public static FileConfiguration getRelicRewardsDataFC() {
+        return FactionEvent.getInstance().getRelicRewardsFileConfiguration();
+    }
+
     public static FileConfiguration getPurgeRewardsDataFC() {
         return FactionEvent.getInstance().getPurgeRewardsFileConfiguration();
     }
@@ -188,6 +196,8 @@ public class FileManager {
         FileManager.createDataFile("eventManager.yml");
         FileManager.createDataFile("classement.yml");
         FileManager.createDataFile("domination.yml");
+        FileManager.createDataFile("relic.yml");
+        FileManager.createDataFile("relicRewards.yml");
         FileManager.createDataFile("purgeRewards.yml");
         FileManager.createDataFile("lmsRewards.yml");
     }
@@ -207,6 +217,8 @@ public class FileManager {
             instance.setEventManagerFileConfiguration(loadUtf8(getDataFile("eventManager.yml")));
             instance.setClassementFileConfiguration(loadUtf8(getDataFile("classement.yml")));
             instance.setDominationFileConfiguration(loadUtf8(getDataFile("domination.yml")));
+            instance.setRelicFileConfiguration(loadUtf8(getDataFile("relic.yml")));
+            instance.setRelicRewardsFileConfiguration(loadUtf8(getDataFile("relicRewards.yml")));
             instance.setPurgeRewardsFileConfiguration(loadUtf8(getDataFile("purgeRewards.yml")));
             instance.setLMSRewardsFileConfiguration(loadUtf8(getDataFile("lmsRewards.yml")));
             LocalDateTime localDateTime = LocalDateTime.now();
@@ -240,6 +252,8 @@ public class FileManager {
             saveWithUtf8(instance.getEventManagerFileConfiguration(), getDataFile("eventManager.yml"));
             saveWithUtf8(instance.getClassementFileConfiguration(), getDataFile("classement.yml"));
             saveWithUtf8(instance.getDominationFileConfiguration(), getDataFile("domination.yml"));
+            saveWithUtf8(instance.getRelicFileConfiguration(), getDataFile("relic.yml"));
+            saveWithUtf8(instance.getRelicRewardsFileConfiguration(), getDataFile("relicRewards.yml"));
             saveWithUtf8(instance.getPurgeRewardsFileConfiguration(), getDataFile("purgeRewards.yml"));
             saveWithUtf8(instance.getLMSRewardsFileConfiguration(), getDataFile("lmsRewards.yml"));
         } catch (IOException e) {

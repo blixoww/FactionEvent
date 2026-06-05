@@ -73,3 +73,11 @@ commands:
     usage: /purgereward
     description: Récupère les items gagnés pendant la Purge
     aliases: [pgr, purgerewards]
+  relic:
+    usage: /relic <start|stop|list|addspawn|delspawn|tp|save>
+    description: Gestion de la Course à la Relique
+    aliases: [relique, course]
+  relicreward:
+    usage: /relicreward
+    description: Récupère les items gagnés pendant la Course à la Relique
+    aliases: [rr, relicrewards, reliquereward]

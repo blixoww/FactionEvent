@@ -174,6 +174,32 @@ public class RankingManager {
         }
     }
 
+    public static int getRelicWins(Faction faction) {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            String path = faction.getId() + ".relic";
+            if (fc.contains(path)) {
+                return Integer.parseInt(fc.getString(path));
+            }
+            return 0;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return 0;
+        }
+    }
+
+    public static void addRelicWins(Faction faction) {
+        try {
+            FileConfiguration fc = FileManager.getClassementFC();
+            String path = faction.getId() + ".relic";
+            int wins = getRelicWins(faction) + 1;
+            fc.set(path, wins);
+            fc.save(FileManager.getDataFile("classement.yml"));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
     public static void logsMessage(String message) {
         try {
             FileConfiguration logs = FileManager.getLogsFC();

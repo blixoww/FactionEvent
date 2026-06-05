@@ -16,6 +16,8 @@ import fr.blixow.factionevent.commands.lms.LMSRCommand;
 import fr.blixow.factionevent.commands.lms.LMSRewardCommand;
 import fr.blixow.factionevent.commands.purge.PurgeCommand;
 import fr.blixow.factionevent.commands.purge.PurgeRewardCommand;
+import fr.blixow.factionevent.commands.relic.RelicCommand;
+import fr.blixow.factionevent.commands.relic.RelicRewardCommand;
 import fr.blixow.factionevent.commands.planning.PlanningAddCommand;
 import fr.blixow.factionevent.commands.planning.PlanningCommand;
 import fr.blixow.factionevent.commands.planning.PlanningRemoveCommand;
@@ -42,6 +44,9 @@ import fr.blixow.factionevent.utils.koth.KOTHManager;
 import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSManager;
 import fr.blixow.factionevent.utils.purge.PurgeManager;
+import fr.blixow.factionevent.utils.relic.RelicManager;
+import fr.blixow.factionevent.utils.relic.RelicRewardManager;
+import fr.blixow.factionevent.utils.relic.RelicSpawn;
 import fr.blixow.factionevent.utils.lms.LMSRewardManager;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEditor;
@@ -82,6 +87,11 @@ public final class FactionEvent extends JavaPlugin {
     private FileConfiguration dominationFileConfiguration;
     // Coffres de loot Domination → faction gagnante autorisée à les ouvrir
     private HashMap<org.bukkit.Location, Faction> dominationLootChests = new HashMap<>();
+
+    // Relic (Course à la Relique)
+    private ArrayList<RelicSpawn> listRelicSpawns;
+    private FileConfiguration relicFileConfiguration;
+    private FileConfiguration relicRewardsFileConfiguration;
 
     // EventOn instance manager
     private EventOn eventOn;
@@ -192,6 +202,10 @@ public final class FactionEvent extends JavaPlugin {
         getCommand("purge").setExecutor(new PurgeCommand());
         getCommand("purge").setTabCompleter(new PurgeCommand());
         getCommand("purgereward").setExecutor(new PurgeRewardCommand());
+        // Relic (Course à la Relique)
+        getCommand("relic").setExecutor(new RelicCommand());
+        getCommand("relic").setTabCompleter(new RelicCommand());
+        getCommand("relicreward").setExecutor(new RelicRewardCommand());
         // Event
         getCommand("event").setExecutor(new EventCommand());
         getCommand("event").setTabCompleter(new EventCommand());
@@ -218,6 +232,7 @@ public final class FactionEvent extends JavaPlugin {
         listDTC = new ArrayList<>();
         listLMS = new ArrayList<>();
         listDominationZones = new ArrayList<>();
+        listRelicSpawns = new ArrayList<>();
         playerTotemEditorHashMap = new HashMap<>();
         eventManagerMap = new HashMap<>();
         factionRankings = new LinkedHashMap<>();
@@ -232,6 +247,8 @@ public final class FactionEvent extends JavaPlugin {
         LMSManager.loadLMSfromFile();
         GuessManager.loadWordsFromConfig();
         DominationManager.loadZones();
+        RelicManager.loadSpawns();
+        RelicRewardManager.loadRewards();
         PurgeManager.loadRewards();
         LMSRewardManager.loadRewards();
         planningEvents = loadPlanning();
@@ -434,6 +451,30 @@ public final class FactionEvent extends JavaPlugin {
 
     public HashMap<org.bukkit.Location, Faction> getDominationLootChests() {
         return dominationLootChests;
+    }
+
+    public ArrayList<RelicSpawn> getListRelicSpawns() {
+        return listRelicSpawns;
+    }
+
+    public void setListRelicSpawns(ArrayList<RelicSpawn> listRelicSpawns) {
+        this.listRelicSpawns = listRelicSpawns;
+    }
+
+    public FileConfiguration getRelicFileConfiguration() {
+        return relicFileConfiguration;
+    }
+
+    public void setRelicFileConfiguration(FileConfiguration relicFileConfiguration) {
+        this.relicFileConfiguration = relicFileConfiguration;
+    }
+
+    public FileConfiguration getRelicRewardsFileConfiguration() {
+        return relicRewardsFileConfiguration;
+    }
+
+    public void setRelicRewardsFileConfiguration(FileConfiguration relicRewardsFileConfiguration) {
+        this.relicRewardsFileConfiguration = relicRewardsFileConfiguration;
     }
 
     public EventOn getEventOn() {

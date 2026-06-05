@@ -16,6 +16,8 @@ import fr.blixow.factionevent.utils.lms.LMS;
 import fr.blixow.factionevent.utils.lms.LMSEvent;
 import fr.blixow.factionevent.utils.purge.Purge;
 import fr.blixow.factionevent.utils.purge.PurgeEvent;
+import fr.blixow.factionevent.utils.relic.Relic;
+import fr.blixow.factionevent.utils.relic.RelicEvent;
 import fr.blixow.factionevent.utils.totem.Totem;
 import fr.blixow.factionevent.utils.totem.TotemEvent;
 import org.bukkit.Bukkit;
@@ -33,6 +35,7 @@ public class EventOn {
     private GuessEvent guessEvent;
     private DominationEvent dominationEvent;
     private PurgeEvent purgeEvent;
+    private RelicEvent relicEvent;
     private ArrayList<Object> queue;
     private final FileConfiguration msg;
 
@@ -45,6 +48,7 @@ public class EventOn {
         this.guessEvent = null;
         this.dominationEvent = null;
         this.purgeEvent = null;
+        this.relicEvent = null;
         this.queue = new ArrayList<>();
         new BukkitRunnable() {
             @Override
@@ -74,6 +78,9 @@ public class EventOn {
                             } else if (o instanceof Purge) {
                                 Purge purge = (Purge) o;
                                 purge.start();
+                            } else if (o instanceof Relic) {
+                                Relic relic = (Relic) o;
+                                relic.start();
                             }
                             queue.remove(0);
                         }
@@ -87,7 +94,7 @@ public class EventOn {
     }
 
     public boolean canStartAnEvent() {
-        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null && guessEvent == null && dominationEvent == null && purgeEvent == null;
+        return kothEvent == null && totemEvent == null && dtcEvent == null && lmsEvent == null && guessEvent == null && dominationEvent == null && purgeEvent == null && relicEvent == null;
     }
 
     public void start(KOTH koth, Player... players) {
@@ -422,6 +429,76 @@ public class EventOn {
         queue.add(purge);
     }
 
+    public void start(Relic relic, Player... players) {
+        if (this.canStartAnEvent()) {
+            this.relicEvent = new RelicEvent(relic);
+            FileConfiguration freshMsg = FileManager.getMessageFileConfiguration();
+            FileConfiguration config = FileManager.getConfig();
+            int check_time = 1;
+            try {
+                if (config.contains("relic.check_time")) {
+                    check_time = Math.max(1, config.getInt("relic.check_time"));
+                }
+            } catch (Exception ignored) {}
+            final int finalCheckTime = check_time;
+
+            int duration = config.getInt("relic.max_duration", 900);
+            String startedMsg = freshMsg.getString("relic.started",
+                "§8§m-----------------------------------------------------\n"
+                + "§r §8< §d§lCOURSE À LA RELIQUE §8> §8§m-----------------------------------------------------\n"
+                + "§7Une Relique est apparue dans la warzone ! Emparez-vous-en !\n"
+                + "§7Le porteur fait gagner des points à sa faction... mais devient une cible.\n"
+                + "§7Durée : §d{duration}\n"
+                + "§8§m-----------------------------------------------------");
+            try {
+                int minutes = duration / 60;
+                String dur = (minutes > 0 ? minutes + "m" : duration + "s");
+                if (startedMsg != null) {
+                    startedMsg = startedMsg
+                        .replace("{duration}", dur)
+                        .replace("{seconds}", String.valueOf(duration));
+                }
+            } catch (Exception ignored) {}
+            Bukkit.broadcastMessage(addProportionalLines(startedMsg));
+
+            FactionMessageTitle.sendPlayersTitle(20, 40, 20,
+                "§d§l✦ RELIQUE", "§7Emparez-vous de la Relique !");
+
+            // Runnable 1 sec : score + boussole + action bar
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (relicEvent == null) { cancel(); return; }
+                    relicEvent.tick();
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, 20L);
+
+            // Runnable visuel (particules + anti-despawn) toutes les 5 ticks
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (relicEvent == null) { cancel(); return; }
+                    relicEvent.visualTick();
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 5L, 5L);
+
+            // Runnable vérification fin d'event
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (relicEvent == null) { cancel(); return; }
+                    if (relicEvent.checkTimer()) { cancel(); }
+                }
+            }.runTaskTimer(FactionEvent.getInstance(), 20L, finalCheckTime * 20L);
+            return;
+        }
+        String queueMessage = msg.getString("relic.prefix", "§8[§dRELIQUE§8]§7 ")
+            + msg.getString("relic.adding_to_queue",
+                "§7Un événement est déjà en cours. La Course à la Relique sera lancée automatiquement ensuite.");
+        FactionMessageTitle.sendPlayersMessage(addProportionalLines(queueMessage), players);
+        queue.add(relic);
+    }
+
     public void stopCurrentEvent() {
         if (!canStartAnEvent()) {
             if (kothEvent != null) {
@@ -444,6 +521,9 @@ public class EventOn {
             }
             if (purgeEvent != null) {
                 new Purge().stop();
+            }
+            if (relicEvent != null) {
+                new Relic(null).stop();
             }
         }
     }
@@ -519,6 +599,14 @@ public class EventOn {
 
     public void setPurgeEvent(PurgeEvent purgeEvent) {
         this.purgeEvent = purgeEvent;
+    }
+
+    public RelicEvent getRelicEvent() {
+        return relicEvent;
+    }
+
+    public void setRelicEvent(RelicEvent relicEvent) {
+        this.relicEvent = relicEvent;
     }
 
     private String addProportionalLines(String message) {
