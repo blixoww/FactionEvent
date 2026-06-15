@@ -251,6 +251,7 @@ faction_classement:
     - "§8» §cDTC gagnés : §e{nb_dtc}"
     - "§8» §cLMS gagnés : §e{nb_lms}"
     - "§8» §cDomination gagnées : §e{nb_domination}"
+    - "§8» §cReliques gagnées : §e{nb_relic}"
 
 domination:
   prefix: "§8[§cDOMINATION§8]§7 "

@@ -223,7 +223,7 @@ public class RankingManager {
     public static String getFactionsInformations(FileConfiguration fc, String id) {
         try {
             if (fc.contains(id)) {
-                String points = "0", koth = "0", totem = "0", dtc = "0", lms = "0", domination = "0";
+                String points = "0", koth = "0", totem = "0", dtc = "0", lms = "0", domination = "0", relic = "0";
                 if (fc.contains(id + ".points")) {
                     points = String.valueOf(fc.getInt(id + ".points"));
                 }
@@ -242,12 +242,15 @@ public class RankingManager {
                 if (fc.contains(id + ".domination")) {
                     domination = String.valueOf(fc.getInt(id + ".domination"));
                 }
-                return points + "-" + koth + "-" + totem + "-" + dtc + "-" + lms + "-" + domination;
+                if (fc.contains(id + ".relic")) {
+                    relic = String.valueOf(fc.getInt(id + ".relic"));
+                }
+                return points + "-" + koth + "-" + totem + "-" + dtc + "-" + lms + "-" + domination + "-" + relic;
             }
         } catch (Exception exception) {
             exception.printStackTrace();
         }
-        return "0-0-0-0-0-0";
+        return "0-0-0-0-0-0-0";
     }
 
     public static void updateRanking(boolean broadcast) {
@@ -336,6 +339,7 @@ public class RankingManager {
             fc.set(id + ".dtc", 0);
             fc.set(id + ".lms", 0);
             fc.set(id + ".domination", 0);
+            fc.set(id + ".relic", 0);
             fc.save(FileManager.getDataFile("classement.yml"));
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -354,6 +358,7 @@ public class RankingManager {
                 fc.set(id + ".dtc", 0);
                 fc.set(id + ".lms", 0);
                 fc.set(id + ".domination", 0);
+                fc.set(id + ".relic", 0);
             }
             // Also, in case there are leftover entries not matching current factions, clear them
             // Iterate keys at root
@@ -366,6 +371,7 @@ public class RankingManager {
                 fc.set(key + ".dtc", 0);
                 fc.set(key + ".lms", 0);
                 fc.set(key + ".domination", 0);
+                fc.set(key + ".relic", 0);
             }
             fc.save(FileManager.getDataFile("classement.yml"));
         } catch (Exception exception) {

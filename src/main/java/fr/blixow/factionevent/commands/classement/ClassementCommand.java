@@ -109,7 +109,7 @@ public class ClassementCommand implements TabExecutor {
                 if(factions == null){
                     player.sendMessage("§7La faction §c" + args[0] + " §7n'existe pas");
                 } else {
-                    int points = 0, koth = 0, totem = 0, dtc = 0, lms = 0, domination = 0;
+                    int points = 0, koth = 0, totem = 0, dtc = 0, lms = 0, domination = 0, relic = 0;
                     try {
                         String[] factionInformations = RankingManager.getFactionsInformations(fc, factions.getId()).split("-");
                         points = Integer.parseInt(factionInformations[0]);
@@ -118,6 +118,7 @@ public class ClassementCommand implements TabExecutor {
                         dtc = Integer.parseInt(factionInformations[3]);
                         lms = Integer.parseInt(factionInformations[4]);
                         if (factionInformations.length >= 6) domination = Integer.parseInt(factionInformations[5]);
+                        if (factionInformations.length >= 7) relic = Integer.parseInt(factionInformations[6]);
                         if(msg.contains("faction_classement.title") && msg.contains("faction_classement.footer") && msg.contains("faction_classement.lines")){
                             String title = new StrManager(msg.getString("faction_classement.title")).reFaction(factions.getTag()).toString();
                             String footer = new StrManager(msg.getString("faction_classement.footer")).reFaction(factions.getTag()).toString();
@@ -132,6 +133,7 @@ public class ClassementCommand implements TabExecutor {
                                         .reCustom("{nb_dtc}", String.valueOf(dtc))
                                         .reCustom("{nb_lms}", String.valueOf(lms))
                                         .reCustom("{nb_domination}", String.valueOf(domination))
+                                        .reCustom("{nb_relic}", String.valueOf(relic))
                                         .toString();
                                 player.sendMessage(line_custom);
                             }
@@ -146,6 +148,7 @@ public class ClassementCommand implements TabExecutor {
                             player.sendMessage("§8» §cDTC gagnés : §7" + dtc);
                             player.sendMessage("§8» §cLMS gagnés : §7" + lms);
                             player.sendMessage("§8» §cDomination gagnées : §7" + domination);
+                            player.sendMessage("§8» §cReliques gagnées : §7" + relic);
                             player.sendMessage("");
                             player.sendMessage("§8§m-----§r§8[§e" + factions.getTag() + "§8]§m-----");
                         }
