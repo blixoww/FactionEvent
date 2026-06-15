@@ -81,8 +81,10 @@ public class LMS {
         boolean isLeaderOrOfficer = role == Role.ADMIN || role == Role.MODERATOR || role == Role.COLEADER;
         if (!isLeaderOrOfficer) {
             boolean anyLeaderOrOfficerOnline = false;
-            for (FPlayer fp : FPlayers.getInstance().getOnlinePlayers()) {
-                if (fp.getFaction().getId().equals(faction.getId())
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                if (online == null || !online.isOnline()) continue;
+                FPlayer fp = FPlayers.getInstance().getByPlayer(online);
+                if (fp != null && fp.getFaction().getId().equals(faction.getId())
                         && (fp.getRole() == Role.ADMIN || fp.getRole() == Role.MODERATOR || fp.getRole() == Role.COLEADER)) {
                     anyLeaderOrOfficerOnline = true;
                     break;

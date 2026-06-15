@@ -844,11 +844,11 @@ public class DominationEvent {
 
     private List<Player> getOnlineFactionPlayers(Faction faction) {
         List<Player> list = new ArrayList<>();
-        for (FPlayer fp : FPlayers.getInstance().getOnlinePlayers()) {
-            if (fp.getFaction().equals(faction)) {
-                Player p = Bukkit.getPlayer(fp.getName());
-                if (p != null && p.isOnline()) list.add(p);
-            }
+        if (faction == null) return list;
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p == null || !p.isOnline()) continue;
+            FPlayer fp = FPlayers.getInstance().getByPlayer(p);
+            if (fp != null && faction.equals(fp.getFaction())) list.add(p);
         }
         return list;
     }

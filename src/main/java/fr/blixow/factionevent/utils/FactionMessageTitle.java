@@ -20,12 +20,12 @@ public class FactionMessageTitle {
      */
     private static List<Player> getOnlineFactionPlayers(Faction faction) {
         List<Player> players = new ArrayList<>();
-        for (FPlayer fPlayer : FPlayers.getInstance().getOnlinePlayers()) {
-            if (fPlayer.getFaction().equals(faction)) {
-                Player player = Bukkit.getPlayer(fPlayer.getName());
-                if (player != null && player.isOnline()) {
-                    players.add(player);
-                }
+        if (faction == null) return players;
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player == null || !player.isOnline()) continue;
+            FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+            if (fPlayer != null && faction.equals(fPlayer.getFaction())) {
+                players.add(player);
             }
         }
         return players;

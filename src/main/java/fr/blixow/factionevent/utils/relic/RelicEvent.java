@@ -438,73 +438,74 @@ public class RelicEvent {
         accumulateCarry();
         ended = true;
 
-        // Conversion des points faction accumulés (par seconde de portage)
-        for (Map.Entry<String, Integer> e : factionScores.entrySet()) {
-            Faction f = getFactionById(e.getKey());
-            if (f != null && !f.isWilderness() && e.getValue() > 0) {
-                RankingManager.addPoints(f, e.getValue());
+        try {
+            // Conversion des points faction accumulés (par seconde de portage)
+            for (Map.Entry<String, Integer> e : factionScores.entrySet()) {
+                Faction f = getFactionById(e.getKey());
+                if (f != null && !f.isWilderness() && e.getValue() > 0) {
+                    RankingManager.addPoints(f, e.getValue());
+                }
             }
-        }
 
-        List<Map.Entry<UUID, Long>> top = sortedStandings();
+            List<Map.Entry<UUID, Long>> top = sortedStandings();
 
-        // Personne n'a jamais porté la relique → l'event est simplement annulé en fin de temps
-        // (aucun vainqueur, aucune récompense, aucun point). La relique au sol est retirée par cleanup().
-        if (top.isEmpty()) {
+            // Personne n'a jamais porté la relique → l'event est simplement annulé en fin de temps
+            // (aucun vainqueur, aucune récompense, aucun point). La relique au sol est retirée par cleanup().
+            if (top.isEmpty()) {
+                Bukkit.broadcastMessage("\n§8§m-----------------------------------------------------\n"
+                    + "§r §8< §d§lCOURSE À LA RELIQUE §8> §8§m-----------------------------------------------------\n"
+                    + "§7Le temps est écoulé : §cpersonne n'a porté la Relique§7. Event annulé.\n"
+                    + "§8§m-----------------------------------------------------");
+                return;
+            }
+
+            // Vainqueur = plus long porteur cumulé
+            UUID winnerId = top.get(0).getKey();
+            String winnerName = playerNames.getOrDefault(winnerId, "?");
+            Player winnerP = Bukkit.getPlayer(winnerId);
+
+            Faction winnerFac = null;
+            try {
+                FPlayer fp = FPlayers.getInstance().getByOfflinePlayer(Bukkit.getOfflinePlayer(winnerId));
+                if (fp != null) winnerFac = fp.getFaction();
+            } catch (Exception ignored) {}
+            String winFacTag = (winnerFac == null || winnerFac.isWilderness())
+                ? msg.getString("no-faction", "§7Sans faction") : winnerFac.getTag();
+
             Bukkit.broadcastMessage("\n§8§m-----------------------------------------------------\n"
-                + "§r §8< §d§lCOURSE À LA RELIQUE §8> §8§m-----------------------------------------------------\n"
-                + "§7Le temps est écoulé : §cpersonne n'a porté la Relique§7. Event annulé.\n"
+                + "§r §8< §d§lVICTOIRE — RELIQUE §8> §8§m-----------------------------------------------------\n"
+                + "§7🏆 §e" + winnerName + " §7(§c" + winFacTag + "§7) a porté la Relique le plus longtemps !\n"
+                + buildFinalLeaderboard(top)
                 + "§8§m-----------------------------------------------------");
+            FactionMessageTitle.sendPlayersTitle(20, 60, 20, "§6§l🏆 RELIQUE",
+                "§e" + winnerName + " §7l'emporte !");
+            playSoundAll(Sound.LEVEL_UP);
+
+            if (winnerFac != null && !winnerFac.isWilderness()) {
+                RankingManager.addRelicWins(winnerFac);
+                RankingManager.addPoints(winnerFac, winPoints);
+                FactionMessageTitle.sendFactionTitle(winnerFac, 20, 60, 20,
+                    "§6§l🏆 VICTOIRE !", "§a+" + winPoints + " pts classement");
+            }
+
+            // Téléport instantané du vainqueur au spawn (preuve de survie)
+            if (winnerP != null) {
+                String spawnCmd = config.getString("relic.rewards.spawn_command", "spawn %player%");
+                try {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                        spawnCmd.replace("%player%", winnerP.getName()).replace("{player}", winnerP.getName()));
+                } catch (Exception ignored) {}
+            }
+
+            // Récompenses argent + items aux 3 meilleurs (décroissant)
+            distributeRewards(top);
+        } finally {
+            // Toujours exécuté, même si une annonce/titre échoue : la relique disparaît
+            // de tous les inventaires et le classement est rafraîchi.
             cleanup();
             FactionEvent.getInstance().getEventOn().setRelicEvent(null);
             RankingManager.updateRanking(true);
-            return;
         }
-
-        // Vainqueur = plus long porteur cumulé
-        UUID winnerId = top.get(0).getKey();
-        String winnerName = playerNames.getOrDefault(winnerId, "?");
-        Player winnerP = Bukkit.getPlayer(winnerId);
-
-        Faction winnerFac = null;
-        try {
-            FPlayer fp = FPlayers.getInstance().getByOfflinePlayer(Bukkit.getOfflinePlayer(winnerId));
-            if (fp != null) winnerFac = fp.getFaction();
-        } catch (Exception ignored) {}
-        String winFacTag = (winnerFac == null || winnerFac.isWilderness())
-            ? msg.getString("no-faction", "§7Sans faction") : winnerFac.getTag();
-
-        Bukkit.broadcastMessage("\n§8§m-----------------------------------------------------\n"
-            + "§r §8< §d§lVICTOIRE — RELIQUE §8> §8§m-----------------------------------------------------\n"
-            + "§7🏆 §e" + winnerName + " §7(§c" + winFacTag + "§7) a porté la Relique le plus longtemps !\n"
-            + buildFinalLeaderboard(top)
-            + "§8§m-----------------------------------------------------");
-        FactionMessageTitle.sendPlayersTitle(20, 60, 20, "§6§l🏆 RELIQUE",
-            "§e" + winnerName + " §7l'emporte !");
-        playSoundAll(Sound.LEVEL_UP);
-
-        if (winnerFac != null && !winnerFac.isWilderness()) {
-            RankingManager.addRelicWins(winnerFac);
-            RankingManager.addPoints(winnerFac, winPoints);
-            FactionMessageTitle.sendFactionTitle(winnerFac, 20, 60, 20,
-                "§6§l🏆 VICTOIRE !", "§a+" + winPoints + " pts classement");
-        }
-
-        // Téléport instantané du vainqueur au spawn (preuve de survie)
-        if (winnerP != null) {
-            String spawnCmd = config.getString("relic.rewards.spawn_command", "spawn %player%");
-            try {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
-                    spawnCmd.replace("%player%", winnerP.getName()).replace("{player}", winnerP.getName()));
-            } catch (Exception ignored) {}
-        }
-
-        // Récompenses argent + items aux 3 meilleurs (décroissant)
-        distributeRewards(top);
-
-        cleanup();
-        FactionEvent.getInstance().getEventOn().setRelicEvent(null);
-        RankingManager.updateRanking(true);
     }
 
     private void distributeRewards(List<Map.Entry<UUID, Long>> top) {
