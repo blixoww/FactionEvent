@@ -1,10 +1,10 @@
 package fr.blixow.factionevent.events;
 
-import com.massivecraft.factions.event.FactionCreateEvent;
-import com.massivecraft.factions.event.FactionPlayerEvent;
+import fr.redfaction.api.events.FactionCreateEvent;
 import fr.blixow.factionevent.manager.FileManager;
-import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.event.FactionDisbandEvent;
+import fr.blixow.factionevent.utils.FactionUtil;
+import fr.redfaction.entity.Faction;
+import fr.redfaction.api.events.FactionDisbandEvent;
 import fr.blixow.factionevent.manager.RankingManager;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,8 +18,8 @@ public class ManagerFactionEvent implements Listener {
     @EventHandler
     public void onCreation(FactionCreateEvent event) {
         try {
-            Faction faction = event.getFPlayer().getFaction();
-            String id = faction.getId();
+            Faction faction = event.getFaction();
+            String id = FactionUtil.id(faction);
             FileConfiguration fc = FileManager.getClassementFC();
             File file = FileManager.getDataFile("classement.yml");
             if (!fc.contains(id)) {
@@ -40,7 +40,7 @@ public class ManagerFactionEvent implements Listener {
     public void onDisband(FactionDisbandEvent event) {
         try {
             Faction faction = event.getFaction();
-            String id = faction.getId();
+            String id = FactionUtil.id(faction);
             FileConfiguration fc = FileManager.getClassementFC();
             File file = FileManager.getDataFile("classement.yml");
             if (fc.contains(id)) {

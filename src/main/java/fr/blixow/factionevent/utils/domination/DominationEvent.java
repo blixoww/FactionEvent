@@ -1,12 +1,11 @@
 package fr.blixow.factionevent.utils.domination;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.Factions;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.utils.LootItemParser;
 import fr.blixow.factionevent.utils.Messages;
 import net.milkbowl.vault.economy.Economy;
@@ -177,28 +176,28 @@ public class DominationEvent {
     // ── Kill handling ─────────────────────────────────────────────────────
     public void handleKill(Player killer, Player victim) {
         if (killer == null || victim == null) return;
-        FPlayer fKiller = FPlayers.getInstance().getByPlayer(killer);
-        FPlayer fVictim = FPlayers.getInstance().getByPlayer(victim);
+        FPlayer fKiller = FactionUtil.fplayer(killer);
+        FPlayer fVictim = FactionUtil.fplayer(victim);
         if (fKiller == null || fVictim == null) return;
         Faction killerFaction = fKiller.getFaction();
         Faction victimFaction = fVictim.getFaction();
-        if (killerFaction.isWilderness() && victimFaction.isWilderness()) return;
+        if (FactionUtil.isWilderness(killerFaction) && FactionUtil.isWilderness(victimFaction)) return;
 
         for (DominationZone zone : domination.getActiveZones()) {
             if (!zone.isPlayerInZone(victim)) continue;
             ZoneState state = zoneStates.get(zone.getName());
             if (state == null) continue;
 
-            if (!killerFaction.isWilderness()) {
+            if (!FactionUtil.isWilderness(killerFaction)) {
                 if (state.contestFaction != null && state.contestFaction.equals(killerFaction)) {
                     state.contestProgress = Math.min(100, state.contestProgress + killCaptureBonus);
                 } else if (state.contestFaction == null && !killerFaction.equals(state.ownerFaction)) {
                     state.contestFaction = killerFaction;
                     state.contestProgress = Math.min(100, killCaptureBonus);
                 }
-                factionScores.merge(killerFaction.getId(), 1, Integer::sum);
+                factionScores.merge(FactionUtil.id(killerFaction), 1, Integer::sum);
             }
-            if (!victimFaction.isWilderness() && state.contestFaction != null
+            if (!FactionUtil.isWilderness(victimFaction) && state.contestFaction != null
                     && state.contestFaction.equals(victimFaction)) {
                 state.contestProgress = Math.max(0, state.contestProgress - killCaptureBonus);
                 if (state.contestProgress == 0) state.contestFaction = null;
@@ -250,10 +249,10 @@ public class DominationEvent {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (!zone.isPlayerInZone(p)) continue;
                 if (isAFK(p)) continue;
-                FPlayer fp = FPlayers.getInstance().getByPlayer(p);
-                if (fp == null || fp.getFaction().isWilderness()) continue;
+                FPlayer fp = FactionUtil.fplayer(p);
+                if (fp == null || FactionUtil.isWilderness(fp.getFaction())) continue;
                 participants.add(p.getUniqueId());
-                countByFaction.merge(fp.getFaction().getId(), 1, Integer::sum);
+                countByFaction.merge(FactionUtil.id(fp.getFaction()), 1, Integer::sum);
             }
 
             // Strict majority detection
@@ -390,7 +389,7 @@ public class DominationEvent {
         FactionMessageTitle.sendPlayersTitle(5, 30, 10, "§a🏁 Zone capturée !", "§c" + newOwner.getTag() + " §7contrôle §c" + zone.getName());
         playSoundAll(Sound.LEVEL_UP);
 
-        if (previousOwner != null && !previousOwner.isWilderness()) {
+        if (previousOwner != null && !FactionUtil.isWilderness(previousOwner)) {
             String lostMsg = "\n§8§m-----------------------------------------------------\n"
                 + "§r §8< §6§lDOMINATION §8> §8§m-----------------------------------------------------\n"
                 + "§7❌ §c" + previousOwner.getTag() + " §7perd la zone §c" + zone.getName() + " §7!\n"
@@ -412,7 +411,7 @@ public class DominationEvent {
         for (DominationZone zone : domination.getActiveZones()) {
             ZoneState state = zoneStates.get(zone.getName());
             if (state == null || state.ownerFaction == null) continue;
-            String fid = state.ownerFaction.getId();
+            String fid = FactionUtil.id(state.ownerFaction);
             switch (state.multiplier) {
                 case HOT:
                     // ×2 : 2 points per tick
@@ -445,7 +444,7 @@ public class DominationEvent {
         for (DominationZone zone : domination.getActiveZones()) {
             ZoneState state = zoneStates.get(zone.getName());
             if (state == null || state.ownerFaction == null) continue;
-            zoneCount.merge(state.ownerFaction.getId(), 1, Integer::sum);
+            zoneCount.merge(FactionUtil.id(state.ownerFaction), 1, Integer::sum);
         }
 
         String newDominantId = null;
@@ -468,10 +467,10 @@ public class DominationEvent {
         if (dominantFaction == null) return;
         int ticks = snowballDuration * 20;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            FPlayer fp = FPlayers.getInstance().getByPlayer(player);
-            if (fp == null || fp.getFaction().isWilderness()) continue;
+            FPlayer fp = FactionUtil.fplayer(player);
+            if (fp == null || FactionUtil.isWilderness(fp.getFaction())) continue;
             Faction faction = fp.getFaction();
-            int zonesOwned = zoneCount.getOrDefault(faction.getId(), 0);
+            int zonesOwned = zoneCount.getOrDefault(FactionUtil.id(faction), 0);
 
             if (faction.equals(dominantFaction)) {
                 // Faction dominante : Ralentissement + Faiblesse
@@ -544,7 +543,7 @@ public class DominationEvent {
         giveMoneyToFaction(winner, winMoney, winPoints, true);
 
         // ── 2nd place consolation ─────────────────────────────────────────
-        if (second != null && !second.isWilderness()) {
+        if (second != null && !FactionUtil.isWilderness(second)) {
             RankingManager.addPoints(second, secondPoints);
             FactionMessageTitle.sendFactionTitle(second, 10, 40, 10,
                 "§e§l2ème place", "§a+" + secondPoints + " pts"
@@ -553,7 +552,7 @@ public class DominationEvent {
         }
 
         // ── 3rd place consolation ─────────────────────────────────────────
-        if (third != null && !third.isWilderness()) {
+        if (third != null && !FactionUtil.isWilderness(third)) {
             RankingManager.addPoints(third, thirdPoints);
             FactionMessageTitle.sendFactionTitle(third, 10, 40, 10,
                 "§7§l3ème place", "§a+" + thirdPoints + " pts"
@@ -570,9 +569,9 @@ public class DominationEvent {
         Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 try {
-                    FPlayer fp = FPlayers.getInstance().getByPlayer(p);
+                    FPlayer fp = FactionUtil.fplayer(p);
                     // Ne téléporte pas les joueurs de la faction gagnante
-                    if (fp != null && fp.getFaction().equals(finalWinner)) continue;
+                    if (fp != null && fp.getFaction() != null && fp.getFaction().equals(finalWinner)) continue;
                     // Ne téléporte que les joueurs proches d'une zone (dans une zone ou dans 20 blocs)
                     if (!isNearAnyZone(p, 20)) continue;
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
@@ -786,7 +785,7 @@ public class DominationEvent {
     private int countZonesOwned(String factionId) {
         int count = 0;
         for (ZoneState s : zoneStates.values()) {
-            if (s.ownerFaction != null && s.ownerFaction.getId().equals(factionId)) count++;
+            if (s.ownerFaction != null && FactionUtil.id(s.ownerFaction).equals(factionId)) count++;
         }
         return count;
     }
@@ -835,8 +834,8 @@ public class DominationEvent {
 
     private Faction getFactionById(String id) {
         try {
-            for (Faction f : Factions.getInstance().getAllFactions()) {
-                if (f.getId().equals(id)) return f;
+            for (Faction f : FactionUtil.allFactions()) {
+                if (FactionUtil.id(f).equals(id)) return f;
             }
         } catch (Exception ignored) {}
         return null;
@@ -847,7 +846,7 @@ public class DominationEvent {
         if (faction == null) return list;
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (p == null || !p.isOnline()) continue;
-            FPlayer fp = FPlayers.getInstance().getByPlayer(p);
+            FPlayer fp = FactionUtil.fplayer(p);
             if (fp != null && faction.equals(fp.getFaction())) list.add(p);
         }
         return list;

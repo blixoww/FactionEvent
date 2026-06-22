@@ -1,11 +1,11 @@
 package fr.blixow.factionevent.utils.guess;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.RankingManager;
 import fr.blixow.factionevent.manager.StrManager;
+import fr.blixow.factionevent.utils.FactionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -40,12 +40,12 @@ public class GuessEvent {
 
     private void grantVictory(Player player) {
         won = true;
-        FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
-        Faction faction = fPlayer.getFaction();
+        FPlayer fPlayer = FactionUtil.fplayer(player);
+        Faction faction = fPlayer == null ? null : fPlayer.getFaction();
         String correctWord = guess.getWords().get(currentWordIndex);
         Bukkit.broadcastMessage(prefix + new StrManager(msg.getString("guess.correct", "§a{player} a trouvé le mot §e{word}§a !"))
                 .rePlayer(player).reWord(correctWord).toString());
-        if (!faction.isWilderness()) {
+        if (!FactionUtil.isWilderness(faction)) {
             RankingManager.addPoints(faction, 1);
         }
         nextWord();

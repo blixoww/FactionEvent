@@ -3,6 +3,7 @@ version: '${project.version}'
 main: fr.blixow.factionevent.FactionEvent
 authors: [ SYNATIKS ,blixow14 ]
 description: plugin d'event faction
+depend: [RedFaction]
 commands:
   planning:
     description: Affiche le planning des events de la semaine.

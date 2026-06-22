@@ -1,6 +1,6 @@
 package fr.blixow.factionevent;
 
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.domination.DominationCommand;
 import fr.blixow.factionevent.commands.dtc.DTCCommand;

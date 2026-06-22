@@ -4,8 +4,8 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
 import fr.blixow.factionevent.utils.Messages;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.blixow.factionevent.utils.FactionUtil;
+import fr.redfaction.entity.Faction;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EnderCrystal;
@@ -81,8 +81,8 @@ public class DTCEvent {
             }
         } catch (Exception ignored) {}
 
-        Faction faction = FPlayers.getInstance().getByPlayer(player).getFaction();
-        if (!faction.isWilderness() && !faction.isSafeZone() && !faction.isWarZone()) {
+        Faction faction = FactionUtil.faction(player);
+        if (!FactionUtil.isWilderness(faction) && !faction.isSafeZone() && !faction.isWarZone()) {
             double current = damageMap.getOrDefault(faction, 0.0);
             damageMap.put(faction, current + damage);
         }

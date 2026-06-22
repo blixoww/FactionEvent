@@ -1,10 +1,10 @@
 package fr.blixow.factionevent.utils.lms;
 
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.utils.LootItemParser;
 import fr.blixow.factionevent.utils.Messages;
 import net.milkbowl.vault.economy.Economy;
@@ -208,14 +208,14 @@ public class LMSEvent {
                 lms.resetPhase();
             } else {
                 Faction firstFaction = null;
-                try { firstFaction = FPlayers.getInstance().getByPlayer(alive.get(0)).getFaction(); }
+                try { firstFaction = FactionUtil.faction(alive.get(0)); }
                 catch (Exception ignored) {}
                 if (firstFaction != null) {
                     final Faction finalFirstFaction = firstFaction;
                     boolean allSame = alive.stream().allMatch(p -> {
                         try {
-                            return FPlayers.getInstance().getByPlayer(p)
-                                .getFaction().getId().equals(finalFirstFaction.getId());
+                            Faction f = FactionUtil.faction(p);
+                            return f != null && f.getId().equals(finalFirstFaction.getId());
                         } catch (Exception e) { return false; }
                     });
                     if (allSame) {
@@ -249,12 +249,12 @@ public class LMSEvent {
         Faction winnerFaction = null;
         int factionPoints = config.getInt("lms.win_points", 20);
         try {
-            winnerFaction = FPlayers.getInstance().getByPlayer(winners.get(0)).getFaction();
+            winnerFaction = FactionUtil.faction(winners.get(0));
         } catch (Exception ignored) {}
 
         // Broadcast victoire
         String winnerNames = winners.stream().map(Player::getName).collect(Collectors.joining("§7, §c"));
-        String winnerFactionTag = (winnerFaction != null && !winnerFaction.isWilderness())
+        String winnerFactionTag = (winnerFaction != null && !FactionUtil.isWilderness(winnerFaction))
             ? winnerFaction.getTag() : "?";
 
         if (lms.getMode() == LMSMode.DUO && winners.size() >= 2) {
@@ -279,7 +279,7 @@ public class LMSEvent {
         }
 
         // Points faction
-        if (winnerFaction != null && !winnerFaction.isWilderness()) {
+        if (winnerFaction != null && !FactionUtil.isWilderness(winnerFaction)) {
             RankingManager.addLMSWins(winnerFaction);
             RankingManager.addPoints(winnerFaction, factionPoints);
             FactionMessageTitle.sendFactionTitle(winnerFaction, 20, 60, 20,

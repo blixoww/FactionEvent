@@ -1,10 +1,9 @@
 package fr.blixow.factionevent.utils.relic;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.Factions;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.FactionEvent;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.manager.DateManager;
 import fr.blixow.factionevent.manager.EventManager;
 import fr.blixow.factionevent.manager.FileManager;
@@ -215,8 +214,8 @@ public class RelicEvent {
         player.getInventory().addItem(relicItem.clone());
         player.updateInventory();
 
-        FPlayer fp = FPlayers.getInstance().getByPlayer(player);
-        String fac = (fp == null || fp.getFaction().isWilderness())
+        FPlayer fp = FactionUtil.fplayer(player);
+        String fac = (fp == null || FactionUtil.isWilderness(fp.getFaction()))
             ? msg.getString("no-faction", "§7Sans faction") : fp.getFaction().getTag();
 
         // Annonce : récupération + invitation à le taper
@@ -318,9 +317,9 @@ public class RelicEvent {
         if (ended) return;
         Player carrierP = getCarrier();
         if (carrierP != null) {
-            FPlayer fp = FPlayers.getInstance().getByPlayer(carrierP);
-            if (fp != null && !fp.getFaction().isWilderness() && pointsPerSecond > 0) {
-                factionScores.merge(fp.getFaction().getId(), pointsPerSecond, Integer::sum);
+            FPlayer fp = FactionUtil.fplayer(carrierP);
+            if (fp != null && !FactionUtil.isWilderness(fp.getFaction()) && pointsPerSecond > 0) {
+                factionScores.merge(FactionUtil.id(fp.getFaction()), pointsPerSecond, Integer::sum);
             }
             updateCompassAll(carrierP.getLocation());
 
@@ -422,7 +421,7 @@ public class RelicEvent {
     }
 
     private void announceCarrierLocation(Player carrierP, FPlayer fp) {
-        String fac = (fp == null || fp.getFaction().isWilderness())
+        String fac = (fp == null || FactionUtil.isWilderness(fp.getFaction()))
             ? msg.getString("no-faction", "§7Sans faction") : fp.getFaction().getTag();
         Location l = carrierP.getLocation();
         String coords = l.getBlockX() + " / " + l.getBlockY() + " / " + l.getBlockZ();
@@ -442,7 +441,7 @@ public class RelicEvent {
             // Conversion des points faction accumulés (par seconde de portage)
             for (Map.Entry<String, Integer> e : factionScores.entrySet()) {
                 Faction f = getFactionById(e.getKey());
-                if (f != null && !f.isWilderness() && e.getValue() > 0) {
+                if (f != null && !FactionUtil.isWilderness(f) && e.getValue() > 0) {
                     RankingManager.addPoints(f, e.getValue());
                 }
             }
@@ -466,10 +465,10 @@ public class RelicEvent {
 
             Faction winnerFac = null;
             try {
-                FPlayer fp = FPlayers.getInstance().getByOfflinePlayer(Bukkit.getOfflinePlayer(winnerId));
+                FPlayer fp = FactionUtil.fplayer(winnerId);
                 if (fp != null) winnerFac = fp.getFaction();
             } catch (Exception ignored) {}
-            String winFacTag = (winnerFac == null || winnerFac.isWilderness())
+            String winFacTag = (winnerFac == null || FactionUtil.isWilderness(winnerFac))
                 ? msg.getString("no-faction", "§7Sans faction") : winnerFac.getTag();
 
             Bukkit.broadcastMessage("\n§8§m-----------------------------------------------------\n"
@@ -481,7 +480,7 @@ public class RelicEvent {
                 "§e" + winnerName + " §7l'emporte !");
             playSoundAll(Sound.LEVEL_UP);
 
-            if (winnerFac != null && !winnerFac.isWilderness()) {
+            if (winnerFac != null && !FactionUtil.isWilderness(winnerFac)) {
                 RankingManager.addRelicWins(winnerFac);
                 RankingManager.addPoints(winnerFac, winPoints);
                 FactionMessageTitle.sendFactionTitle(winnerFac, 20, 60, 20,
@@ -633,8 +632,8 @@ public class RelicEvent {
         long elapsed = (System.currentTimeMillis() - startTime) / 1000;
         String timeStr = DateManager.getFormattedTime((int) Math.max(0, duration - elapsed));
         if (carrierP != null) {
-            FPlayer fp = FPlayers.getInstance().getByPlayer(carrierP);
-            String fac = (fp == null || fp.getFaction().isWilderness())
+            FPlayer fp = FactionUtil.fplayer(carrierP);
+            String fac = (fp == null || FactionUtil.isWilderness(fp.getFaction()))
                 ? "§7Sans faction" : "§c" + fp.getFaction().getTag();
             long heldMs = carryMillis.getOrDefault(carrierP.getUniqueId(), 0L)
                 + (carrierSince > 0 ? System.currentTimeMillis() - carrierSince : 0);
@@ -653,8 +652,8 @@ public class RelicEvent {
 
     private Faction getFactionById(String id) {
         try {
-            for (Faction f : Factions.getInstance().getAllFactions()) {
-                if (f.getId().equals(id)) return f;
+            for (Faction f : FactionUtil.allFactions()) {
+                if (FactionUtil.id(f).equals(id)) return f;
             }
         } catch (Exception ignored) {}
         return null;

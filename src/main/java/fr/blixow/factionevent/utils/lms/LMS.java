@@ -1,13 +1,13 @@
 package fr.blixow.factionevent.utils.lms;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.perms.Role;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
+import fr.redfaction.entity.Role;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.utils.event.EventOn;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -69,23 +69,23 @@ public class LMS {
             return;
         }
 
-        FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
-        Faction faction = fPlayer.getFaction();
-        if (faction == null || faction.isWilderness()) {
+        FPlayer fPlayer = FactionUtil.fplayer(player);
+        Faction faction = fPlayer == null ? null : fPlayer.getFaction();
+        if (FactionUtil.isWilderness(faction)) {
             player.sendMessage(prefix + new StrManager(msg.getString("lms.no_faction")).rePlayer(player).reLMS(name).toString());
             return;
         }
 
         // Vérification rôle : chef ou officier uniquement, sauf si aucun n'est en ligne
         Role role = fPlayer.getRole();
-        boolean isLeaderOrOfficer = role == Role.ADMIN || role == Role.MODERATOR || role == Role.COLEADER;
+        boolean isLeaderOrOfficer = role == Role.LEADER || role == Role.OFFICER;
         if (!isLeaderOrOfficer) {
             boolean anyLeaderOrOfficerOnline = false;
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online == null || !online.isOnline()) continue;
-                FPlayer fp = FPlayers.getInstance().getByPlayer(online);
-                if (fp != null && fp.getFaction().getId().equals(faction.getId())
-                        && (fp.getRole() == Role.ADMIN || fp.getRole() == Role.MODERATOR || fp.getRole() == Role.COLEADER)) {
+                FPlayer fp = FactionUtil.fplayer(online);
+                if (fp != null && fp.getFaction() != null && fp.getFaction().getId().equals(faction.getId())
+                        && (fp.getRole() == Role.LEADER || fp.getRole() == Role.OFFICER)) {
                     anyLeaderOrOfficerOnline = true;
                     break;
                 }
@@ -101,8 +101,8 @@ public class LMS {
         int maxPerFaction = (mode == LMSMode.DUO) ? 2 : 1;
         int countForFaction = 0;
         for (Player rp : registeredPlayers.keySet()) {
-            FPlayer rfp = FPlayers.getInstance().getByPlayer(rp);
-            if (rfp != null && rfp.getFaction().getId().equals(faction.getId())) {
+            FPlayer rfp = FactionUtil.fplayer(rp);
+            if (rfp != null && rfp.getFaction() != null && rfp.getFaction().getId().equals(faction.getId())) {
                 countForFaction++;
             }
         }

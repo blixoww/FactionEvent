@@ -1,12 +1,12 @@
 package fr.blixow.factionevent.utils.fallingchest;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.RankingManager;
 import fr.blixow.factionevent.manager.StrManager;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.utils.LootItemParser;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -257,10 +257,10 @@ public class FallingChestManager {
         FileConfiguration config = FileManager.getConfig();
         int points = config.getInt("falling_chest.win_points", 5);
 
-        FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+        FPlayer fPlayer = FactionUtil.fplayer(player);
         Faction faction = (fPlayer != null) ? fPlayer.getFaction() : null;
 
-        if (faction != null && !faction.isWilderness()) {
+        if (faction != null && !FactionUtil.isWilderness(faction)) {
             RankingManager.addPoints(faction, points);
             RankingManager.updateRanking(true);
             String opened = new StrManager(msg("opened_faction"))

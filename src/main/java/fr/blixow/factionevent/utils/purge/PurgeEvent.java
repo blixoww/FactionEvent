@@ -1,9 +1,9 @@
 package fr.blixow.factionevent.utils.purge;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.FactionEvent;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.manager.DateManager;
 import fr.blixow.factionevent.manager.EventManager;
 import fr.blixow.factionevent.manager.FileManager;
@@ -243,10 +243,10 @@ public class PurgeEvent {
             UUID uuid = top.get(i).getKey();
             int pts = cfg.getInt("purge.faction_top_points." + (i + 1), defaultPoints[i]);
 
-            FPlayer fp = FPlayers.getInstance().getByOfflinePlayer(Bukkit.getOfflinePlayer(uuid));
+            FPlayer fp = FactionUtil.fplayer(uuid);
             if (fp == null) continue;
             Faction faction = fp.getFaction();
-            if (faction == null || faction.isWilderness()) continue;
+            if (FactionUtil.isWilderness(faction)) continue;
 
             factionPointsMap.merge(faction, pts, Integer::sum);
             factionPlayersMap.computeIfAbsent(faction, k -> new ArrayList<>())

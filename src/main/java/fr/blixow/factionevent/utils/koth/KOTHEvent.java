@@ -1,11 +1,11 @@
 package fr.blixow.factionevent.utils.koth;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.utils.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -39,10 +39,10 @@ public class KOTHEvent {
             long joined = 0;
             if(playersInKOTH.isEmpty()){ joined = new Date().getTime(); }
             playersInKOTH.put(player, joined);
-            FPlayer factionPlayer = FPlayers.getInstance().getByPlayer(player);
+            FPlayer factionPlayer = FactionUtil.fplayer(player);
             FileConfiguration msg = FileManager.getMessageFileConfiguration();
             String prefix = msg.getString("koth.prefix");
-            if(factionPlayer.getFaction().isWilderness()){
+            if(FactionUtil.isWilderness(factionPlayer.getFaction())){
                 try {
                     String factionless = msg.getString("no-faction");
                     String str = new StrManager(msg.getString("koth.king")).reKoth(koth.getName()).rePlayer(player).reFaction(factionless).toString();
@@ -74,12 +74,12 @@ public class KOTHEvent {
                 Player p2 = getFirstPlayer();
                 long joined = getFirstPlayerJoined();
                 playersInKOTH.replace(p2, joined, new Date().getTime());
-                FPlayer factionPlayer = FPlayers.getInstance().getByPlayer(p2);
-                if(factionPlayer.getFaction().isWilderness()){
+                FPlayer factionPlayer = FactionUtil.fplayer(p2);
+                if(FactionUtil.isWilderness(factionPlayer.getFaction())){
                     String str = new StrManager(msg.getString("koth.new_king")).reKoth(koth.getName()).rePlayer(p2).reFaction(msg.getString("no-faction")).toString();
                     if(playersInKOTH.size() == 1){ Bukkit.broadcastMessage(prefix + str); }
                 } else {
-                    String factionName = FPlayers.getInstance().getByPlayer(p2).getFaction().getTag();
+                    String factionName = factionPlayer.getFaction().getTag();
                     String str = new StrManager(msg.getString("koth.new_king")).reKoth(koth.getName()).rePlayer(p2).reFaction(factionName).toString();
                     if(playersInKOTH.size() == 1){ Bukkit.broadcastMessage(prefix + str); }
                 }
@@ -132,11 +132,11 @@ public class KOTHEvent {
     public void grantVictory(Player player){
         FileConfiguration msg = FileManager.getMessageFileConfiguration();
         String prefix = msg.getString("koth.prefix");
-        FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+        FPlayer fPlayer = FactionUtil.fplayer(player);
         String str = prefix + new StrManager(msg.getString("koth.winner")).rePlayer(player).reKoth(koth.getName()).toString();
         Faction faction = fPlayer.getFaction();
         Bukkit.broadcastMessage(str);
-        if(!faction.isWilderness()){
+        if(!FactionUtil.isWilderness(faction)){
             int points = 10;
             try { if(config.contains("koth.win_points")){ points = config.getInt("koth.win_points"); if(points < 1){ points = 1; } } } catch (Exception ignored){}
             RankingManager.addKothWins(faction);

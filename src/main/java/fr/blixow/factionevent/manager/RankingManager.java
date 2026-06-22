@@ -1,7 +1,7 @@
 package fr.blixow.factionevent.manager;
 
-import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.Factions;
+import fr.redfaction.entity.Faction;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.FactionEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,7 +18,7 @@ public class RankingManager {
     public static int getPoints(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".points";
+            String path = FactionUtil.id(faction) + ".points";
             if (fc.contains(path)) {
                 return Integer.parseInt(fc.getString(path));
             }
@@ -32,13 +32,13 @@ public class RankingManager {
     public static void addPoints(Faction faction, int points) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".points";
+            String path = FactionUtil.id(faction) + ".points";
             int current_points = getPoints(faction);
             current_points += points;
             fc.set(path, current_points);
             fc.save(FileManager.getDataFile("classement.yml"));
-            faction.sendMessage("§a+" + points + " points §7classement ajouté à votre faction.");
-            logsMessage(faction.getTag() + " (ID=" + faction.getId() + ") : " + points + " points classement ajouté à votre faction.");
+            FactionUtil.sendMessage(faction, "§a+" + points + " points §7classement ajouté à votre faction.");
+            logsMessage(faction.getTag() + " (ID=" + FactionUtil.id(faction) + ") : " + points + " points classement ajouté à votre faction.");
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -47,7 +47,7 @@ public class RankingManager {
     public static int getKothWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".koth";
+            String path = FactionUtil.id(faction) + ".koth";
             if (fc.contains(path)) {
                 return Integer.parseInt(fc.getString(path));
             }
@@ -61,7 +61,7 @@ public class RankingManager {
     public static void addKothWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".koth";
+            String path = FactionUtil.id(faction) + ".koth";
             int koth_wins = getKothWins(faction) + 1;
             fc.set(path, koth_wins);
             fc.save(FileManager.getDataFile("classement.yml"));
@@ -73,7 +73,7 @@ public class RankingManager {
     public static int getTotemWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".totem";
+            String path = FactionUtil.id(faction) + ".totem";
             if (fc.contains(path)) {
                 return Integer.parseInt(fc.getString(path));
             }
@@ -87,7 +87,7 @@ public class RankingManager {
     public static void addTotemWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".totem";
+            String path = FactionUtil.id(faction) + ".totem";
             int totem_wins = getTotemWins(faction) + 1;
             fc.set(path, totem_wins);
             fc.save(FileManager.getDataFile("classement.yml"));
@@ -99,7 +99,7 @@ public class RankingManager {
     public static int getDTCWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".dtc";
+            String path = FactionUtil.id(faction) + ".dtc";
             if (fc.contains(path)) {
                 return Integer.parseInt(fc.getString(path));
             }
@@ -113,7 +113,7 @@ public class RankingManager {
     public static void addDTCWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".dtc";
+            String path = FactionUtil.id(faction) + ".dtc";
             int dtc_wins = getDTCWins(faction) + 1;
             fc.set(path, dtc_wins);
             fc.save(FileManager.getDataFile("classement.yml"));
@@ -125,7 +125,7 @@ public class RankingManager {
     public static int getLMSWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".lms";
+            String path = FactionUtil.id(faction) + ".lms";
             if (fc.contains(path)) {
                 return Integer.parseInt(fc.getString(path));
             }
@@ -139,7 +139,7 @@ public class RankingManager {
     public static void addLMSWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".lms";
+            String path = FactionUtil.id(faction) + ".lms";
             int lms_wins = getLMSWins(faction) + 1;
             fc.set(path, lms_wins);
             fc.save(FileManager.getDataFile("classement.yml"));
@@ -151,7 +151,7 @@ public class RankingManager {
     public static int getDominationWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".domination";
+            String path = FactionUtil.id(faction) + ".domination";
             if (fc.contains(path)) {
                 return Integer.parseInt(fc.getString(path));
             }
@@ -165,7 +165,7 @@ public class RankingManager {
     public static void addDominationWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".domination";
+            String path = FactionUtil.id(faction) + ".domination";
             int wins = getDominationWins(faction) + 1;
             fc.set(path, wins);
             fc.save(FileManager.getDataFile("classement.yml"));
@@ -177,7 +177,7 @@ public class RankingManager {
     public static int getRelicWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".relic";
+            String path = FactionUtil.id(faction) + ".relic";
             if (fc.contains(path)) {
                 return Integer.parseInt(fc.getString(path));
             }
@@ -191,7 +191,7 @@ public class RankingManager {
     public static void addRelicWins(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String path = faction.getId() + ".relic";
+            String path = FactionUtil.id(faction) + ".relic";
             int wins = getRelicWins(faction) + 1;
             fc.set(path, wins);
             fc.save(FileManager.getDataFile("classement.yml"));
@@ -256,9 +256,9 @@ public class RankingManager {
     public static void updateRanking(boolean broadcast) {
         FileConfiguration fileConfiguration = FileManager.getClassementFC();
         LinkedHashMap<Faction, Integer> factionRankings = new LinkedHashMap<>();
-        for (Faction faction : Factions.getInstance().getAllFactions()) {
-            if (!faction.isWilderness() && !faction.isSafeZone() && !faction.isWarZone()) {
-                String[] factionInformations = getFactionsInformations(fileConfiguration, faction.getId()).split("-");
+        for (Faction faction : FactionUtil.allFactions()) {
+            if (!FactionUtil.isWilderness(faction) && !faction.isSafeZone() && !faction.isWarZone()) {
+                String[] factionInformations = getFactionsInformations(fileConfiguration, FactionUtil.id(faction)).split("-");
                 int points = 0;
                 try {
                     if (factionInformations.length >= 5) {
@@ -332,7 +332,7 @@ public class RankingManager {
     public static void resetFactionRanking(Faction faction) {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            String id = faction.getId();
+            String id = FactionUtil.id(faction);
             fc.set(id + ".points", 0);
             fc.set(id + ".koth", 0);
             fc.set(id + ".totem", 0);
@@ -349,9 +349,9 @@ public class RankingManager {
     public static void resetAllRankings() {
         try {
             FileConfiguration fc = FileManager.getClassementFC();
-            for (Faction faction : Factions.getInstance().getAllFactions()) {
-                if (faction.isWilderness() || faction.isSafeZone() || faction.isWarZone()) continue;
-                String id = faction.getId();
+            for (Faction faction : FactionUtil.allFactions()) {
+                if (FactionUtil.isWilderness(faction) || faction.isSafeZone() || faction.isWarZone()) continue;
+                String id = FactionUtil.id(faction);
                 fc.set(id + ".points", 0);
                 fc.set(id + ".koth", 0);
                 fc.set(id + ".totem", 0);

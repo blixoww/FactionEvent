@@ -3,9 +3,9 @@ package fr.blixow.factionevent.utils.totem;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.utils.FactionMessageTitle;
 import fr.blixow.factionevent.utils.Messages;
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.blixow.factionevent.utils.FactionUtil;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.manager.*;
 import fr.blixow.factionevent.utils.event.EventOn;
 import org.bukkit.Bukkit;
@@ -52,10 +52,10 @@ public class TotemEvent {
      */
     private String getPlayerTag(Player player) {
         try {
-            FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+            FPlayer fPlayer = FactionUtil.fplayer(player);
             if (fPlayer == null) return INDEPENDENT_TAG;
             Faction f = fPlayer.getFaction();
-            if (f == null || f.isWilderness() || f.isSafeZone() || f.isWarZone()) return INDEPENDENT_TAG;
+            if (FactionUtil.isWilderness(f) || f.isSafeZone() || f.isWarZone()) return INDEPENDENT_TAG;
             return f.getTag();
         } catch (Exception e) { return INDEPENDENT_TAG; }
     }
@@ -65,10 +65,10 @@ public class TotemEvent {
      */
     private Faction getFactionOfPlayer(Player player) {
         try {
-            FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+            FPlayer fPlayer = FactionUtil.fplayer(player);
             if (fPlayer == null) return null;
             Faction f = fPlayer.getFaction();
-            if (f == null || f.isWilderness() || f.isSafeZone() || f.isWarZone()) return null;
+            if (FactionUtil.isWilderness(f) || f.isSafeZone() || f.isWarZone()) return null;
             return f;
         } catch (Exception e) { return null; }
     }
@@ -109,7 +109,7 @@ public class TotemEvent {
 
     private Faction findFactionByTag(String tag) {
         try {
-            for (Faction f : com.massivecraft.factions.Factions.getInstance().getAllFactions()) {
+            for (Faction f : FactionUtil.allFactions()) {
                 if (f.getTag().equals(tag)) return f;
             }
         } catch (Exception ignored) {}
@@ -117,7 +117,7 @@ public class TotemEvent {
     }
 
     private void rewardFaction(Faction f, FileConfiguration config) {
-        if (f != null && !f.isWilderness() && !f.isSafeZone() && !f.isWarZone()) {
+        if (f != null && !FactionUtil.isWilderness(f) && !f.isSafeZone() && !f.isWarZone()) {
             int points = 10;
             try { if (config.contains("totem.win_points")) { points = config.getInt("totem.win_points"); if (points < 1) points = 1; } } catch (Exception ignored) {}
             RankingManager.addTotemWins(f);

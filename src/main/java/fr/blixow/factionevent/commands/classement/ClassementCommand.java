@@ -4,10 +4,9 @@ import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.RankingManager;
 import fr.blixow.factionevent.manager.StrManager;
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.Factions;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
+import fr.blixow.factionevent.utils.FactionUtil;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -29,8 +28,8 @@ public class ClassementCommand implements TabExecutor {
         if(sender instanceof Player){
             Player player = (Player)sender;
             FileConfiguration msg = FileManager.getMessageFileConfiguration();
-            FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
-            Faction faction = fPlayer.getFaction();
+            FPlayer fPlayer = FactionUtil.fplayer(player);
+            Faction faction = fPlayer == null ? null : fPlayer.getFaction();
             if(args.length == 0){
                 // ... affichage classement global ...
                 if(msg.contains("classement.title") && msg.contains("classement.lines")){
@@ -84,7 +83,7 @@ public class ClassementCommand implements TabExecutor {
                             player.sendMessage("§cUsage: /classement -reset <factionTag>");
                             break;
                         }
-                        Faction toReset = Factions.getInstance().getByTag(args[1]);
+                        Faction toReset = FactionUtil.byName(args[1]);
                         if (toReset == null) {
                             player.sendMessage("§7La faction §c" + args[1] + " §7n'existe pas");
                         } else {
@@ -105,13 +104,13 @@ public class ClassementCommand implements TabExecutor {
                 }
             } else if(args.length == 1){
                 FileConfiguration fc = FileManager.getClassementFC();
-                Faction factions = Factions.getInstance().getByTag(args[0]);
+                Faction factions = FactionUtil.byName(args[0]);
                 if(factions == null){
                     player.sendMessage("§7La faction §c" + args[0] + " §7n'existe pas");
                 } else {
                     int points = 0, koth = 0, totem = 0, dtc = 0, lms = 0, domination = 0, relic = 0;
                     try {
-                        String[] factionInformations = RankingManager.getFactionsInformations(fc, factions.getId()).split("-");
+                        String[] factionInformations = RankingManager.getFactionsInformations(fc, FactionUtil.id(factions)).split("-");
                         points = Integer.parseInt(factionInformations[0]);
                         koth = Integer.parseInt(factionInformations[1]);
                         totem = Integer.parseInt(factionInformations[2]);
@@ -172,8 +171,8 @@ public class ClassementCommand implements TabExecutor {
         List<String> stringList = new ArrayList<>();
         if(args.length == 1){
             // Factions
-            for(Faction faction : Factions.getInstance().getAllFactions()){
-                if(faction.getTag().toLowerCase().startsWith(args[0].toLowerCase()) && !faction.isWarZone() && !faction.isSafeZone() && !faction.isWilderness()){
+            for(Faction faction : FactionUtil.allFactions()){
+                if(faction.getTag().toLowerCase().startsWith(args[0].toLowerCase()) && !faction.isWarZone() && !faction.isSafeZone() && !FactionUtil.isWilderness(faction)){
                     stringList.add(faction.getTag());
                 }
             }
@@ -185,8 +184,8 @@ public class ClassementCommand implements TabExecutor {
             }
         } else if(args.length == 2 && args[0].equalsIgnoreCase("-reset")){
             // Suggestion de faction pour -reset
-            for(Faction faction : Factions.getInstance().getAllFactions()){
-                if(faction.getTag().toLowerCase().startsWith(args[1].toLowerCase()) && !faction.isWarZone() && !faction.isSafeZone() && !faction.isWilderness()){
+            for(Faction faction : FactionUtil.allFactions()){
+                if(faction.getTag().toLowerCase().startsWith(args[1].toLowerCase()) && !faction.isWarZone() && !faction.isSafeZone() && !FactionUtil.isWilderness(faction)){
                     stringList.add(faction.getTag());
                 }
             }

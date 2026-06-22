@@ -2,9 +2,8 @@ package fr.blixow.factionevent.utils;
 
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.EventManager;
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -23,7 +22,7 @@ public class FactionMessageTitle {
         if (faction == null) return players;
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player == null || !player.isOnline()) continue;
-            FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+            FPlayer fPlayer = FactionUtil.fplayer(player);
             if (fPlayer != null && faction.equals(fPlayer.getFaction())) {
                 players.add(player);
             }
@@ -32,7 +31,7 @@ public class FactionMessageTitle {
     }
 
     public static void sendFactionTitle(Faction faction, int fadeIn, int stay, int fadeOut, String title, String subtitle) {
-        if (!faction.isWilderness()) {
+        if (!FactionUtil.isWilderness(faction)) {
             HashMap<Player, EventManager> managerHashMap = FactionEvent.getInstance().getEventScoreboardOff();
             for (Player player : getOnlineFactionPlayers(faction)) {
                 if (managerHashMap.containsKey(player)) {
@@ -58,7 +57,7 @@ public class FactionMessageTitle {
     }
 
     public static void sendFactionActionBar(Faction faction, String message) {
-        if (faction != null && !faction.isWilderness()) {
+        if (faction != null && !FactionUtil.isWilderness(faction)) {
             for (Player player : getOnlineFactionPlayers(faction)) {
                 Messages.sendActionBar(player, message);
             }

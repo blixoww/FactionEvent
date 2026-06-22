@@ -68,11 +68,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>dev.kitteh</groupId>
-            <artifactId>factionsuuid</artifactId>
-            <version>0.7.0</version>
-            <scope>system</scope>
-            <systemPath>C:/Users/Valentin/Desktop/JAVA MC/Project/Factions.jar</systemPath>
+            <groupId>fr.redfaction</groupId>
+            <artifactId>redfaction</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.azbh111</groupId>

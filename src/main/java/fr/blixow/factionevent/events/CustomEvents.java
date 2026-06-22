@@ -1,12 +1,12 @@
 package fr.blixow.factionevent.events;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
+import fr.redfaction.entity.FPlayer;
+import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.FactionEvent;
 import fr.blixow.factionevent.manager.EventManager;
 import fr.blixow.factionevent.manager.FileManager;
 import fr.blixow.factionevent.manager.StrManager;
+import fr.blixow.factionevent.utils.FactionUtil;
 import fr.blixow.factionevent.utils.domination.DominationEvent;
 import fr.blixow.factionevent.utils.dtc.DTCEvent;
 import fr.blixow.factionevent.utils.dtc.DTCManager;
@@ -239,11 +239,11 @@ public class CustomEvents implements Listener {
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
-        Faction faction = fPlayer.getFaction();
+        FPlayer fPlayer = FactionUtil.fplayer(player);
+        Faction faction = fPlayer == null ? null : fPlayer.getFaction();
         String format = event.getFormat();
 
-        if (!faction.isWilderness()) {
+        if (!FactionUtil.isWilderness(faction)) {
             // Snapshot de la map pour éviter ConcurrentModificationException depuis le thread async
             Map<Faction, Integer> rankings = new java.util.LinkedHashMap<>(FactionEvent.getInstance().getFactionRankings());
             int factionRank = 1;
@@ -284,7 +284,7 @@ public class CustomEvents implements Listener {
         if (lmsEvent == null || !lmsEvent.isParticipant(player)) return;
         // Sauvegarder la power avant que Factions ne la réduise
         try {
-            FPlayer fp = FPlayers.getInstance().getByPlayer(player);
+            FPlayer fp = FactionUtil.fplayer(player);
             if (fp != null) lmsSavedPower.put(player.getUniqueId(), fp.getPower());
         } catch (Exception ignored) {}
     }
@@ -340,8 +340,8 @@ public class CustomEvents implements Listener {
             final double savedPower = lmsSavedPower.remove(player.getUniqueId());
                 org.bukkit.Bukkit.getScheduler().runTaskLater(FactionEvent.getInstance(), () -> {
                 try {
-                    FPlayer fp = FPlayers.getInstance().getByPlayer(player);
-                    if (fp != null) fp.alterPower(savedPower - fp.getPower());
+                    FPlayer fp = FactionUtil.fplayer(player);
+                    if (fp != null) fp.setPower(savedPower);
                 } catch (Exception ignored) {}
             }, 2L);
         }
@@ -477,8 +477,8 @@ public class CustomEvents implements Listener {
         Faction allowedFaction = FactionEvent.getInstance().getDominationLootChests().get(key);
         if (allowedFaction == null) return; // Ce coffre n'est pas un coffre de Domination
 
-        FPlayer fp = FPlayers.getInstance().getByPlayer(player);
-        if (fp == null || !fp.getFaction().equals(allowedFaction)) {
+        FPlayer fp = FactionUtil.fplayer(player);
+        if (fp == null || fp.getFaction() == null || !fp.getFaction().equals(allowedFaction)) {
             event.setCancelled(true);
             player.sendMessage("§8[§cDOMINATION§8]§c Ce coffre appartient à la faction §7"
                 + allowedFaction.getTag() + "§c !");
