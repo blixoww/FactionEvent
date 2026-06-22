@@ -126,6 +126,7 @@ public final class FactionEvent extends JavaPlugin {
         instanceListMap();
         loadCommand();
         loadListeners();
+        registerPlaceholders();
         loadEvents();
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Activation du plugin FactionEvent");
         startSchedulerForPlanning();
@@ -224,6 +225,22 @@ public final class FactionEvent extends JavaPlugin {
         pluginManager.registerEvents(new InventoryEvent(), this);
         // Falling chest
         pluginManager.registerEvents(new FallingChestListener(), this);
+    }
+
+    /**
+     * Enregistre l'expansion PlaceholderAPI (classement event dans le chat).
+     * RedFaction reconstruit le chat public et n'expose que PAPI comme point
+     * d'injection : sans ça, le rang ne peut pas apparaître dans le chat.
+     */
+    private void registerPlaceholders() {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW
+                + "[FactionEvent] PlaceholderAPI non trouvé — le classement ne s'affichera pas dans le chat.");
+            return;
+        }
+        new fr.blixow.factionevent.hooks.FactionEventExpansion(this).register();
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN
+            + "[FactionEvent] Placeholders %factionevent_*% enregistrés.");
     }
 
     private void instanceListMap() {

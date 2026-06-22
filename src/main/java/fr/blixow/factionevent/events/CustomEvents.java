@@ -55,8 +55,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Map;
-
 public class CustomEvents implements Listener {
 
     /**
@@ -236,28 +234,10 @@ public class CustomEvents implements Listener {
         }
     }
 
-    @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        FPlayer fPlayer = FactionUtil.fplayer(player);
-        Faction faction = fPlayer == null ? null : fPlayer.getFaction();
-        String format = event.getFormat();
-
-        if (!FactionUtil.isWilderness(faction)) {
-            // Snapshot de la map pour éviter ConcurrentModificationException depuis le thread async
-            Map<Faction, Integer> rankings = new java.util.LinkedHashMap<>(FactionEvent.getInstance().getFactionRankings());
-            int factionRank = 1;
-            for (Faction faction1 : rankings.keySet()) {
-                if (faction1.equals(faction)) {
-                    String prefix = FileManager.getMessageFileConfiguration().getString("chat_format.faction_rank_prefix");
-                    String newFormat = prefix.replace("%faction_rank%", String.valueOf(factionRank)) + " [FACTION] " + format;
-                    event.setFormat(newFormat);
-                    break;
-                }
-                factionRank++;
-            }
-        }
-    }
+    // Le classement event dans le chat public est désormais injecté via le
+    // placeholder %factionevent_rank_prefix% (voir FactionEventExpansion) consommé
+    // par le global_format de RedFaction : ce dernier annule l'AsyncPlayerChatEvent
+    // et reconstruit la ligne lui-même, donc un setFormat() ici serait sans effet.
 
     // DOMINATION
 
