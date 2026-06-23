@@ -1,5 +1,7 @@
 package fr.blixow.factionevent;
 
+import fr.redfaction.api.RankingProvider;
+import fr.redfaction.api.RedFactionAPI;
 import fr.redfaction.entity.Faction;
 import fr.blixow.factionevent.commands.classement.ClassementCommand;
 import fr.blixow.factionevent.commands.domination.DominationCommand;
@@ -134,6 +136,44 @@ public final class FactionEvent extends JavaPlugin {
         FallingChestManager.startScheduler();
         actionsForOnlinePlayers();
         RankingManager.runTaskUpdateRankings();
+        registerRankingProvider();
+    }
+
+    /**
+     * Exposes our faction ranking to RedFaction so {@code /f show} can display each
+     * faction's points and global position. RedFaction does not depend on us, so it
+     * only reads the ranking through this provider when we are installed.
+     */
+    private void registerRankingProvider() {
+        if (!RedFactionAPI.isAvailable()) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW
+                + "[FactionEvent] RedFactionAPI indisponible — classement non exposé à /f show.");
+            return;
+        }
+        RedFactionAPI.get().setRankingProvider(new RankingProvider() {
+            @Override
+            public int getPoints(Faction faction) {
+                return faction == null ? 0 : RankingManager.getPoints(faction);
+            }
+
+            @Override
+            public int getRank(Faction faction) {
+                if (faction == null) return 0;
+                int position = 1;
+                for (Faction ranked : getFactionRankings().keySet()) {
+                    if (ranked.equals(faction)) return position;
+                    position++;
+                }
+                return 0;
+            }
+
+            @Override
+            public int getRankedCount() {
+                return getFactionRankings().size();
+            }
+        });
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN
+            + "[FactionEvent] Classement exposé à RedFaction (/f show).");
     }
 
     private void setupEconomy() {
@@ -395,6 +435,7 @@ public final class FactionEvent extends JavaPlugin {
         FallingChestManager.onDisable();
         FileManager.saveFiles();
         if (eventOn != null) eventOn.cancelEvent();
+        if (RedFactionAPI.isAvailable()) RedFactionAPI.get().setRankingProvider(null);
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Désactivation du plugin");
     }
 
